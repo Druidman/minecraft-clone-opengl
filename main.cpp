@@ -123,20 +123,40 @@ int main(void)
     glfwMakeContextCurrent(window);
     glfwSetWindowSizeCallback(window,resize_callback);
     glfwSetCursorPosCallback(window, cursor_position_callback);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glewInit();
 
     stbi_set_flip_vertically_on_load(true);
     
     GLCall( glViewport(0,0,800,600) ) ;
     GLCall( glEnable(GL_DEPTH_TEST)   );
+    int textures = 100;
+    float* blockTextures = new float[textures * 2];
+    int indd =0;
+    for (int x =0; x < 10; x++){
+        for (int z = 0; z < 10; z++){
+            int change = rand() % 2;
 
-    int blocks = 10000;
+            if (change){
+                blockTextures[indd] = 0.0;
+                blockTextures[indd + 1] = -0.25;
+            }
+            else{
+                blockTextures[indd] = 0.0;
+                blockTextures[indd + 1] = 0.0;
+            }
+            
+            
+            indd += 2;
+        }   
+    }
+
+    int blocks = 100;
     float* blockPositions = new float[blocks * 3];
     
     int ind =0;
-    for (int x =0; x < 100; x++){
-        for (int z = 0; z < 100; z++){
+    for (int x =0; x < 10; x++){
+        for (int z = 0; z < 10; z++){
             blockPositions[ind] = x;
             blockPositions[ind + 1] = 0.0;
             blockPositions[ind + 2] = z;
@@ -162,20 +182,26 @@ int main(void)
     VertexArray vao = VertexArray();
     VertexBuffer vbo = VertexBuffer();
     ElementBuffer ebo = ElementBuffer();
-    VertexBuffer vboInstanced = VertexBuffer();
+    VertexBuffer vboInstancedPos = VertexBuffer();
+    VertexBuffer vboInstancedTex = VertexBuffer();
     
 
     vbo.fillData<float>(blockVertices,sizeof(blockVertices));
     ebo.fillData(blockIndicies,sizeof(blockIndicies));
-    vboInstanced.fillData<float>(blockPositions,blocks * 3);
+    vboInstancedPos.fillData<float>(blockPositions,blocks * 3);
+    vboInstancedTex.fillData<float>(blockTextures,textures * 2);
 
     vbo.bind();
     vao.setAttr(0,3,GL_FLOAT,5 * sizeof(float),0);
     vao.setAttr(1,2,GL_FLOAT,5 * sizeof(float),3 * sizeof(float));
 
-    vboInstanced.bind();
+    vboInstancedPos.bind();
     vao.setAttr(2,3,GL_FLOAT,3 * sizeof(float),0);
     GLCall( glVertexAttribDivisor(2,1) );
+
+    vboInstancedTex.bind();
+    vao.setAttr(3,2,GL_FLOAT,2 * sizeof(float),0);
+    GLCall( glVertexAttribDivisor(3,1) );
 
 
     /* Loop until the user closes the window */

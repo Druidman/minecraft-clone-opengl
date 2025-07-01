@@ -2,14 +2,7 @@
 #include "../vendor/glm/gtc/type_ptr.hpp"
 #include <fstream>
 
-#define GLCall(x) GLClearError(); x; GLCheckError(#x, __FILE__, __LINE__)
-inline void GLClearError() { while (glGetError() != GL_NO_ERROR); }
-inline void GLCheckError(const char* func, const char* file, int line) { \
-    for (GLenum e; (e = glGetError()); ) {\
-        std::cerr << "[OpenGL Error] " << e << " at " << func << " " << file << ":" << line << std::endl; \
-        std::exit(EXIT_FAILURE); \
-    }\
-}
+#include "../betterGL.h"
 
 std::string Shader::readFile(std::string path)
 {
