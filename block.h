@@ -42,7 +42,7 @@ float blockVertices[120] = {
      0.5f,  0.5f, -0.5f,  0.5f, 1.0f   // 23
 };
 
-int blockIndicies[36] = {
+unsigned int blockIndicies[36] = {
     0, 1, 2, 2, 3, 0,        // Top
     4, 5, 6, 6, 7, 4,        // Bottom
     8, 9,10,10,11, 8,        // Front

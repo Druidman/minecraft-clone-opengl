@@ -131,20 +131,20 @@ int main(void)
     GLCall( glViewport(0,0,800,600) ) ;
     GLCall( glEnable(GL_DEPTH_TEST)   );
 
-    float blockPositions[] = {
-        0.0,0.0,0.0,
-        2.0,0.0,0.0,
-        4.0,0.0,0.0,
-        6.0,0.0,0.0,
-        8.0,0.0,0.0,
-        10.0,0.0,0.0,
-        12.0,0.0,0.0,
-        14.0,0.0,0.0,
-        16.0,0.0,0.0,
-        -2.0,0.0,0.0
-
-    };
-
+    int blocks = 10000;
+    float* blockPositions = new float[blocks * 3];
+    
+    int ind =0;
+    for (int x =0; x < 100; x++){
+        for (int z = 0; z < 100; z++){
+            blockPositions[ind] = x;
+            blockPositions[ind + 1] = 0.0;
+            blockPositions[ind + 2] = z;
+            ind += 3;
+        }   
+    }
+    std::cout << ind;
+    
     
 
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -167,7 +167,7 @@ int main(void)
 
     vbo.fillData<float>(blockVertices,sizeof(blockVertices));
     ebo.fillData(blockIndicies,sizeof(blockIndicies));
-    vboInstanced.fillData<float>(blockPositions,sizeof(blockPositions));
+    vboInstanced.fillData<float>(blockPositions,blocks * 3);
 
     vbo.bind();
     vao.setAttr(0,3,GL_FLOAT,5 * sizeof(float),0);
@@ -196,7 +196,7 @@ int main(void)
         shader.setMatrixFloat("view",GL_FALSE,view);
         shader.setMatrixFloat("model",GL_FALSE,model);
 
-        GLCall( glDrawElementsInstanced(GL_TRIANGLES, sizeof(blockIndicies), GL_UNSIGNED_INT, 0,sizeof(blockPositions)) );
+        GLCall( glDrawElementsInstanced(GL_TRIANGLES, sizeof(blockIndicies), GL_UNSIGNED_INT, 0,blocks ) );
         
         
         /* Swap front and back buffers */
@@ -206,7 +206,7 @@ int main(void)
         glfwPollEvents();
         GLCall( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
     }
-
+    delete[] blockPositions;
     glfwTerminate();
     return 0;
 }

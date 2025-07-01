@@ -7,6 +7,6 @@ class ElementBuffer{
     public:
         ElementBuffer();
         void bind();
-        void fillData(int *indicies, unsigned int count);
+        void fillData(unsigned int *indicies, unsigned int count);
 };
 #endif
