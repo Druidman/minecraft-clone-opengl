@@ -1,8 +1,8 @@
 #include <iostream>
-#include "../betterGL.h"
+#include "betterGL.h"
 
 #include "texture.h"
-#include "../vendor/stb_image/stb_image.h"
+#include "vendor/stb_image/stb_image.h"
 
 
 Texture::Texture(std::string filePath, std::string imgFormat)

@@ -8,8 +8,8 @@
 #include "vendor/glm/gtc/matrix_transform.hpp"
 #include "vendor/stb_image/stb_image.h"
 
-#include "shaders/shader.h"
-#include "textures/texture.h"
+#include "shader.h"
+#include "texture.h"
 #include "vertexArray.h"
 #include "vertexBuffer.h"
 #include "elementBuffer.h"
@@ -123,7 +123,7 @@ int main(void)
     glfwMakeContextCurrent(window);
     glfwSetWindowSizeCallback(window,resize_callback);
     glfwSetCursorPosCallback(window, cursor_position_callback);
-    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glewInit();
 
     stbi_set_flip_vertically_on_load(true);

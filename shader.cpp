@@ -1,8 +1,8 @@
 #include "shader.h"
-#include "../vendor/glm/gtc/type_ptr.hpp"
+#include "vendor/glm/gtc/type_ptr.hpp"
 #include <fstream>
 
-#include "../betterGL.h"
+#include "betterGL.h"
 
 std::string Shader::readFile(std::string path)
 {

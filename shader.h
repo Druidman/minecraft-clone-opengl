@@ -1,7 +1,7 @@
 #ifndef SHADER_C
 #define SHADER_C
 
-#include "../vendor/glm/glm.hpp"
+#include "vendor/glm/glm.hpp"
 #include <string>
 #include <iostream>
 #include <GL/glew.h>
