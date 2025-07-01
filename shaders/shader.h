@@ -17,7 +17,7 @@ class Shader{
         unsigned int attachShader(std::string shaderSource, GLenum shaderType);
     public:
         ~Shader();
-        Shader(const char* vertexPath, const char* fragmentPath);
+        Shader(std::string vertexPath, std::string fragmentPath);
 
         void use();
 

@@ -1,21 +1,17 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <filesystem>
+#include "betterGL.h"
+
+
 #include "vendor/glm/glm.hpp"
 #include "vendor/glm/gtc/matrix_transform.hpp"
 #include "vendor/stb_image/stb_image.h"
 
 #include "shaders/shader.h"
+#include "textures/texture.h"
 
-#define GLCall(x) \
-    while(glGetError() != GL_NO_ERROR){}; \
-    x; \
-    { \
-        GLenum error = glGetError();\
-        if (error != GL_NO_ERROR){ \
-            std::cout << "[OPENGL_ERROR " << error << " ] " << "occured at "<< #x <<"in line: " << __LINE__ << " , FILE: " << __FILE__ << "\n";\
-            std::exit(EXIT_FAILURE); \
-        } \
-    }
+
 
 typedef unsigned int uint;
 
@@ -131,25 +127,7 @@ int main(void)
     GLCall( glViewport(0,0,800,600) ) ;
     GLCall( glEnable(GL_DEPTH_TEST)   );
 
-    int width,height,nChannels;
-    unsigned char *img = stbi_load("textures/dirtTexture.png",&width,&height,&nChannels,0);
-    if (img == NULL){
-        std::cout << "ERROR LOADING TEXTURE IMG" << "\n";
-        std::exit(EXIT_FAILURE);
-    }
-    uint texture;
-    GLCall( glGenTextures(1, &texture) );
-    GLCall( glActiveTexture(GL_TEXTURE7) );
-    GLCall( glBindTexture(GL_TEXTURE_2D,texture) );
-
-    GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT) );
-    GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT) );
-    GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST) );
-    GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST) );
-
-    GLCall( glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,width,height,0,GL_RGBA,GL_UNSIGNED_BYTE,img) );
-    GLCall( glGenerateMipmap(GL_TEXTURE_2D) );
-    stbi_image_free(img);
+    
 
     float vertices[] = {
         // Top face (Y+)
@@ -199,7 +177,15 @@ int main(void)
        20,21,22,22,23,20         // Right
     };
 
-    Shader shader = Shader("shaders/vertexShader.vs", "shaders/fragmentShader.fs");
+    std::filesystem::path cwd = std::filesystem::current_path();
+
+    std::filesystem::path vsPath = cwd / "shaders/vertexShader.vs";
+    std::filesystem::path fsPath = cwd / "shaders/fragmentShader.fs";
+    Shader shader = Shader(vsPath.string(), fsPath.string());
+
+    std::filesystem::path texturePath = cwd / "textures/texture.png";
+    Texture texture = Texture(texturePath, "png");
+
     uint VBO, VAO, EBO;
     GLCall( glGenBuffers(1,&VBO) );
     GLCall( glGenBuffers(1,&EBO) );
@@ -238,8 +224,6 @@ int main(void)
 
         view = glm::lookAt(cameraPos,cameraPos - cameraFront, cameraUp);
        
-
-        shader.setInt("texture8", 7);
         shader.setMatrixFloat("projection",GL_FALSE,projection);
         shader.setMatrixFloat("view",GL_FALSE,view);
         shader.setMatrixFloat("model",GL_FALSE,model);

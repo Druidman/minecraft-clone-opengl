@@ -42,7 +42,7 @@ Shader::~Shader()
     GLCall( glDeleteProgram(m_programID) );
 }
 
-Shader::Shader(const char *vertexPath, const char *fragmentPath)
+Shader::Shader(std::string vertexPath, std::string fragmentPath)
 {
     m_programID = glCreateProgram();
 
