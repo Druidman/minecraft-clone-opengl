@@ -1,0 +1,23 @@
+#include "betterGL.h"
+
+#include "vertexArray.h"
+
+
+VertexArray::VertexArray()
+{
+    GLCall( glGenVertexArrays(1,&m_vao) );
+    bind();
+
+}
+
+void VertexArray::bind()
+{
+    GLCall( glBindVertexArray(m_vao) );
+}
+
+void VertexArray::setAttr(GLuint index, int count, GLenum type, GLsizei stride, size_t offset)
+{
+    bind();
+    GLCall( glVertexAttribPointer(index, count, type, GL_FALSE, stride, (void*)offset) );
+    GLCall( glEnableVertexAttribArray(index) );
+}

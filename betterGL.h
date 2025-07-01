@@ -1,6 +1,7 @@
 #ifndef BETTER_GL_H
 #define BETTER_GL_H
 #include <GL/glew.h>
+#include <iostream>
 
 #define GLCall(x) \
     while(glGetError() != GL_NO_ERROR){}; \

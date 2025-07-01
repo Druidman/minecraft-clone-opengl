@@ -10,6 +10,9 @@
 
 #include "shaders/shader.h"
 #include "textures/texture.h"
+#include "vertexArray.h"
+#include "vertexBuffer.h"
+#include "elementBuffer.h"
 
 
 
@@ -167,8 +170,7 @@ int main(void)
          0.5f,  0.5f, -0.5f,  0.5f, 1.0f   // 23
     };
     
-
-    unsigned int indicies[] = {
+    int indicies[] = {
         0, 1, 2, 2, 3, 0,        // Top
         4, 5, 6, 6, 7, 4,        // Bottom
         8, 9,10,10,11, 8,        // Front
@@ -181,35 +183,24 @@ int main(void)
 
     std::filesystem::path vsPath = cwd / "shaders/vertexShader.vs";
     std::filesystem::path fsPath = cwd / "shaders/fragmentShader.fs";
+    
     Shader shader = Shader(vsPath.string(), fsPath.string());
 
+
     std::filesystem::path texturePath = cwd / "textures/texture.png";
+
     Texture texture = Texture(texturePath, "png");
 
-    uint VBO, VAO, EBO;
-    GLCall( glGenBuffers(1,&VBO) );
-    GLCall( glGenBuffers(1,&EBO) );
-    GLCall( glGenVertexArrays(1,&VAO) );
+    VertexArray vao = VertexArray();
+    VertexBuffer vbo = VertexBuffer();
+    ElementBuffer ebo = ElementBuffer();
 
-    GLCall( glBindVertexArray(VAO) );
+    vbo.fillData(vertices,sizeof(vertices));
+    ebo.fillData(indicies,sizeof(indicies));
 
-    GLCall( glBindBuffer(GL_ARRAY_BUFFER,VBO) );
-    GLCall( glBufferData(GL_ARRAY_BUFFER,sizeof(vertices),vertices,GL_STATIC_DRAW) );
+    vao.setAttr(0,3,GL_FLOAT,5 * sizeof(float),0);
+    vao.setAttr(1,2,GL_FLOAT,5 * sizeof(float),3 * sizeof(float));
 
-    // positions
-    GLCall( glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE, 5 * sizeof(float), (void*)0) );
-    GLCall( glEnableVertexAttribArray(0) );
-
-    // texture uv's
-    GLCall( glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float))) );
-    GLCall( glEnableVertexAttribArray(1) );
-
-    GLCall( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO) );
-    GLCall( glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof(indicies),indicies,GL_STATIC_DRAW) );
-
-    
-    
-    
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
