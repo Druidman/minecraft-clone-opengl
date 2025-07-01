@@ -13,6 +13,7 @@
 #include "vertexArray.h"
 #include "vertexBuffer.h"
 #include "elementBuffer.h"
+#include "block.h"
 
 
 
@@ -130,54 +131,21 @@ int main(void)
     GLCall( glViewport(0,0,800,600) ) ;
     GLCall( glEnable(GL_DEPTH_TEST)   );
 
-    
+    float blockPositions[] = {
+        0.0,0.0,0.0,
+        2.0,0.0,0.0,
+        4.0,0.0,0.0,
+        6.0,0.0,0.0,
+        8.0,0.0,0.0,
+        10.0,0.0,0.0,
+        12.0,0.0,0.0,
+        14.0,0.0,0.0,
+        16.0,0.0,0.0,
+        -2.0,0.0,0.0
 
-    float vertices[] = {
-        // Top face (Y+)
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,  0.25f, 1.0f,
-         0.5f,  0.5f,  0.5f,  0.25f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-    
-        // Bottom face (Y-)
-        -0.5f, -0.5f, -0.5f,  0.5f, 1.0f,  // 4
-         0.5f, -0.5f, -0.5f,  0.75f, 1.0f,  // 5
-         0.5f, -0.5f,  0.5f,  0.75f, 0.0f,  // 6
-        -0.5f, -0.5f,  0.5f,  0.5f, 0.0f,  // 7
-    
-        // Front face (Z+)
-        -0.5f, -0.5f,  0.5f,  0.25f, 0.0f,  // 8
-         0.5f, -0.5f,  0.5f,  0.5f, 0.0f,   // 9
-         0.5f,  0.5f,  0.5f,  0.5f, 1.0f,   // 10
-        -0.5f,  0.5f,  0.5f,  0.25f, 1.0f,  // 11
-    
-        // Back face (Z-)
-        -0.5f, -0.5f, -0.5f,  0.5f, 0.0f,  // 12
-         0.5f, -0.5f, -0.5f,  0.25f, 0.0f,   // 13
-         0.5f,  0.5f, -0.5f,  0.25f, 1.0f,   // 14
-        -0.5f,  0.5f, -0.5f,  0.5f, 1.0f,  // 15
-    
-        // Left face (X-)
-        -0.5f, -0.5f, -0.5f,  0.25f, 0.0f,  // 16
-        -0.5f, -0.5f,  0.5f,  0.5f, 0.0f,   // 17
-        -0.5f,  0.5f,  0.5f,  0.5f, 1.0f,   // 18
-        -0.5f,  0.5f, -0.5f,  0.25f, 1.0f,  // 19
-    
-        // Right face (X+)
-         0.5f, -0.5f, -0.5f,  0.5f, 0.0f,  // 20
-         0.5f, -0.5f,  0.5f,  0.25f, 0.0f,   // 21
-         0.5f,  0.5f,  0.5f,  0.25f, 1.0f,   // 22
-         0.5f,  0.5f, -0.5f,  0.5f, 1.0f   // 23
     };
+
     
-    int indicies[] = {
-        0, 1, 2, 2, 3, 0,        // Top
-        4, 5, 6, 6, 7, 4,        // Bottom
-        8, 9,10,10,11, 8,        // Front
-       12,13,14,14,15,12,        // Back
-       16,17,18,18,19,16,        // Left
-       20,21,22,22,23,20         // Right
-    };
 
     std::filesystem::path cwd = std::filesystem::current_path();
 
@@ -194,12 +162,21 @@ int main(void)
     VertexArray vao = VertexArray();
     VertexBuffer vbo = VertexBuffer();
     ElementBuffer ebo = ElementBuffer();
+    VertexBuffer vboInstanced = VertexBuffer();
+    
 
-    vbo.fillData(vertices,sizeof(vertices));
-    ebo.fillData(indicies,sizeof(indicies));
+    vbo.fillData<float>(blockVertices,sizeof(blockVertices));
+    ebo.fillData(blockIndicies,sizeof(blockIndicies));
+    vboInstanced.fillData<float>(blockPositions,sizeof(blockPositions));
 
+    vbo.bind();
     vao.setAttr(0,3,GL_FLOAT,5 * sizeof(float),0);
     vao.setAttr(1,2,GL_FLOAT,5 * sizeof(float),3 * sizeof(float));
+
+    vboInstanced.bind();
+    vao.setAttr(2,3,GL_FLOAT,3 * sizeof(float),0);
+    GLCall( glVertexAttribDivisor(2,1) );
+
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
@@ -219,7 +196,8 @@ int main(void)
         shader.setMatrixFloat("view",GL_FALSE,view);
         shader.setMatrixFloat("model",GL_FALSE,model);
 
-        GLCall( glDrawElements(GL_TRIANGLES, sizeof(indicies), GL_UNSIGNED_INT, 0) );
+        GLCall( glDrawElementsInstanced(GL_TRIANGLES, sizeof(blockIndicies), GL_UNSIGNED_INT, 0,sizeof(blockPositions)) );
+        
         
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
