@@ -2,9 +2,11 @@
 #define BLOCK_H
 #include "vendor/glm/glm.hpp"
 enum BlockType{
-    DIRT, GRASS, STONE, COBBLESTONE, WOOD
+    GRASS_DIRT, OWN
 };
-float blockVertices[120] = {
+
+const int BLOCK_VERTICES_COUNT = 120;
+float blockVertices[BLOCK_VERTICES_COUNT] = {
     // Top face (Y+)
     -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
      0.5f,  0.5f, -0.5f,  0.25f, 1.0f,
@@ -42,7 +44,8 @@ float blockVertices[120] = {
      0.5f,  0.5f, -0.5f,  0.5f, 1.0f   // 23
 };
 
-unsigned int blockIndicies[36] = {
+const int BLOCK_INDICIES_COUNT = 36;
+unsigned int blockIndicies[BLOCK_INDICIES_COUNT] = {
     0, 1, 2, 2, 3, 0,        // Top
     4, 5, 6, 6, 7, 4,        // Bottom
     8, 9,10,10,11, 8,        // Front
@@ -54,7 +57,7 @@ unsigned int blockIndicies[36] = {
 class Block{
 
     public:
-        inline Block(BlockType blockType, glm::vec3 blockPosition){this->type = blockType; this->position = position;};
+        Block(BlockType blockType, glm::vec3 blockPosition){this->type = blockType; this->position = blockPosition;};
         BlockType type;
         glm::vec3 position;
 };

@@ -2,6 +2,7 @@
 #define BETTER_GL_H
 #include <GL/glew.h>
 #include <iostream>
+#include <string>
 
 #define GLCall(x) \
     while(glGetError() != GL_NO_ERROR){}; \
@@ -13,5 +14,10 @@
             std::exit(EXIT_FAILURE); \
         } \
     }
+
+inline void ExitError(std::string errorType, std::string msg){
+    std::cout << "[ " << errorType << " ]\n" << "Error message: " << msg << "\n";
+    std::exit(EXIT_FAILURE);
+}
 
 #endif

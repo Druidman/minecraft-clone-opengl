@@ -13,7 +13,7 @@ class VertexBuffer{
 };
 
 template <typename T>
-void VertexBuffer::fillData(T *vertices, unsigned int count)
+inline void VertexBuffer::fillData(T *vertices, unsigned int count)
 {
     bind();
     GLCall( glBufferData(GL_ARRAY_BUFFER,count * sizeof(T),vertices,GL_STATIC_DRAW) );
