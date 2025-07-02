@@ -42,6 +42,9 @@ class Chunk{
         std::vector< Block > blocks;
         VertexBuffer vboPos;
         VertexBuffer vboTex;
+
+        float *blockPositions = genBlockPositions();
+        float *blockUVs = genBlockUVs();
         
 
         Chunk(glm::vec3 chunkPosition, VertexBuffer vboPositions, VertexBuffer vboTextureUVs){
@@ -55,8 +58,7 @@ class Chunk{
         
         void render(){
             
-            float *blockPositions = genBlockPositions();
-            float *blockUVs = genBlockUVs();
+            
             vboPos.fillData<float>(blockPositions,blocks.size() * 3);
             vboTex.fillData<float>(blockUVs,blocks.size() * 2);
 
@@ -68,13 +70,15 @@ class Chunk{
                 block.position.x < this->position.x - CHUNK_WIDTH + 1 ||
                 block.position.z > this->position.z + CHUNK_WIDTH - 1 ||
                 block.position.z < this->position.z - CHUNK_WIDTH + 1 ||
-                block.position.y > CHUNK_HEIGHT - 1 || block.position.y < 0
+                block.position.y > CHUNK_HEIGHT - 1 //|| block.position.y < 0
             ){
                 ExitError("CHUNK","adding block to chunk outside its borders");
                 return ;
             }
             
             this->blocks.push_back(block);
+            blockPositions = genBlockPositions();
+            blockUVs = genBlockUVs();
 
         }
 

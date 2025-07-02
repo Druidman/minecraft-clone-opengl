@@ -2,6 +2,8 @@
 #include <GLFW/glfw3.h>
 #include <filesystem>
 
+#define FNL_IMPL
+#include "vendor/fastNoise/FastNoiseLite.h"
 
 #include "betterGL.h"
 
@@ -37,14 +39,14 @@ double yaw = 90, pitch = 0;
 bool firstMouse = true;
 glm::mat4 model(1.0f);
 glm::mat4 view = glm::lookAt(cameraPos,cameraPos + cameraFront,cameraUp);
-glm::mat4 projection = glm::perspective(glm::radians(45.0),(double)WINDOW_WIDTH/WINDOW_HEIGHT,0.1,100.0);
+glm::mat4 projection = glm::perspective(glm::radians(45.0),(double)WINDOW_WIDTH/WINDOW_HEIGHT,0.1,1000.0);
 
 bool removeChunk = false;
 
 
 void resize_callback(GLFWwindow *window, int width, int height){
     glViewport(0,0,width,height);
-    projection = glm::perspective(glm::radians(45.0),(double)width/height,0.1,100.0);
+    projection = glm::perspective(glm::radians(45.0),(double)width/height,0.1,1000.0);
     WINDOW_WIDTH = width;
     WINDOW_HEIGHT = height;
 }
@@ -64,17 +66,18 @@ void process_key_press(GLFWwindow *window, int key){
 }
 
 void process_input(GLFWwindow *window){
+    float speed = 1;
     if (glfwGetKey(window,GLFW_KEY_W)){
-        cameraPos -= 0.1f * cameraFront;
+        cameraPos -= speed * cameraFront;
     }
     if (glfwGetKey(window,GLFW_KEY_S)){
-        cameraPos += 0.1f * cameraFront;
+        cameraPos += speed * cameraFront;
     }
     if (glfwGetKey(window,GLFW_KEY_D)){
-        cameraPos += 0.1f * glm::normalize(glm::cross(cameraUp,cameraFront));
+        cameraPos += speed * glm::normalize(glm::cross(cameraUp,cameraFront));
     }
     if (glfwGetKey(window,GLFW_KEY_A)){
-        cameraPos -= 0.1f * glm::normalize(glm::cross(cameraUp,cameraFront));
+        cameraPos -= speed * glm::normalize(glm::cross(cameraUp,cameraFront));
     }
 }
 
@@ -131,14 +134,35 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos){
 
 }
 
-std::vector<float> world_gen(int sizex , int sizey){
-    std::vector<float> world(sizex * sizey, 0.0f);
+std::vector<int> world_gen(int sizex , int sizey){
+    std::vector<int> world(sizex * sizey, 0.0f);
 
-    for (int i =0; i<sizex; i++){
-        for (int j =0; j<sizey; j++){
-            world[(i*sizey) + j] = 0.0f;
-        }   
+        // Create and configure noise state
+    fnl_state noise = fnlCreateState();
+    noise.fractal_type = FNL_FRACTAL_FBM;
+    noise.frequency = 0.005;
+    noise.seed = 1652;
+
+    noise.noise_type = FNL_NOISE_PERLIN;
+
+    // Gather noise data
+    
+    unsigned long int index = 0;
+
+    for (int y = 0; y < sizey; y++)
+    {
+        for (int x = 0; x < sizex; x++) 
+        {
+            float gen = fnlGetNoise2D(&noise, y, x);
+            gen = (gen + 1) / 2 * 64;
+
+            world[index++] = (int)gen;
+        }
     }
+
+
+    
+        
 
     return world;
 
@@ -168,6 +192,7 @@ int main(void)
     glfwSetCursorPosCallback(window, cursor_position_callback);
     glfwSetKeyCallback(window,input_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSwapInterval( 0 );
     glewInit();
 
     stbi_set_flip_vertically_on_load(true);
@@ -219,15 +244,15 @@ int main(void)
     GLCall( glBindVertexArray(0) );
 
 
-    const int WORLD_WIDTH = 256;
+    const int WORLD_WIDTH = 1000;
     const unsigned long long WORLD_BLOCKS_COUNT = WORLD_WIDTH * WORLD_WIDTH;
     const unsigned long long WORLD_CHUNKS_COUNT = WORLD_BLOCKS_COUNT / (CHUNK_WIDTH * CHUNK_WIDTH);
-    std::vector<float> world = world_gen(WORLD_WIDTH,WORLD_WIDTH);
+    std::vector<int> world = world_gen(WORLD_WIDTH,WORLD_WIDTH);
 
 
     int startX = 0;
     int startY = 0;
-    int blockInd = 0;
+
     for (int chunkInd =0; chunkInd < WORLD_CHUNKS_COUNT; chunkInd++){
         if (startX >= WORLD_WIDTH){
             startX = 0;
@@ -240,9 +265,11 @@ int main(void)
         
         for (int i =startX; i< startX + CHUNK_WIDTH ; i++){
             for (int j =startY; j< startY + CHUNK_WIDTH; j++){
-                Block block(GRASS_DIRT,glm::vec3(i,world[blockInd],j));
+                
+                Block block(GRASS_DIRT,glm::vec3(i,world[j * WORLD_WIDTH + i] ,j));
+                
                 chunk.addBlock(block);
-                blockInd++;
+                
             }
         }
 
@@ -254,11 +281,30 @@ int main(void)
         
     
 
-    
+    double last = glfwGetTime();
     /* Loop until the user closes the window */
+    double avgFPS = 0;
+    std::vector<double> fpsS;
     while (!glfwWindowShouldClose(window))
     {
+        double delta = glfwGetTime() - last;
+        double fps = 1 / delta;
+        if (fpsS.size() >= 10){
+            avgFPS = 0;
+            int divide = fpsS.size();
+            for (int i=fpsS.size() -1 ; i>= 0; i--){
+                avgFPS += fpsS[i];
+                fpsS.pop_back();
+            }
+            avgFPS /= divide;
+            std::cout << "FPS: " << avgFPS << "\n";
+        }
+        else{
+            fpsS.push_back(fps);
+        }
+        
 
+        last = glfwGetTime();
         process_input(window);
         /* Render here */
         if (removeChunk){
