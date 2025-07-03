@@ -24,7 +24,7 @@
 
 typedef unsigned int uint;
 
-const int PLAYER_RANGE = 10;
+const int PLAYER_RANGE = 20;
 int WINDOW_WIDTH = 800;
 int WINDOW_HEIGHT = 600;
 glm::vec3 cameraPos = glm::vec3(0.0,0.0,0.0);
@@ -55,8 +55,10 @@ void destroyBlock(std::vector< std::vector< Chunk > > &chunks){
     glm::vec3 playerPos = cameraPos;
     glm::vec3 playerDirection = glm::normalize(cameraFront);
 
-    int row = (int)(std::floor(playerPos.z / (float)CHUNK_WIDTH));
-    int col = (int)(std::floor(playerPos.x / (float)CHUNK_WIDTH));
+    glm::vec3 playerTarget = playerPos - ((float)PLAYER_RANGE * playerDirection);
+
+    int row = (int)(std::floor(playerTarget.z / (float)CHUNK_WIDTH));
+    int col = (int)(std::floor(playerTarget.x / (float)CHUNK_WIDTH));
     if (row >= chunks.size()){
         return ;
     }
@@ -65,7 +67,29 @@ void destroyBlock(std::vector< std::vector< Chunk > > &chunks){
     }
    
     Chunk &currentChunk = chunks[row][col];
+
+    
+
+    for (int i=0; i < chunks.size(); i++){
+        for (int j=0; j < chunks[i].size(); j++){
+            chunks[i][j].setBlocksTo(GRASS_DIRT);
+        }   
+    }
     currentChunk.setBlocksTo(SAND);
+
+    // std::vector<Chunk> nearbyChunks;
+
+    // for (int i =0; i < currentChunk.blocks.size(); i++){
+    //     glm::vec3 blockPosition  = currentChunk.blocks[i].position;
+        
+    //     if (glm::distance(blockPosition, playerPos) <= PLAYER_RANGE){
+    //         currentChunk.blocks[i].type = SAND;
+    //     }
+    //     else{
+    //         currentChunk.blocks[i].type = GRASS_DIRT;
+    //     }
+    // }
+    // currentChunk.blockUVs = currentChunk.genBlockUVs();
 
 
 

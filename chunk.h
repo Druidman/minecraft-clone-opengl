@@ -12,7 +12,25 @@ const int CHUNK_WIDTH = 16;
 const int CHUNK_HEIGHT = 256;
 
 class Chunk{
-    private:
+
+    public:
+        glm::vec3 position;
+        std::vector< Block > blocks;
+        VertexBuffer vboPos;
+        VertexBuffer vboTex;
+
+        float *blockPositions = genBlockPositions();
+        float *blockUVs = genBlockUVs();
+        
+
+        Chunk(glm::vec3 chunkPosition, VertexBuffer vboPositions, VertexBuffer vboTextureUVs){
+            this->position = chunkPosition;
+            this->vboPos = vboPositions;
+            this->vboTex = vboTextureUVs;
+
+    
+
+        };
         float* genBlockPositions(){
             float* blockPositions = new float[this->blocks.size() * 3];
 
@@ -37,24 +55,6 @@ class Chunk{
 
             return blockUVs;
         }
-    public:
-        glm::vec3 position;
-        std::vector< Block > blocks;
-        VertexBuffer vboPos;
-        VertexBuffer vboTex;
-
-        float *blockPositions = genBlockPositions();
-        float *blockUVs = genBlockUVs();
-        
-
-        Chunk(glm::vec3 chunkPosition, VertexBuffer vboPositions, VertexBuffer vboTextureUVs){
-            this->position = chunkPosition;
-            this->vboPos = vboPositions;
-            this->vboTex = vboTextureUVs;
-
-    
-
-        };
         
         void render(){
             
