@@ -71,3 +71,8 @@ void Shader::setMatrixFloat(const char *uniformName, bool transpose, glm::mat4 &
 {
     GLCall( glUniformMatrix4fv(glGetUniformLocation(m_programID, uniformName),1,transpose,glm::value_ptr(matrix)) );
 }
+
+void Shader::setVec3Float(const char *uniformName, glm::vec3 vector3)
+{
+    GLCall( glUniform3fv(glGetUniformLocation(m_programID, uniformName),1,glm::value_ptr(vector3)) );
+}

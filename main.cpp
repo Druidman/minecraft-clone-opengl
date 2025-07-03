@@ -24,9 +24,10 @@
 
 typedef unsigned int uint;
 
+const int PLAYER_RANGE = 10;
 int WINDOW_WIDTH = 800;
 int WINDOW_HEIGHT = 600;
-glm::vec3 cameraPos = glm::vec3(0.0,0.0,3.0);
+glm::vec3 cameraPos = glm::vec3(0.0,0.0,0.0);
 glm::vec3 cameraFront = glm::vec3(0.0,0.0,1.0);
 glm::vec3 cameraUp = glm::vec3(0.0,1.0,0.0);
 
@@ -50,15 +51,38 @@ void resize_callback(GLFWwindow *window, int width, int height){
     WINDOW_WIDTH = width;
     WINDOW_HEIGHT = height;
 }
+void destroyBlock(std::vector< std::vector< Chunk > > &chunks){
+    glm::vec3 playerPos = cameraPos;
+    glm::vec3 playerDirection = glm::normalize(cameraFront);
 
+    int row = (int)(std::floor(playerPos.z / (float)CHUNK_WIDTH));
+    int col = (int)(std::floor(playerPos.x / (float)CHUNK_WIDTH));
+    if (row >= chunks.size()){
+        return ;
+    }
+    if (col >= chunks[row].size()){
+        return ;
+    }
+   
+    Chunk &currentChunk = chunks[row][col];
+    currentChunk.setBlocksTo(SAND);
+
+
+
+
+
+}
 void process_key_release(GLFWwindow *window, int key){
     if (key ==GLFW_KEY_ESCAPE){
         glfwSetWindowShouldClose(window,true);
     }
-    
+     
     if (key == GLFW_KEY_ENTER){
         removeChunk = true;
     }
+    // if (key == GLFW_KEY_SPACE){
+    //     destroyBlock();
+    // }
 }
 
 void process_key_press(GLFWwindow *window, int key){
@@ -148,17 +172,21 @@ std::vector<int> world_gen(int sizex , int sizey){
     // Gather noise data
     
     unsigned long int index = 0;
-
+    int min = 1000;
     for (int y = 0; y < sizey; y++)
     {
         for (int x = 0; x < sizex; x++) 
         {
             float gen = fnlGetNoise2D(&noise, y, x);
-            gen = (gen + 1) / 2 * 64;
+            gen = (gen + 1) / 2 * 100;
 
             world[index++] = (int)gen;
+            if (gen < min){
+                min = (int)gen;
+            }
         }
     }
+    std::cout << min;
 
 
     
@@ -192,7 +220,7 @@ int main(void)
     glfwSetCursorPosCallback(window, cursor_position_callback);
     glfwSetKeyCallback(window,input_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    glfwSwapInterval( 0 );
+    
     glewInit();
 
     stbi_set_flip_vertically_on_load(true);
@@ -202,7 +230,7 @@ int main(void)
 
 
 
-    std::vector< Chunk > chunks;
+    
 
 
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -228,55 +256,80 @@ int main(void)
     ebo.fillData(blockIndicies,BLOCK_INDICIES_COUNT);
 
     vbo.bind();
-    vao.setAttr(0,3,GL_FLOAT,5 * sizeof(float),0);
-    vao.setAttr(1,2,GL_FLOAT,5 * sizeof(float),3 * sizeof(float));
+    vao.setAttr(0,3,GL_FLOAT,8 * sizeof(float),0);
+    vao.setAttr(1,2,GL_FLOAT,8 * sizeof(float),3 * sizeof(float));
+    vao.setAttr(2,3,GL_FLOAT,8 * sizeof(float),5 * sizeof(float));
 
     vboInstancedPos.bind();
-    vao.setAttr(2,3,GL_FLOAT,3 * sizeof(float),0);
-    GLCall( glVertexAttribDivisor(2,1) );
+    vao.setAttr(3,3,GL_FLOAT,3 * sizeof(float),0);
+    GLCall( glVertexAttribDivisor(3,1) );
 
     vboInstancedTex.bind();
-    vao.setAttr(3,2,GL_FLOAT,2 * sizeof(float),0);
-    GLCall( glVertexAttribDivisor(3,1) );
+    vao.setAttr(4,2,GL_FLOAT,2 * sizeof(float),0);
+    GLCall( glVertexAttribDivisor(4,1) );
 
     GLCall( glBindBuffer(GL_ARRAY_BUFFER, 0) );
     GLCall( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0) );
     GLCall( glBindVertexArray(0) );
 
 
-    const int WORLD_WIDTH = 1000;
+    const int WORLD_WIDTH = 32;
     const unsigned long long WORLD_BLOCKS_COUNT = WORLD_WIDTH * WORLD_WIDTH;
     const unsigned long long WORLD_CHUNKS_COUNT = WORLD_BLOCKS_COUNT / (CHUNK_WIDTH * CHUNK_WIDTH);
     std::vector<int> world = world_gen(WORLD_WIDTH,WORLD_WIDTH);
+
+    std::vector< std::vector <Chunk> > chunks;
 
 
     int startX = 0;
     int startY = 0;
 
-    for (int chunkInd =0; chunkInd < WORLD_CHUNKS_COUNT; chunkInd++){
-        if (startX >= WORLD_WIDTH){
-            startX = 0;
-            startY += CHUNK_WIDTH;
-        }
-
-        glm::vec3 chunkPos = glm::vec3(startX + (CHUNK_WIDTH / 2), 0.0, startY + (CHUNK_WIDTH / 2));
-        Chunk chunk = Chunk(chunkPos,vboInstancedPos,vboInstancedTex);
-        
-        
-        for (int i =startX; i< startX + CHUNK_WIDTH ; i++){
-            for (int j =startY; j< startY + CHUNK_WIDTH; j++){
-                
-                Block block(GRASS_DIRT,glm::vec3(i,world[j * WORLD_WIDTH + i] ,j));
-                
-                chunk.addBlock(block);
-                
+    for (int row = 0; row < WORLD_WIDTH / CHUNK_WIDTH; row++){
+        for (int column = 0; column < WORLD_WIDTH / CHUNK_WIDTH; column++){
+            if (startX >= WORLD_WIDTH){
+                startX = 0;
+                startY += CHUNK_WIDTH;
             }
-        }
 
-        chunks.push_back(chunk);
-        startX += CHUNK_WIDTH;
-        
+            glm::vec3 chunkPos = glm::vec3(startX + (CHUNK_WIDTH / 2), 0.0, startY + (CHUNK_WIDTH / 2));
+            Chunk chunk = Chunk(chunkPos,vboInstancedPos,vboInstancedTex);
+            
+            
+            for (int i =startX; i< startX + CHUNK_WIDTH ; i++){
+                for (int j =startY; j< startY + CHUNK_WIDTH; j++){
+
+                    int zCoord = world[j * WORLD_WIDTH + i];
+                    BlockType blockType = GRASS_DIRT;
+                    if (zCoord < 30){
+                     
+                        blockType = SAND;
+                        
+                        
+                    }
+                    else if (zCoord > 60){
+                        blockType = STONE;
+                    }
+                    
+                    Block block(blockType,glm::vec3(i, zCoord ,j));
+                    
+                    chunk.addBlock(block);
+                    
+                }
+            }
+            
+            
+            if (column == 0){
+                chunks.push_back(std::vector< Chunk >(1,chunk));
+            }
+            else{
+                chunks[row].push_back(chunk);
+            }
+            
+            startX += CHUNK_WIDTH;
+        }
     }
+
+  
     
         
     
@@ -287,6 +340,7 @@ int main(void)
     std::vector<double> fpsS;
     while (!glfwWindowShouldClose(window))
     {
+        destroyBlock(chunks);
         double delta = glfwGetTime() - last;
         double fps = 1 / delta;
         if (fpsS.size() >= 10){
@@ -308,17 +362,26 @@ int main(void)
         process_input(window);
         /* Render here */
         if (removeChunk){
-            chunks.pop_back();
+            int rows = chunks.size();
+            int lastRow = rows - 1;
+            if (chunks[lastRow].size() == 1){
+                chunks.pop_back();
+            }
+            else {
+                chunks[lastRow].pop_back();
+            }
+            
             removeChunk = false;
         }
         
-        GLCall( glClearColor(0.2f, 0.3f, 0.3f, 1.0f) );
+        GLCall( glClearColor(0.68f, 0.84f, 0.9f, 1.0f) );
         GLCall( glClear(GL_COLOR_BUFFER_BIT) );
 
         shader.use();
 
         view = glm::lookAt(cameraPos,cameraPos - cameraFront, cameraUp);
-       
+        
+        shader.setVec3Float("LightPos",cameraPos);
         shader.setMatrixFloat("projection",GL_FALSE,projection);
         shader.setMatrixFloat("view",GL_FALSE,view);
         shader.setMatrixFloat("model",GL_FALSE,model);
@@ -327,8 +390,16 @@ int main(void)
         vbo.bind();
         ebo.bind();
 
-        for (int i = 0; i <chunks.size(); i++){
-            chunks[i].render();
+        
+        for (int row = 0; row < chunks.size(); row++){
+            for (int column = 0; column < chunks[row].size(); column++){
+                
+                chunks[row][column].render();
+
+                
+                
+            }
+            
         }
         
         

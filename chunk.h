@@ -81,6 +81,13 @@ class Chunk{
             blockUVs = genBlockUVs();
 
         }
+        void setBlocksTo(BlockType type){
+            for (int i =0; i < blocks.size(); i++){
+                this->blocks[i].type = type;
+            }
+            this->blockUVs = genBlockUVs();
+
+        }
 
 
 };
