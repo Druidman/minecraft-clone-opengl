@@ -62,8 +62,8 @@ void destroyBlock(std::vector< std::vector< Chunk > > &chunks){
     bool targetFound = false;
     for (int i=0; i<PLAYER_RANGE; i++){
     
-        target -= playerDirection / 2.0f;
-        
+        target -= playerDirection;
+
         int chunkRow = (int)(std::floor(target.z / (float)CHUNK_WIDTH));
         int chunkCol = (int)(std::floor(target.x / (float)CHUNK_WIDTH));
         if (chunkRow >= chunks.size() ||
@@ -90,8 +90,15 @@ void destroyBlock(std::vector< std::vector< Chunk > > &chunks){
             continue ; 
         }
         if (currentChunk.blocks[platformB][rowB][columnB].type != NONE_BLOCK){
-            currentChunk.blocks[platformB][rowB][columnB].type = NONE_BLOCK;
-            currentChunk.update();
+            // that would be it for destroy logic
+            // currentChunk.blocks[platformB][rowB][columnB].type = NONE_BLOCK;
+            // currentChunk.update();
+
+            //lets find blocks right next to each FOUND block face to know at which face place block;
+            // back ray of length BLOCK_WIDTH / 2 then lengths IMO?
+
+
+
             
             break;
         }
@@ -144,7 +151,7 @@ void process_input(GLFWwindow *window, auto &chunks){
         cameraPos -= speed * glm::normalize(glm::cross(cameraUp,cameraFront));
     }
 
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT)){
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE){
         destroyBlock(chunks);
     }
 }
@@ -400,7 +407,7 @@ int main(void)
                 fpsS.pop_back();
             }
             avgFPS /= divide;
-            // std::cout << "FPS: " << avgFPS << "\n";
+            std::cout << "FPS: " << avgFPS << "\n";
         }
         else{
             fpsS.push_back(fps);
