@@ -2,7 +2,7 @@
 #define BLOCK_H
 #include "vendor/glm/glm.hpp"
 enum BlockType{
-    GRASS_DIRT, SAND, STONE, WATER
+    GRASS_DIRT, SAND, STONE, WATER, NONE_BLOCK
 };
 
 const int BLOCK_VERTICES_COUNT = 192;

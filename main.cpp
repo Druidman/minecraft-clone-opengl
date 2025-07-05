@@ -24,11 +24,11 @@
 
 typedef unsigned int uint;
 
-const int PLAYER_RANGE = 20;
+const int PLAYER_RANGE = 100;
 int WINDOW_WIDTH = 800;
 int WINDOW_HEIGHT = 600;
 glm::vec3 cameraPos = glm::vec3(0.0,0.0,0.0);
-glm::vec3 cameraFront = glm::vec3(0.0,0.0,1.0);
+glm::vec3 cameraFront = glm::vec3(0.0,0.0,3.0);
 glm::vec3 cameraUp = glm::vec3(0.0,1.0,0.0);
 
 glm::vec2 cursorPos = glm::vec2(0.0,0.0);
@@ -55,46 +55,62 @@ void destroyBlock(std::vector< std::vector< Chunk > > &chunks){
     glm::vec3 playerPos = cameraPos;
     glm::vec3 playerDirection = glm::normalize(cameraFront);
 
-    glm::vec3 playerTarget = playerPos - ((float)PLAYER_RANGE * playerDirection);
+    // / glm::vec3 playerTarget = playerPos - ((float)PLAYER_RANGE * playerDirection);
+    // chunk row = ind * CHUNK_WIDTH;
+    //raycast approach;
+    glm::vec3 target = playerPos;
+    bool targetFound = false;
+    for (int i=0; i<PLAYER_RANGE; i++){
+    
+        target -= playerDirection / 2.0f;
+        
+        int chunkRow = (int)(std::floor(target.z / (float)CHUNK_WIDTH));
+        int chunkCol = (int)(std::floor(target.x / (float)CHUNK_WIDTH));
+        if (chunkRow >= chunks.size() ||
+            chunkCol >= chunks[chunkRow].size()
+        ){
+            
+            continue ;
+        }
 
-    int row = (int)(std::floor(playerTarget.z / (float)CHUNK_WIDTH));
-    int col = (int)(std::floor(playerTarget.x / (float)CHUNK_WIDTH));
-    if (row >= chunks.size()){
-        return ;
+        Chunk &currentChunk = chunks[chunkRow][chunkCol];
+
+        if (target.y < currentChunk.position.y){
+            
+            continue ; 
+        }
+
+        glm::vec3 inChunk = target - currentChunk.position + glm::vec3( CHUNK_WIDTH / 2, 0.0 , CHUNK_WIDTH / 2 );
+        int platformB = std::floor(inChunk.y);
+        int rowB = std::floor(inChunk.z);
+        int columnB = std::floor(inChunk.x);
+
+        if (platformB > currentChunk.blocks.size() - 1){
+       
+            continue ; 
+        }
+        if (currentChunk.blocks[platformB][rowB][columnB].type != NONE_BLOCK){
+            currentChunk.blocks[platformB][rowB][columnB].type = NONE_BLOCK;
+            currentChunk.update();
+            
+            break;
+        }
+        
+        
     }
-    if (col >= chunks[row].size()){
-        return ;
-    }
+
+    
+    
    
-    Chunk &currentChunk = chunks[row][col];
+    
+    
+    
 
     
 
-    for (int i=0; i < chunks.size(); i++){
-        for (int j=0; j < chunks[i].size(); j++){
-            chunks[i][j].setBlocksTo(GRASS_DIRT);
-        }   
-    }
-    currentChunk.setBlocksTo(SAND);
-
-    // std::vector<Chunk> nearbyChunks;
-
-    // for (int i =0; i < currentChunk.blocks.size(); i++){
-    //     glm::vec3 blockPosition  = currentChunk.blocks[i].position;
-        
-    //     if (glm::distance(blockPosition, playerPos) <= PLAYER_RANGE){
-    //         currentChunk.blocks[i].type = SAND;
-    //     }
-    //     else{
-    //         currentChunk.blocks[i].type = GRASS_DIRT;
-    //     }
-    // }
-    // currentChunk.blockUVs = currentChunk.genBlockUVs();
-
-
-
-
-
+    
+    
+    
 }
 void process_key_release(GLFWwindow *window, int key){
     if (key ==GLFW_KEY_ESCAPE){
@@ -113,7 +129,7 @@ void process_key_press(GLFWwindow *window, int key){
     
 }
 
-void process_input(GLFWwindow *window){
+void process_input(GLFWwindow *window, auto &chunks){
     float speed = 1;
     if (glfwGetKey(window,GLFW_KEY_W)){
         cameraPos -= speed * cameraFront;
@@ -126,6 +142,10 @@ void process_input(GLFWwindow *window){
     }
     if (glfwGetKey(window,GLFW_KEY_A)){
         cameraPos -= speed * glm::normalize(glm::cross(cameraUp,cameraFront));
+    }
+
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT)){
+        destroyBlock(chunks);
     }
 }
 
@@ -205,12 +225,15 @@ std::vector<int> world_gen(int sizex , int sizey){
             gen = (gen + 1) / 2 * 100;
 
             world[index++] = (int)gen;
-            if (gen < min){
+            if ((int)gen < min){
                 min = (int)gen;
             }
         }
     }
-    std::cout << min;
+    // lets make world's wfirst block be settled on 0.0
+    for (int i=0; i<world.size();i++){
+        world[i] -= min;
+    } 
 
 
     
@@ -297,7 +320,7 @@ int main(void)
     GLCall( glBindVertexArray(0) );
 
 
-    const int WORLD_WIDTH = 32;
+    const int WORLD_WIDTH = 1024;
     const unsigned long long WORLD_BLOCKS_COUNT = WORLD_WIDTH * WORLD_WIDTH;
     const unsigned long long WORLD_CHUNKS_COUNT = WORLD_BLOCKS_COUNT / (CHUNK_WIDTH * CHUNK_WIDTH);
     std::vector<int> world = world_gen(WORLD_WIDTH,WORLD_WIDTH);
@@ -322,7 +345,7 @@ int main(void)
             for (int i =startX; i< startX + CHUNK_WIDTH ; i++){
                 for (int j =startY; j< startY + CHUNK_WIDTH; j++){
 
-                    int zCoord = world[j * WORLD_WIDTH + i];
+                    float zCoord = world[j * WORLD_WIDTH + i] + 0.5;
                     BlockType blockType = GRASS_DIRT;
                     if (zCoord < 30){
                      
@@ -334,12 +357,14 @@ int main(void)
                         blockType = STONE;
                     }
                     
-                    Block block(blockType,glm::vec3(i, zCoord ,j));
+                    Block block(blockType,glm::vec3(i + 0.5, zCoord ,j + 0.5));
                     
                     chunk.addBlock(block);
                     
                 }
             }
+            
+            chunk.update();
             
             
             if (column == 0){
@@ -364,7 +389,7 @@ int main(void)
     std::vector<double> fpsS;
     while (!glfwWindowShouldClose(window))
     {
-        destroyBlock(chunks);
+        
         double delta = glfwGetTime() - last;
         double fps = 1 / delta;
         if (fpsS.size() >= 10){
@@ -375,7 +400,7 @@ int main(void)
                 fpsS.pop_back();
             }
             avgFPS /= divide;
-            std::cout << "FPS: " << avgFPS << "\n";
+            // std::cout << "FPS: " << avgFPS << "\n";
         }
         else{
             fpsS.push_back(fps);
@@ -383,7 +408,7 @@ int main(void)
         
 
         last = glfwGetTime();
-        process_input(window);
+        process_input(window,chunks);
         /* Render here */
         if (removeChunk){
             int rows = chunks.size();
