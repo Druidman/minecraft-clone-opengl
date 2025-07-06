@@ -1,6 +1,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <filesystem>
+#include <optional>
 
 #define FNL_IMPL
 #include "vendor/fastNoise/FastNoiseLite.h"
@@ -42,8 +43,22 @@ glm::mat4 model(1.0f);
 glm::mat4 view = glm::lookAt(cameraPos,cameraPos + cameraFront,cameraUp);
 glm::mat4 projection = glm::perspective(glm::radians(45.0),(double)WINDOW_WIDTH/WINDOW_HEIGHT,0.1,1000.0);
 
+
 bool removeChunk = false;
 
+template <typename T>
+struct Result
+{
+    T *result; 
+    bool success;
+};
+
+struct BlockIntersection{
+    Block *block;
+    Chunk *chunk;
+    glm::vec3 hitPos;
+
+};
 
 void resize_callback(GLFWwindow *window, int width, int height){
     glViewport(0,0,width,height);
@@ -51,34 +66,123 @@ void resize_callback(GLFWwindow *window, int width, int height){
     WINDOW_WIDTH = width;
     WINDOW_HEIGHT = height;
 }
-void destroyBlock(std::vector< std::vector< Chunk > > &chunks){
+std::optional<Chunk*> getChunkByPos(glm::vec3 pointPositionInWorld, auto &chunks){
+    int chunkRow = (int)(std::floor(pointPositionInWorld.z / (float)CHUNK_WIDTH));
+    int chunkCol = (int)(std::floor(pointPositionInWorld.x / (float)CHUNK_WIDTH));
+    if (chunkRow >= chunks.size() ||
+        chunkCol >= chunks[chunkRow].size()
+    ){
+        return std::nullopt;
+    }
+
+    
+
+    if (pointPositionInWorld.y < chunks[chunkRow][chunkCol].position.y){
+        return std::nullopt;
+    }
+
+    return &chunks[chunkRow][chunkCol];
+}
+
+void placeBlock(auto &chunks){
+    std::optional<BlockIntersection> result = lookAtBlock(chunks);
+    if (!result.has_value()){
+        return ;
+    }
+    BlockIntersection intersection = result.value();
+
+    Block &currentBlock = *intersection.block;
+    glm::vec3 hitPos = intersection.hitPos;
+
+    std::vector <float > distanceToFaces = {
+        glm::distance(hitPos, currentBlock.position + FRONT_FACE_POS),
+        glm::distance(hitPos, currentBlock.position + BACK_FACE_POS),
+        glm::distance(hitPos, currentBlock.position + TOP_FACE_POS),
+        glm::distance(hitPos, currentBlock.position + BOTTOM_FACE_POS),
+        glm::distance(hitPos, currentBlock.position + LEFT_FACE_POS),
+        glm::distance(hitPos, currentBlock.position + RIGHT_FACE_POS)
+    };
+    float minDistance = 100;
+    int minDistanceInd = 0;
+
+    for (int i=0; i<distanceToFaces.size();i++){
+        if (distanceToFaces[i] < minDistance){
+            minDistance = distanceToFaces[i];
+            minDistanceInd = i;
+        }
+    }
+    glm::vec3 placePos = currentBlock.position;
+    switch (minDistanceInd)
+    {
+        case 0:
+            placePos.z += 1;
+            break;
+        case 1:
+            placePos.z -= 1;
+            break;
+        case 2:
+            placePos.y += 1;
+            break;
+        case 3:
+            placePos.y -= 1;
+            break;
+        case 4:
+            placePos.x -= 1;
+            break;
+        case 5:
+            placePos.x += 1;
+            break;
+        
+        default:
+            break;
+    }
+    
+    std::optional<Chunk*> res = getChunkByPos(placePos,chunks);
+    if (!res.has_value()){
+        return ;
+    }
+
+    Chunk &placeChunk = *res.value();
+    placeChunk.addBlock(Block(STONE,placePos));
+    placeChunk.update();
+}
+
+void destroyBlock(auto &chunks){
+    std::optional<BlockIntersection> result = lookAtBlock(chunks);
+    if (!result.has_value()){
+        return ;
+    }
+    BlockIntersection intersection = result.value();
+
+    Block &currentBlock = *intersection.block;
+    Chunk &chunk = *intersection.chunk;
+    glm::vec3 hitPos = intersection.hitPos;
+
+    glm::vec3 inChunk = hitPos - chunk.position + glm::vec3( CHUNK_WIDTH / 2, 0.0 , CHUNK_WIDTH / 2 );
+    int platform = std::floor(inChunk.y);
+    int row = std::floor(inChunk.z);
+    int column = std::floor(inChunk.x);
+
+    chunk.blocks[platform][row][column].type = NONE_BLOCK;
+    chunk.update();
+}
+
+std::optional<BlockIntersection> lookAtBlock(std::vector< std::vector< Chunk > > &chunks){
     glm::vec3 playerPos = cameraPos;
     glm::vec3 playerDirection = glm::normalize(cameraFront);
 
-    // / glm::vec3 playerTarget = playerPos - ((float)PLAYER_RANGE * playerDirection);
-    // chunk row = ind * CHUNK_WIDTH;
-    //raycast approach;
     glm::vec3 target = playerPos;
     bool targetFound = false;
-    for (int i=0; i<PLAYER_RANGE; i++){
+    for (int i=0; i<PLAYER_RANGE * 50; i++){
     
-        target -= playerDirection;
+        target -= playerDirection / 50.0f;
 
-        int chunkRow = (int)(std::floor(target.z / (float)CHUNK_WIDTH));
-        int chunkCol = (int)(std::floor(target.x / (float)CHUNK_WIDTH));
-        if (chunkRow >= chunks.size() ||
-            chunkCol >= chunks[chunkRow].size()
-        ){
-            
+        std::optional<Chunk*> result = getChunkByPos(target,chunks);
+        if (!result.has_value()){
             continue ;
         }
 
-        Chunk &currentChunk = chunks[chunkRow][chunkCol];
-
-        if (target.y < currentChunk.position.y){
-            
-            continue ; 
-        }
+        Chunk &currentChunk = *result.value();
 
         glm::vec3 inChunk = target - currentChunk.position + glm::vec3( CHUNK_WIDTH / 2, 0.0 , CHUNK_WIDTH / 2 );
         int platformB = std::floor(inChunk.y);
@@ -90,35 +194,24 @@ void destroyBlock(std::vector< std::vector< Chunk > > &chunks){
             continue ; 
         }
         if (currentChunk.blocks[platformB][rowB][columnB].type != NONE_BLOCK){
-            // that would be it for destroy logic
-            // currentChunk.blocks[platformB][rowB][columnB].type = NONE_BLOCK;
-            // currentChunk.update();
-
-            //lets find blocks right next to each FOUND block face to know at which face place block;
-            // back ray of length BLOCK_WIDTH / 2 then lengths IMO?
+    
+            Block &currentBlock = currentChunk.blocks[platformB][rowB][columnB];
+    
 
 
+            BlockIntersection intersection;
+            intersection.block = &currentBlock;
+            intersection.chunk = &currentChunk;
+            intersection.hitPos = target;
 
-            
-            break;
+            return intersection;
         }
         
-        
     }
-
     
-    
-   
-    
-    
-    
-
-    
-
-    
-    
-    
+    return std::nullopt;
 }
+
 void process_key_release(GLFWwindow *window, int key){
     if (key ==GLFW_KEY_ESCAPE){
         glfwSetWindowShouldClose(window,true);
@@ -151,8 +244,11 @@ void process_input(GLFWwindow *window, auto &chunks){
         cameraPos -= speed * glm::normalize(glm::cross(cameraUp,cameraFront));
     }
 
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE){
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS){
         destroyBlock(chunks);
+    }
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS){
+        placeBlock(chunks);
     }
 }
 
@@ -216,6 +312,7 @@ std::vector<int> world_gen(int sizex , int sizey){
     fnl_state noise = fnlCreateState();
     noise.fractal_type = FNL_FRACTAL_FBM;
     noise.frequency = 0.005;
+    noise.octaves = 4;
     noise.seed = 1652;
 
     noise.noise_type = FNL_NOISE_PERLIN;
@@ -291,13 +388,27 @@ int main(void)
 
     std::filesystem::path vsPath = cwd / "shaders/vertexShader.vs";
     std::filesystem::path fsPath = cwd / "shaders/fragmentShader.fs";
+
+    std::filesystem::path cvsPath = cwd / "shaders/vertexShaderCrosshair.vs";
+    std::filesystem::path cfsPath = cwd / "shaders/fragmentShaderCrosshair.fs";
     
     Shader shader = Shader(vsPath.string(), fsPath.string());
-
+    Shader crosshairShader = Shader(cvsPath.string(),cfsPath.string());
 
     std::filesystem::path texturePath = cwd / "textures/texture.jpg";
 
     Texture texture = Texture(texturePath, "jpg");
+
+    float crosshairVertices[] = {
+        -0.01f, -0.01f, 0.0f,
+        0.01f, -0.01f, 0.0f,
+        0.0f,  0.0f, 0.0f
+    };
+
+    VertexArray crosshairVAO = VertexArray();
+    VertexBuffer crosshairVBO = VertexBuffer();
+    crosshairVBO.fillData<float>(crosshairVertices,9);
+    crosshairVAO.setAttr(0,3,GL_FLOAT, 3 * sizeof(float), 0);
 
     VertexArray vao = VertexArray();
     VertexBuffer vbo = VertexBuffer();
@@ -457,6 +568,10 @@ int main(void)
             }
             
         }
+        crosshairShader.use();
+        crosshairVAO.bind();
+        crosshairVBO.bind();
+        GLCall( glDrawArrays(GL_TRIANGLES,0,3) );
         
         
         
@@ -471,4 +586,5 @@ int main(void)
     glfwTerminate();
     return 0;
 }
+
 

@@ -4,8 +4,25 @@
 enum BlockType{
     GRASS_DIRT, SAND, STONE, WATER, NONE_BLOCK
 };
+enum BlockFace {
+    FRONT_FACE, BACK_FACE, TOP_FACE, BOTTOM_FACE, LEFT_FACE, RIGHT_FACE
+};
 
+const int BLOCK_WIDTH = 1;
 const int BLOCK_VERTICES_COUNT = 192;
+const int BLOCK_INDICIES_COUNT = 36;
+
+glm::vec3 TOP_FACE_POS = glm::vec3(0.0,0.5,0.0);
+glm::vec3 BOTTOM_FACE_POS = glm::vec3(0.0,-0.5,0.0);
+
+glm::vec3 FRONT_FACE_POS = glm::vec3(0.0,0.0,0.5);
+glm::vec3 BACK_FACE_POS = glm::vec3(0.0,0.0,-0.5);
+
+glm::vec3 LEFT_FACE_POS = glm::vec3(-0.5,0.0,0.0);
+glm::vec3 RIGHT_FACE_POS = glm::vec3(0.5,0.0,0.0);
+
+
+
 float blockVertices[BLOCK_VERTICES_COUNT] = {
     // Top face (Y+)
     -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,   0.0f, 1.0f, 0.0f,
@@ -44,7 +61,7 @@ float blockVertices[BLOCK_VERTICES_COUNT] = {
      0.5f,  0.5f, -0.5f,  0.5f, 1.0f,   1.0f, 0.0f, 0.0f
 };
 
-const int BLOCK_INDICIES_COUNT = 36;
+
 unsigned int blockIndicies[BLOCK_INDICIES_COUNT] = {
     0, 1, 2, 2, 3, 0,        // Top
     4, 5, 6, 6, 7, 4,        // Bottom

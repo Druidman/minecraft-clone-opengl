@@ -16,7 +16,7 @@
     }
 
 inline void ExitError(std::string errorType, std::string msg){
-    std::cout << "[ " << errorType << " ]\n" << "Error message: " << msg << "\n";
+    std::cout << "[ " << errorType << " ]\n" << "Error message: " << msg << " " << __FILE__ << " " << __LINE__ <<"\n";
     std::exit(EXIT_FAILURE);
 }
 
