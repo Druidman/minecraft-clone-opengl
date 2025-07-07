@@ -1,5 +1,5 @@
-#version 300 es
-precision mediump float;
+#version 330 core
+
 
 in vec2 TexCoords;
 in vec3 Normal;
@@ -25,5 +25,10 @@ void main()
     vec3 diffuse = diff * lightColor;
 
     vec3 result = (ambient + diffuse) * objectColor;
-    Color = vec4(result,1.0);
+
+    float alpha = texture(text,TexCoords)[3];
+    if (alpha < 1.0){
+        alpha *= 0.5;
+    }
+    Color = vec4(result,alpha);
 }

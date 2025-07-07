@@ -378,6 +378,11 @@ int main(void)
     
     GLCall( glViewport(0,0,WINDOW_WIDTH,WINDOW_HEIGHT) ) ;
     GLCall( glEnable(GL_DEPTH_TEST) );
+    GLCall( glEnable(GL_BLEND) );
+    GLCall( glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) );
+    GLCall( glDisable(GL_CULL_FACE) );
+    
+
 
 
 
@@ -395,9 +400,9 @@ int main(void)
     Shader shader = Shader(vsPath.string(), fsPath.string());
     Shader crosshairShader = Shader(cvsPath.string(),cfsPath.string());
 
-    std::filesystem::path texturePath = cwd / "textures/texture.jpg";
+    std::filesystem::path texturePath = cwd / "textures/texture.png";
 
-    Texture texture = Texture(texturePath, "jpg");
+    Texture texture = Texture(texturePath, "png");
 
     float crosshairVertices[] = {
         -0.01f, -0.01f, 0.0f,
@@ -438,7 +443,7 @@ int main(void)
     GLCall( glBindVertexArray(0) );
 
 
-    const int WORLD_WIDTH = 1024;
+    const int WORLD_WIDTH = 320;
     const unsigned long long WORLD_BLOCKS_COUNT = WORLD_WIDTH * WORLD_WIDTH;
     const unsigned long long WORLD_CHUNKS_COUNT = WORLD_BLOCKS_COUNT / (CHUNK_WIDTH * CHUNK_WIDTH);
     std::vector<int> world = world_gen(WORLD_WIDTH,WORLD_WIDTH);
@@ -481,8 +486,8 @@ int main(void)
                     
                 }
             }
+            chunk.fillWater();
             
-            chunk.update();
             
             
             if (column == 0){
