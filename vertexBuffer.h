@@ -1,5 +1,8 @@
 #ifndef VERTEX_BUFFER_H
 #define VERTEX_BUFFER_H
+#include <vector>
+#include "vendor/glm/glm.hpp"
+#include "vendor/glm/gtc/type_ptr.hpp"
 
 class VertexBuffer{
     private:
@@ -9,14 +12,13 @@ class VertexBuffer{
         void bind();
 
         template <typename T>
-        void fillData(T *vertices, unsigned int count);
+        void fillData(const std::vector< T > &vertices);
 };
 
+
 template <typename T>
-inline void VertexBuffer::fillData(T *vertices, unsigned int count)
-{
+inline void VertexBuffer::fillData(const std::vector< T > &vertices){
     bind();
-    GLCall( glBufferData(GL_ARRAY_BUFFER,count * sizeof(T),vertices,GL_STATIC_DRAW) );
-    
+    GLCall( glBufferData(GL_ARRAY_BUFFER,vertices.size() * sizeof(T),vertices.data(),GL_DYNAMIC_DRAW) );
 }
 #endif

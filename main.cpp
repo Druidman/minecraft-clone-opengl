@@ -144,7 +144,7 @@ void placeBlock(auto &chunks){
 
     Chunk &placeChunk = *res.value();
     placeChunk.addBlock(Block(STONE,placePos));
-    placeChunk.update();
+    
 }
 
 void destroyBlock(auto &chunks){
@@ -163,8 +163,9 @@ void destroyBlock(auto &chunks){
     int row = std::floor(inChunk.z);
     int column = std::floor(inChunk.x);
 
-    chunk.blocks[platform][row][column].type = NONE_BLOCK;
-    chunk.update();
+    chunk.removeBlock(platform,row,column);
+    
+    
 }
 
 std::optional<BlockIntersection> lookAtBlock(std::vector< std::vector< Chunk > > &chunks){
@@ -193,7 +194,7 @@ std::optional<BlockIntersection> lookAtBlock(std::vector< std::vector< Chunk > >
        
             continue ; 
         }
-        if (currentChunk.blocks[platformB][rowB][columnB].type != NONE_BLOCK){
+        if (currentChunk.blocks[platformB][rowB][columnB].type != NONE_BLOCK && currentChunk.blocks[platformB][rowB][columnB].type != WATER){
     
             Block &currentBlock = currentChunk.blocks[platformB][rowB][columnB];
     
@@ -378,9 +379,8 @@ int main(void)
     
     GLCall( glViewport(0,0,WINDOW_WIDTH,WINDOW_HEIGHT) ) ;
     GLCall( glEnable(GL_DEPTH_TEST) );
-    GLCall( glEnable(GL_BLEND) );
-    GLCall( glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) );
-    GLCall( glDisable(GL_CULL_FACE) );
+    
+      
     
 
 
@@ -394,17 +394,21 @@ int main(void)
     std::filesystem::path vsPath = cwd / "shaders/vertexShader.vs";
     std::filesystem::path fsPath = cwd / "shaders/fragmentShader.fs";
 
+    std::filesystem::path vsTPath = cwd / "shaders/vertexShaderTrans.vs";
+    std::filesystem::path fsTPath = cwd / "shaders/fragmentShaderTrans.fs";
+
     std::filesystem::path cvsPath = cwd / "shaders/vertexShaderCrosshair.vs";
     std::filesystem::path cfsPath = cwd / "shaders/fragmentShaderCrosshair.fs";
     
     Shader shader = Shader(vsPath.string(), fsPath.string());
     Shader crosshairShader = Shader(cvsPath.string(),cfsPath.string());
+    Shader shaderTrans = Shader(vsTPath.string(),fsTPath.string());
 
     std::filesystem::path texturePath = cwd / "textures/texture.png";
 
     Texture texture = Texture(texturePath, "png");
 
-    float crosshairVertices[] = {
+    std::vector<float> crosshairVertices = {
         -0.01f, -0.01f, 0.0f,
         0.01f, -0.01f, 0.0f,
         0.0f,  0.0f, 0.0f
@@ -412,7 +416,7 @@ int main(void)
 
     VertexArray crosshairVAO = VertexArray();
     VertexBuffer crosshairVBO = VertexBuffer();
-    crosshairVBO.fillData<float>(crosshairVertices,9);
+    crosshairVBO.fillData<float>(crosshairVertices);
     crosshairVAO.setAttr(0,3,GL_FLOAT, 3 * sizeof(float), 0);
 
     VertexArray vao = VertexArray();
@@ -422,7 +426,7 @@ int main(void)
     VertexBuffer vboInstancedTex = VertexBuffer();
     
  
-    vbo.fillData<float>(blockVertices,BLOCK_VERTICES_COUNT);
+    vbo.fillData<float>(blockVertices);
     ebo.fillData(blockIndicies,BLOCK_INDICIES_COUNT);
 
     vbo.bind();
@@ -443,7 +447,27 @@ int main(void)
     GLCall( glBindVertexArray(0) );
 
 
-    const int WORLD_WIDTH = 320;
+    // TRANSPARENT
+    VertexArray vaoTrans = VertexArray();
+    VertexBuffer vboTrans = VertexBuffer();
+
+    vaoTrans.bind();
+    vboTrans.bind();
+
+    vaoTrans.setAttr(0,3,GL_FLOAT,8 * sizeof(float),0);
+    vaoTrans.setAttr(1,2,GL_FLOAT,8 * sizeof(float),3 * sizeof(float));
+    vaoTrans.setAttr(2,3,GL_FLOAT,8 * sizeof(float),5 * sizeof(float));
+
+
+
+    GLCall( glBindBuffer(GL_ARRAY_BUFFER, 0) );
+    GLCall( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0) );
+    GLCall( glBindVertexArray(0) );
+
+   
+
+
+    const int WORLD_WIDTH = 32;
     const unsigned long long WORLD_BLOCKS_COUNT = WORLD_WIDTH * WORLD_WIDTH;
     const unsigned long long WORLD_CHUNKS_COUNT = WORLD_BLOCKS_COUNT / (CHUNK_WIDTH * CHUNK_WIDTH);
     std::vector<int> world = world_gen(WORLD_WIDTH,WORLD_WIDTH);
@@ -462,7 +486,7 @@ int main(void)
             }
 
             glm::vec3 chunkPos = glm::vec3(startX + (CHUNK_WIDTH / 2), 0.0, startY + (CHUNK_WIDTH / 2));
-            Chunk chunk = Chunk(chunkPos,vboInstancedPos,vboInstancedTex);
+            Chunk chunk = Chunk(chunkPos,vboInstancedPos,vboInstancedTex,vboTrans,&cameraPos);
             
             
             for (int i =startX; i< startX + CHUNK_WIDTH ; i++){
@@ -510,6 +534,8 @@ int main(void)
     /* Loop until the user closes the window */
     double avgFPS = 0;
     std::vector<double> fpsS;
+    // GLCall( glEnable(GL_CULL_FACE) );  
+    // GLCall( glCullFace(GL_FRONT_AND_BACK) );  
     while (!glfwWindowShouldClose(window))
     {
         
@@ -549,30 +575,46 @@ int main(void)
         GLCall( glClearColor(0.68f, 0.84f, 0.9f, 1.0f) );
         GLCall( glClear(GL_COLOR_BUFFER_BIT) );
 
-        shader.use();
+        // shader.use();
 
         view = glm::lookAt(cameraPos,cameraPos - cameraFront, cameraUp);
         
-        shader.setVec3Float("LightPos",cameraPos);
-        shader.setMatrixFloat("projection",GL_FALSE,projection);
-        shader.setMatrixFloat("view",GL_FALSE,view);
-        shader.setMatrixFloat("model",GL_FALSE,model);
+        // shader.setVec3Float("LightPos",cameraPos);
+        // shader.setMatrixFloat("projection",GL_FALSE,projection);
+        // shader.setMatrixFloat("view",GL_FALSE,view);
+        // shader.setMatrixFloat("model",GL_FALSE,model);
 
-        vao.bind();
-        vbo.bind();
-        ebo.bind();
+        // vao.bind();
+        // vbo.bind();
+        // ebo.bind();
 
         
+        // for (int row = 0; row < chunks.size(); row++){
+        //     for (int column = 0; column < chunks[row].size(); column++){
+                
+        //         chunks[row][column].renderOpaque();
+                
+        //     }
+            
+        // }
+        shaderTrans.use();
+        shaderTrans.setMatrixFloat("projection",GL_FALSE,projection);
+        shaderTrans.setMatrixFloat("view",GL_FALSE,view);
+        shaderTrans.setMatrixFloat("model",GL_FALSE,model);
+
+        vaoTrans.bind();
+        vboTrans.bind();
+
         for (int row = 0; row < chunks.size(); row++){
             for (int column = 0; column < chunks[row].size(); column++){
                 
-                chunks[row][column].render();
-
-                
+                chunks[row][column].renderTrans();
                 
             }
             
         }
+
+
         crosshairShader.use();
         crosshairVAO.bind();
         crosshairVBO.bind();

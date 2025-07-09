@@ -27,8 +27,10 @@ void main()
     vec3 result = (ambient + diffuse) * objectColor;
 
     float alpha = texture(text,TexCoords)[3];
-    if (alpha < 1.0){
-        alpha *= 0.5;
-    }
-    Color = vec4(result,alpha);
+    
+    
+        
+    Color = vec4(result,1.0);
+    
+    
 }
