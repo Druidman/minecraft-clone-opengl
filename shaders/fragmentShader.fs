@@ -14,7 +14,7 @@ void main()
     vec3 lightColor = vec3(1.0,1.0,0.88);
 
     vec3 ambient = 0.1 * lightColor;
-    vec3 objectColor = vec3(texture(text,TexCoords));
+    vec4 objectColor = texture(text,TexCoords);
     
 
 
@@ -24,12 +24,10 @@ void main()
 
     vec3 diffuse = diff * lightColor;
 
-    vec3 result = (ambient + diffuse) * objectColor;
+    vec3 result = (ambient + diffuse) * vec3(objectColor);
 
-    float alpha = texture(text,TexCoords)[3];
     
-    
-    Color = vec4(norm,1.0);
+    Color = vec4(result,objectColor[3]);
     
     
 }

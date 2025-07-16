@@ -3,7 +3,8 @@
 #version 330 core
 
 layout (location = 0) in vec3 aBasePosition;
-layout (location = 1) in int vertexData;  // <- Input int directly
+layout (location = 1) in vec2 aBaseTexCoord;
+layout (location = 2) in int vertexData;  // <- Input int directly
 
 out vec2 TexCoords;
 out vec3 Normal;
@@ -63,15 +64,39 @@ vec3 rotateVertexPosition(vec3 pos, int face) {
     return pos; // fallback
 }
 
+vec2 rotateUV(vec2 uv, int face) {
+    // Rotate around center (0.5, 0.5)
+    vec2 centered = uv - vec2(0.5);
+
+    if (face == 2) { // front
+        // No rotation
+    } else if (face == 3) { // back
+        // 180 degrees
+        centered = -centered;
+    } else if (face == 4) { // left
+        // 90 degrees
+        centered = vec2(-centered.y, centered.x);
+    } else if (face == 5) { // right
+        // -90 degrees
+        centered = vec2(centered.y, -centered.x);
+    } else if (face == 0 || face == 1) {
+        // You can choose how top/bottom faces are oriented
+        // This example rotates them 90 degrees for top and -90 for bottom
+        centered = (face == 0) ? vec2(-centered.y, centered.x) : vec2(centered.y, -centered.x);
+    }
+
+    return centered + vec2(0.5);
+}
+
 
 
 vec3 NORMALS[6] = vec3[](
-    vec3(1.0, 0.0, 0.0),
-    vec3(-1.0, 0.0, 0.0),
-    vec3(0.0, 0.0, 1.0),
-    vec3(0.0, 0.0, -1.0),
-    vec3(0.0, -1.0, 0.0),
-    vec3(0.0, 1.0, 0.0)
+    vec3(0.0,1.0,0.0),
+    vec3(0.0,-1.0,0.0),
+    vec3(0.0,0.0,1.0),
+    vec3(0.0,0.0,-1.0),
+    vec3(-1.0,0.0,0.0),
+    vec3(1.0,0.0,0.0)
     
 );
 
@@ -85,13 +110,19 @@ void main()
     int face = (vertexData >> 16) & 0x7;
     int textureId = (vertexData >> 19) & 0x7F;
     vec3 rotatedBasePos = rotateVertexPosition(aBasePosition,face);
+    
 
     vec3 blockOffset = vec3(xPos, yPos, zPos);
-    vec3 worldPosition = rotatedBasePos + chunkPos + blockOffset - vec3(8.0,0.0,8.0);
+    vec3 worldPosition = rotatedBasePos + chunkPos + blockOffset - vec3(16.0,0.0,16.0);
 
     gl_Position = projection * view * model * vec4(worldPosition, 1.0);
     Pos = vec3(model * vec4(worldPosition, 1.0));
     Normal = NORMALS[face];
 
-    TexCoords = vec2(0.0, 0.0); // placeholder
+
+    float yChange = - ( floor( textureId / 4.0) * 0.25 );
+    float xChange = (textureId / 4.0 - int(textureId / 4));
+    
+  
+    TexCoords = aBaseTexCoord + vec2(xChange,yChange); 
 }

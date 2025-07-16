@@ -61,13 +61,13 @@ class Chunk{
             for (uint8_t face =0; face < 6; face++){
                 int textId;
                 if (face == 0){ //top
-                    textId = block.type;
+                    textId = block.type * 4;
                 }
                 else if (face == 1){ //bottom
-                    textId = block.type + 2;
+                    textId = block.type * 4 + 2;
                 }
                 else { //middle
-                    textId = block.type + 1;
+                    textId = block.type * 4 + 1;
                 }
 
                 int zCoord = blockPositionChunk.z - 0.5;
@@ -82,6 +82,9 @@ class Chunk{
                 data |= ((VertexDataInt)(zCoord & 15));            // ZZZZ: 4 bity
                         
                 blockFaceVertices.push_back(data);    
+                if (block.type == WATER && !face){
+                    break;;
+                }
             }
 
             
@@ -93,11 +96,14 @@ class Chunk{
             vboInst.fillData< VertexDataInt >(blockFaceVertices);
             glDrawElementsInstanced(GL_TRIANGLES, BLOCK_FACE_INDICES.size(), GL_UNSIGNED_INT, 0,blockFaceVertices.size());
         };
+
         
-        // ready for trans
+        
         void addBlock(Block block){
-            
-            if (block.position.x > this->position.x + (CHUNK_WIDTH/2) || 
+            if (block.type == NONE_BLOCK){
+                return;
+            }
+            if (block.position.x > this->position.x + CHUNK_WIDTH || 
                 block.position.x < this->position.x - CHUNK_WIDTH  ||
                 block.position.z > this->position.z + CHUNK_WIDTH ||
                 block.position.z < this->position.z - CHUNK_WIDTH ||
@@ -123,7 +129,7 @@ class Chunk{
             }
           
             if (platform > this->blocks.size() - 1){
-                int platformsToAdd = platform - this->blocks.size() + 1;
+                int platformsToAdd = platform - this->blocks.size() + 2;
                 for (int i=0; i<platformsToAdd; i++){
                     this->blocks.push_back(std::vector< std::vector< Block > >(CHUNK_WIDTH, std::vector< Block >(CHUNK_WIDTH,Block(NONE_BLOCK,glm::vec3(1.0f)))));
                 }
@@ -135,7 +141,38 @@ class Chunk{
         void removeBlock(int platform, int row, int col){
             blocks[platform][row][col].type = NONE_BLOCK;
         }
-        
+        void fillWater(){
+            int platformI = std::min(20,(int)blocks.size());
+            for (int row =0; row < blocks[platformI].size();row++){
+                for (int col =0; col < blocks[platformI][row].size();col++){
+                    Block &block = blocks[platformI][row][col];
+                    if (block.type != NONE_BLOCK){
+                        continue;
+                    }
+                    block.type = WATER;
+                    block.position.y = platformI + 0.5 + position.y;
+                    block.position.x = col + 0.5 + (position.x - (CHUNK_WIDTH / 2));
+                    block.position.z  = row + 0.5 + (position.z - (CHUNK_WIDTH / 2));
+                }
+            }
+            blockFaceVertices.clear();
+            for (int platform =0; platform < blocks.size(); platform++){
+
+                for (int row =0; row < blocks[platform].size(); row++){
+
+                    for (int col =0; col < blocks[platform][row].size();col++){
+                        Block &block = blocks[platform][row][col];
+                        
+                        addBlock(block);
+                        
+                        
+                        
+                        
+                    }
+                }
+            }
+            
+        }
 
 };
 

@@ -234,15 +234,19 @@ void process_input(GLFWwindow *window, auto &chunks){
     float speed = 1;
     if (glfwGetKey(window,GLFW_KEY_W)){
         cameraPos -= speed * cameraFront;
+    
     }
     if (glfwGetKey(window,GLFW_KEY_S)){
         cameraPos += speed * cameraFront;
+
     }
     if (glfwGetKey(window,GLFW_KEY_D)){
         cameraPos += speed * glm::normalize(glm::cross(cameraUp,cameraFront));
+    
     }
     if (glfwGetKey(window,GLFW_KEY_A)){
         cameraPos -= speed * glm::normalize(glm::cross(cameraUp,cameraFront));
+        
     }
 
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS){
@@ -372,6 +376,7 @@ int main()
     glfwSetCursorPosCallback(window, cursor_position_callback);
     glfwSetKeyCallback(window,input_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSwapInterval( 0 );
     
     glewInit();
 
@@ -379,6 +384,8 @@ int main()
     
     GLCall( glViewport(0,0,WINDOW_WIDTH,WINDOW_HEIGHT) ) ;
     GLCall( glEnable(GL_DEPTH_TEST) );
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
 
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -418,11 +425,11 @@ int main()
     ebo.fillData<int>(BLOCK_FACE_INDICES);
 
     vbo.bind();
-    vao.setAttr(0,3,GL_FLOAT,3 * sizeof(float),0);
-   
+    vao.setAttr(0,3,GL_FLOAT,5 * sizeof(float),0);
+    vao.setAttr(1,2,GL_FLOAT,5 * sizeof(float),3 * sizeof(float));
     vboInst.bind();
-    vao.setAttrI(1,1,sizeof(VertexDataInt),0);
-    GLCall( glVertexAttribDivisor(1,1) );
+    vao.setAttrI(2,1,sizeof(VertexDataInt),0);
+    GLCall( glVertexAttribDivisor(2,1) );
     
 
     GLCall( glBindBuffer(GL_ARRAY_BUFFER, 0) );
@@ -435,12 +442,13 @@ int main()
    
 
 
-    const int WORLD_WIDTH = 32;
+    const int WORLD_WIDTH = 1000;
     const unsigned long long WORLD_BLOCKS_COUNT = WORLD_WIDTH * WORLD_WIDTH;
-    const unsigned long long WORLD_CHUNKS_COUNT = WORLD_BLOCKS_COUNT / (CHUNK_WIDTH * CHUNK_WIDTH);
+    const unsigned long long WORLD_CHUNKS_COUNT = WORLD_BLOCKS_COUNT / ((unsigned long long)CHUNK_WIDTH * CHUNK_WIDTH);
     std::vector<int> world = world_gen(WORLD_WIDTH,WORLD_WIDTH);
 
     std::vector< std::vector <Chunk> > chunks;
+    std::vector<Chunk*> chunkRefs;
 
 
     int startX = 0;
@@ -462,12 +470,11 @@ int main()
 
                     float zCoord = world[j * WORLD_WIDTH + i] + 0.5;
                     BlockType blockType = GRASS_DIRT;
-                    if (zCoord < 30){
+                    if (zCoord < 20){
                      
                         blockType = SAND;
-                        
-                        
                     }
+                    
                     else if (zCoord > 60){
                         blockType = STONE;
                     }
@@ -478,11 +485,14 @@ int main()
                     
                 }
             }
+            chunk.fillWater();
+            
+            
             
             
             
             if (column == 0){
-                chunks.push_back(std::vector< Chunk >(1,chunk));
+                chunks.push_back(std::vector<Chunk>(1,chunk));
             }
             else{
                 chunks[row].push_back(chunk);
@@ -492,7 +502,11 @@ int main()
             std::cout << startX << "\n";
         }
     }
-
+    for (int row =0; row < chunks.size(); row++){
+        for (int col =0; col < chunks[row].size(); col++){
+            chunkRefs.push_back(&chunks[row][col]);
+        }   
+    }
 
   
     
@@ -504,7 +518,8 @@ int main()
     double avgFPS = 0;
     std::vector<double> fpsS;
     // GLCall( glEnable(GL_CULL_FACE) );  
-    // GLCall( glCullFace(GL_FRONT_AND_BACK) );  
+    // GLCall( glCullFace(GL_BACK) );  
+    std::cout << "SIEMA" << "\n";
     while (!glfwWindowShouldClose(window))
     {
         
@@ -527,19 +542,14 @@ int main()
 
         last = glfwGetTime();
         process_input(window,chunks);
-        /* Render here */
-        if (removeChunk){
-            int rows = chunks.size();
-            int lastRow = rows - 1;
-            if (chunks[lastRow].size() == 1){
-                chunks.pop_back();
-            }
-            else {
-                chunks[lastRow].pop_back();
-            }
+        std::sort(chunkRefs.begin(),chunkRefs.end(),[&](Chunk *a, Chunk *b){ 
             
-            removeChunk = false;
-        }
+            float aDist = glm::distance(a->position,cameraPos);
+            float bDist = glm::distance(b->position,cameraPos);
+            return aDist > bDist; 
+        });
+        /* Render here */
+        
         
         GLCall( glClearColor(0.68f, 0.84f, 0.9f, 1.0f) );
         GLCall( glClear(GL_COLOR_BUFFER_BIT) );
@@ -557,17 +567,17 @@ int main()
         vbo.bind();
         ebo.bind();
 
+    
         
-        for (int row = 0; row < chunks.size(); row++){
-            for (int column = 0; column < chunks[row].size(); column++){
-                Chunk chunk = chunks[row][column];
-                shader.setVec3Float("chunkPos",chunk.position);
-                
-                chunk.renderOpaque();
-                
-            }
+        for (Chunk* chunk : chunkRefs){
+         
+            shader.setVec3Float("chunkPos",(*chunk).position);
             
-        }
+            (*chunk).renderOpaque();
+        }   
+        
+                
+          
         
 
 
