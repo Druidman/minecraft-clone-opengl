@@ -9,5 +9,6 @@ class VertexArray{
         VertexArray();
         void bind();
         void setAttr(GLuint index, int count, GLenum type, GLsizei stride, size_t offset);
+        void setAttrI(GLuint index, int count, GLsizei stride, size_t offset);
 };
 #endif

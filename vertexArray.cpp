@@ -22,3 +22,10 @@ void VertexArray::setAttr(GLuint index, int count, GLenum type, GLsizei stride, 
     GLCall( glVertexAttribPointer(index, count, type, GL_FALSE, stride, (void*)offset) );
     
 }
+void VertexArray::setAttrI(GLuint index, int count, GLsizei stride, size_t offset)
+{
+    bind();
+    GLCall( glEnableVertexAttribArray(index) );
+    GLCall( glVertexAttribIPointer(index, count, GL_INT, stride, (void*)offset) );
+    
+}

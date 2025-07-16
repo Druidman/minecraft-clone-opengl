@@ -348,7 +348,7 @@ std::vector<int> world_gen(int sizex , int sizey){
 
 }
 
-int main(void)
+int main()
 {
     
     GLFWwindow* window;
@@ -380,29 +380,18 @@ int main(void)
     GLCall( glViewport(0,0,WINDOW_WIDTH,WINDOW_HEIGHT) ) ;
     GLCall( glEnable(GL_DEPTH_TEST) );
     
-      
-    
-
-
-
-
-    
-
 
     std::filesystem::path cwd = std::filesystem::current_path();
 
     std::filesystem::path vsPath = cwd / "shaders/vertexShader.vs";
     std::filesystem::path fsPath = cwd / "shaders/fragmentShader.fs";
 
-    std::filesystem::path vsTPath = cwd / "shaders/vertexShaderTrans.vs";
-    std::filesystem::path fsTPath = cwd / "shaders/fragmentShaderTrans.fs";
 
     std::filesystem::path cvsPath = cwd / "shaders/vertexShaderCrosshair.vs";
     std::filesystem::path cfsPath = cwd / "shaders/fragmentShaderCrosshair.fs";
     
     Shader shader = Shader(vsPath.string(), fsPath.string());
     Shader crosshairShader = Shader(cvsPath.string(),cfsPath.string());
-    Shader shaderTrans = Shader(vsTPath.string(),fsTPath.string());
 
     std::filesystem::path texturePath = cwd / "textures/texture.png";
 
@@ -422,47 +411,26 @@ int main(void)
     VertexArray vao = VertexArray();
     VertexBuffer vbo = VertexBuffer();
     ElementBuffer ebo = ElementBuffer();
-    VertexBuffer vboInstancedPos = VertexBuffer();
-    VertexBuffer vboInstancedTex = VertexBuffer();
+    VertexBuffer vboInst = VertexBuffer();
     
  
-    vbo.fillData<float>(blockVertices);
-    ebo.fillData(blockIndicies,BLOCK_INDICIES_COUNT);
+    vbo.fillData<float>(BLOCK_FACE_VERTEX_POS);
+    ebo.fillData<int>(BLOCK_FACE_INDICES);
 
     vbo.bind();
-    vao.setAttr(0,3,GL_FLOAT,8 * sizeof(float),0);
-    vao.setAttr(1,2,GL_FLOAT,8 * sizeof(float),3 * sizeof(float));
-    vao.setAttr(2,3,GL_FLOAT,8 * sizeof(float),5 * sizeof(float));
-
-    vboInstancedPos.bind();
-    vao.setAttr(3,3,GL_FLOAT,3 * sizeof(float),0);
-    GLCall( glVertexAttribDivisor(3,1) );
-
-    vboInstancedTex.bind();
-    vao.setAttr(4,2,GL_FLOAT,2 * sizeof(float),0);
-    GLCall( glVertexAttribDivisor(4,1) );
+    vao.setAttr(0,3,GL_FLOAT,3 * sizeof(float),0);
+   
+    vboInst.bind();
+    vao.setAttrI(1,1,sizeof(VertexDataInt),0);
+    GLCall( glVertexAttribDivisor(1,1) );
+    
 
     GLCall( glBindBuffer(GL_ARRAY_BUFFER, 0) );
     GLCall( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0) );
     GLCall( glBindVertexArray(0) );
 
 
-    // TRANSPARENT
-    VertexArray vaoTrans = VertexArray();
-    VertexBuffer vboTrans = VertexBuffer();
 
-    vaoTrans.bind();
-    vboTrans.bind();
-
-    vaoTrans.setAttr(0,3,GL_FLOAT,8 * sizeof(float),0);
-    vaoTrans.setAttr(1,2,GL_FLOAT,8 * sizeof(float),3 * sizeof(float));
-    vaoTrans.setAttr(2,3,GL_FLOAT,8 * sizeof(float),5 * sizeof(float));
-
-
-
-    GLCall( glBindBuffer(GL_ARRAY_BUFFER, 0) );
-    GLCall( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0) );
-    GLCall( glBindVertexArray(0) );
 
    
 
@@ -486,7 +454,7 @@ int main(void)
             }
 
             glm::vec3 chunkPos = glm::vec3(startX + (CHUNK_WIDTH / 2), 0.0, startY + (CHUNK_WIDTH / 2));
-            Chunk chunk = Chunk(chunkPos,vboInstancedPos,vboInstancedTex,vboTrans,&cameraPos);
+            Chunk chunk = Chunk(chunkPos,vboInst,&cameraPos);
             
             
             for (int i =startX; i< startX + CHUNK_WIDTH ; i++){
@@ -510,7 +478,6 @@ int main(void)
                     
                 }
             }
-            chunk.fillWater();
             
             
             
@@ -522,8 +489,10 @@ int main(void)
             }
             
             startX += CHUNK_WIDTH;
+            std::cout << startX << "\n";
         }
     }
+
 
   
     
@@ -575,44 +544,31 @@ int main(void)
         GLCall( glClearColor(0.68f, 0.84f, 0.9f, 1.0f) );
         GLCall( glClear(GL_COLOR_BUFFER_BIT) );
 
-        // shader.use();
+        shader.use();
 
         view = glm::lookAt(cameraPos,cameraPos - cameraFront, cameraUp);
         
-        // shader.setVec3Float("LightPos",cameraPos);
-        // shader.setMatrixFloat("projection",GL_FALSE,projection);
-        // shader.setMatrixFloat("view",GL_FALSE,view);
-        // shader.setMatrixFloat("model",GL_FALSE,model);
+        shader.setVec3Float("LightPos",cameraPos);
+        shader.setMatrixFloat("projection",GL_FALSE,projection);
+        shader.setMatrixFloat("view",GL_FALSE,view);
+        shader.setMatrixFloat("model",GL_FALSE,model);
 
-        // vao.bind();
-        // vbo.bind();
-        // ebo.bind();
+        vao.bind();
+        vbo.bind();
+        ebo.bind();
 
         
-        // for (int row = 0; row < chunks.size(); row++){
-        //     for (int column = 0; column < chunks[row].size(); column++){
-                
-        //         chunks[row][column].renderOpaque();
-                
-        //     }
-            
-        // }
-        shaderTrans.use();
-        shaderTrans.setMatrixFloat("projection",GL_FALSE,projection);
-        shaderTrans.setMatrixFloat("view",GL_FALSE,view);
-        shaderTrans.setMatrixFloat("model",GL_FALSE,model);
-
-        vaoTrans.bind();
-        vboTrans.bind();
-
         for (int row = 0; row < chunks.size(); row++){
             for (int column = 0; column < chunks[row].size(); column++){
+                Chunk chunk = chunks[row][column];
+                shader.setVec3Float("chunkPos",chunk.position);
                 
-                chunks[row][column].renderTrans();
+                chunk.renderOpaque();
                 
             }
             
         }
+        
 
 
         crosshairShader.use();

@@ -1,5 +1,6 @@
 #ifndef ELEMENT_BUFFER_H
 #define ELEMENT_BUFFER_H
+#include <vector>
 
 class ElementBuffer{
     private:
@@ -7,6 +8,12 @@ class ElementBuffer{
     public:
         ElementBuffer();
         void bind();
-        void fillData(unsigned int *indicies, unsigned int count);
+        template <typename T>
+        void fillData(const std::vector< T > &indices);
 };
+template <typename T>
+inline void ElementBuffer::fillData(const std::vector< T > &indices){
+    bind();
+    GLCall( glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof(T) * indices.size(), indices.data(), GL_STATIC_DRAW) );
+}
 #endif

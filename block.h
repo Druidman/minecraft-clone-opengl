@@ -17,8 +17,7 @@ enum BlockType{
 enum BlockFace {
     TOP_FACE, BOTTOM_FACE, FRONT_FACE, BACK_FACE, LEFT_FACE, RIGHT_FACE
 };
-
-const struct FaceData{
+struct FaceData{
     glm::vec3 pos;
     glm::vec3 normal;
     
@@ -46,15 +45,15 @@ glm::vec3 LEFT_FACE_POS = glm::vec3(-0.5,0.0,0.0);
 glm::vec3 RIGHT_FACE_POS = glm::vec3(0.5,0.0,0.0);
 
 const std::vector<float> BLOCK_FACE_VERTEX_POS = {
-    -0.5f,  0.5f, -0.5f, 
-    -0.5f,  0.5f,  0.5f,
-     0.5f,  0.5f,  0.5f, 
-     0.5f,  0.5f, -0.5f, 
+    -0.5f,  0.0f, -0.5f, 
+    -0.5f,  0.0f,  0.5f,
+     0.5f,  0.0f,  0.5f, 
+     0.5f,  0.0f, -0.5f, 
      
      
 };
 const std::vector<int> BLOCK_FACE_INDICES = {
-    0,1,2,2,1,3
+    0,1,2,2,3,0
 };
 
 

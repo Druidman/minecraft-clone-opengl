@@ -10,7 +10,7 @@
 #include "vertexBuffer.h"
 
 
-const int CHUNK_WIDTH = 32;
+const int CHUNK_WIDTH = 16;
 const int CHUNK_HEIGHT = 256;
 
 // block system works that first platform is bottom platform of blocks.
@@ -55,33 +55,31 @@ class Chunk{
             this->cameraPos = cameraPos;
     
         };
-        VertexDataInt setBit(unsigned int k, VertexDataInt data){
-            return (data | (1 << (k)));
-        }
+        
         void genBlockFacesVertices(Block block){
-            glm::vec3 position = block.position;
+            glm::vec3 blockPositionChunk = block.position - position + glm::vec3(CHUNK_WIDTH / 2, 0.0, CHUNK_WIDTH / 2);
             for (uint8_t face =0; face < 6; face++){
                 int textId;
                 if (face == 0){ //top
                     textId = block.type;
                 }
-                else if (face == 5){ //bottom
+                else if (face == 1){ //bottom
                     textId = block.type + 2;
                 }
                 else { //middle
                     textId = block.type + 1;
                 }
 
-                int zCoord = position.z - 0.5;
-                int yCoord = position.y - 0.5;
-                int xCoord = position.x - 0.5;
+                int zCoord = blockPositionChunk.z - 0.5;
+                int yCoord = blockPositionChunk.y - 0.5;
+                int xCoord = blockPositionChunk.x - 0.5;
                 VertexDataInt data = 0;
 
-                data |= ((VertexDataInt)(textId & 0x7F)) << 19;   // TTTTTTT: 7 bitów
-                data |= ((VertexDataInt)(face & 0x7)) << 16;      // NNN: 3 bity
-                data |= ((VertexDataInt)(xCoord & 0xF)) << 12;      // XXXX: 4 bity
-                data |= ((VertexDataInt)(yCoord & 0xFF)) << 4;      // YYYYYYYY: 8 bitów
-                data |= ((VertexDataInt)(zCoord & 0xF));            // ZZZZ: 4 bity
+                data |= ((VertexDataInt)(textId & 127)) << 19;   // TTTTTTT: 7 bitów
+                data |= ((VertexDataInt)(face & 7)) << 16;      // NNN: 3 bity
+                data |= ((VertexDataInt)(xCoord & 15)) << 12;      // XXXX: 4 bity
+                data |= ((VertexDataInt)(yCoord & 255)) << 4;      // YYYYYYYY: 8 bitów
+                data |= ((VertexDataInt)(zCoord & 15));            // ZZZZ: 4 bity
                         
                 blockFaceVertices.push_back(data);    
             }

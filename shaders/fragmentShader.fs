@@ -29,8 +29,7 @@ void main()
     float alpha = texture(text,TexCoords)[3];
     
     
-        
-    Color = vec4(result,1.0);
+    Color = vec4(norm,1.0);
     
     
 }
