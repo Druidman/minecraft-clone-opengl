@@ -95,16 +95,16 @@ void placeBlock(auto &chunks){
     }
     BlockIntersection intersection = result.value();
 
-    Block &currentBlock = *intersection.block;
+    Block *currentBlock = intersection.block;
     glm::vec3 hitPos = intersection.hitPos;
 
     std::vector <float > distanceToFaces = {
-        glm::distance(hitPos, currentBlock.position + FRONT_FACE_POS),
-        glm::distance(hitPos, currentBlock.position + BACK_FACE_POS),
-        glm::distance(hitPos, currentBlock.position + TOP_FACE_POS),
-        glm::distance(hitPos, currentBlock.position + BOTTOM_FACE_POS),
-        glm::distance(hitPos, currentBlock.position + LEFT_FACE_POS),
-        glm::distance(hitPos, currentBlock.position + RIGHT_FACE_POS)
+        glm::distance(hitPos, currentBlock->position + FRONT_FACE_POS),
+        glm::distance(hitPos, currentBlock->position + BACK_FACE_POS),
+        glm::distance(hitPos, currentBlock->position + TOP_FACE_POS),
+        glm::distance(hitPos, currentBlock->position + BOTTOM_FACE_POS),
+        glm::distance(hitPos, currentBlock->position + LEFT_FACE_POS),
+        glm::distance(hitPos, currentBlock->position + RIGHT_FACE_POS)
     };
     float minDistance = 100;
     int minDistanceInd = 0;
@@ -115,7 +115,7 @@ void placeBlock(auto &chunks){
             minDistanceInd = i;
         }
     }
-    glm::vec3 placePos = currentBlock.position;
+    glm::vec3 placePos = currentBlock->position;
     switch (minDistanceInd)
     {
         case 0:
@@ -141,13 +141,15 @@ void placeBlock(auto &chunks){
             break;
     }
     
+
     std::optional<Chunk*> res = getChunkByPos(placePos,chunks);
     if (!res.has_value()){
         return ;
     }
 
-    Chunk &placeChunk = *res.value();
-    placeChunk.addBlock(Block(STONE,placePos));
+    Chunk *placeChunk = res.value();
+    placeChunk->addBlock(Block(STONE,placePos));
+    placeChunk->genChunkMesh();
     
 }
 
@@ -158,16 +160,16 @@ void destroyBlock(auto &chunks){
     }
     BlockIntersection intersection = result.value();
 
-    Block &currentBlock = *intersection.block;
-    Chunk &chunk = *intersection.chunk;
+    Block *currentBlock = intersection.block;
+    Chunk *chunk = intersection.chunk;
     glm::vec3 hitPos = intersection.hitPos;
 
-    glm::vec3 inChunk = hitPos - chunk.position + glm::vec3( CHUNK_WIDTH / 2, 0.0 , CHUNK_WIDTH / 2 );
-    int platform = std::floor(inChunk.y);
-    int row = std::floor(inChunk.z);
-    int column = std::floor(inChunk.x);
-
-    chunk.removeBlock(platform,row,column);
+    
+    int platform = floor(hitPos.y) - chunk->position.y;
+    int col = floor(hitPos.x) - (chunk->position.x - (CHUNK_WIDTH / 2));
+    int row = floor(hitPos.z) - (chunk->position.z - (CHUNK_WIDTH / 2));
+    chunk->removeBlock(platform,row,col);
+    chunk->genChunkMesh();
     
     
 }
@@ -180,37 +182,31 @@ std::optional<BlockIntersection> lookAtBlock(std::vector< std::vector< Chunk > >
     bool targetFound = false;
     for (int i=0; i<PLAYER_RANGE * 50; i++){
     
-        target -= playerDirection / 50.0f;
+        target += playerDirection / 50.0f;
 
         std::optional<Chunk*> result = getChunkByPos(target,chunks);
         if (!result.has_value()){
             continue ;
         }
 
-        Chunk &currentChunk = *result.value();
+        Chunk *currentChunk = result.value();
 
-        glm::vec3 inChunk = target - currentChunk.position + glm::vec3( CHUNK_WIDTH / 2, 0.0 , CHUNK_WIDTH / 2 );
-        int platformB = std::floor(inChunk.y);
-        int rowB = std::floor(inChunk.z);
-        int columnB = std::floor(inChunk.x);
-
-        if (platformB > currentChunk.blocks.size() - 1){
-       
-            continue ; 
+        std::optional<Block*> blockRes = currentChunk->getBlock(target);
+        if (!blockRes.has_value()){
+            continue ;
         }
-        if (currentChunk.blocks[platformB][rowB][columnB].type != NONE_BLOCK && currentChunk.blocks[platformB][rowB][columnB].type != WATER){
-    
-            Block &currentBlock = currentChunk.blocks[platformB][rowB][columnB];
-    
+        Block *currentBlock = blockRes.value();
 
-
-            BlockIntersection intersection;
-            intersection.block = &currentBlock;
-            intersection.chunk = &currentChunk;
-            intersection.hitPos = target;
-
-            return intersection;
+        if (currentBlock->type == WATER){
+            continue ;
         }
+
+        BlockIntersection intersection;
+        intersection.block = currentBlock;
+        intersection.chunk = currentChunk;
+        intersection.hitPos = target;
+        
+        return intersection;
         
     }
     
@@ -237,19 +233,19 @@ void process_key_press(GLFWwindow *window, int key){
 void process_input(GLFWwindow *window, auto &chunks){
     float speed = 1;
     if (glfwGetKey(window,GLFW_KEY_W)){
-        cameraPos -= speed * cameraFront;
+        cameraPos += speed * cameraFront;
     
     }
     if (glfwGetKey(window,GLFW_KEY_S)){
-        cameraPos += speed * cameraFront;
+        cameraPos -= speed * cameraFront;
 
     }
     if (glfwGetKey(window,GLFW_KEY_D)){
-        cameraPos += speed * glm::normalize(glm::cross(cameraUp,cameraFront));
+        cameraPos -= speed * glm::normalize(glm::cross(cameraUp,cameraFront));
     
     }
     if (glfwGetKey(window,GLFW_KEY_A)){
-        cameraPos -= speed * glm::normalize(glm::cross(cameraUp,cameraFront));
+        cameraPos += speed * glm::normalize(glm::cross(cameraUp,cameraFront));
         
     }
 
@@ -289,7 +285,7 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos){
     
 
     yaw -= changeX * 0.1;
-    pitch -= changeY * 0.1;
+    pitch += changeY * 0.1;
 
     if (pitch <= -89.0){
         pitch = -89.0;
@@ -589,7 +585,7 @@ int main()
 
         shader.use();
 
-        view = glm::lookAt(cameraPos,cameraPos - cameraFront, cameraUp);
+        view = glm::lookAt(cameraPos,cameraPos + cameraFront, cameraUp);
         
         shader.setInt("playerState",playerState);
         shader.setVec3Float("LightPos",cameraPos);

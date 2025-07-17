@@ -92,9 +92,9 @@ class Chunk{
         }
         
         std::optional< Block* > getBlock(glm::vec3 positionInWorld){
-            int platform = round(positionInWorld.y) - position.y;
-            int col = round(positionInWorld.x) - (position.x - (CHUNK_WIDTH / 2));
-            int row = round(positionInWorld.z) - (position.z - (CHUNK_WIDTH / 2));
+            int platform = floor(positionInWorld.y) - position.y;
+            int col = floor(positionInWorld.x) - (position.x - (CHUNK_WIDTH / 2));
+            int row = floor(positionInWorld.z) - (position.z - (CHUNK_WIDTH / 2));
             // std::cout << "p: " << platform << " c: " << this->position.x << " r: " << row << "\n";
             return getBlock(platform,row,col);
         }

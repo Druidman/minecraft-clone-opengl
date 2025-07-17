@@ -113,7 +113,7 @@ void main()
     
 
     vec3 blockOffset = vec3(xPos, yPos, zPos);
-    vec3 worldPosition = rotatedBasePos + chunkPos + blockOffset - vec3(16.0,0.0,16.0);
+    vec3 worldPosition = rotatedBasePos + chunkPos + blockOffset - vec3(8.0,0.0,8.0);
 
     gl_Position = projection * view * model * vec4(worldPosition, 1.0);
     Pos = vec3(model * vec4(worldPosition, 1.0));
