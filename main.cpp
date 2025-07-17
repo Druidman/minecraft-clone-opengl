@@ -22,6 +22,10 @@
 #include "chunk.h"
 
 
+enum PlayerState{
+    IN_AIR, IN_WATER, ON_GROUND
+};
+
 
 typedef unsigned int uint;
 
@@ -43,7 +47,7 @@ glm::mat4 model(1.0f);
 glm::mat4 view = glm::lookAt(cameraPos,cameraPos + cameraFront,cameraUp);
 glm::mat4 projection = glm::perspective(glm::radians(45.0),(double)WINDOW_WIDTH/WINDOW_HEIGHT,0.1,1000.0);
 
-
+PlayerState playerState = IN_AIR;
 bool removeChunk = false;
 
 template <typename T>
@@ -219,11 +223,11 @@ void process_key_release(GLFWwindow *window, int key){
     }
      
     if (key == GLFW_KEY_ENTER){
-        removeChunk = true;
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     }
-    // if (key == GLFW_KEY_SPACE){
-    //     destroyBlock();
-    // }
+    if (key == GLFW_KEY_SPACE){
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    }
 }
 
 void process_key_press(GLFWwindow *window, int key){
@@ -352,6 +356,33 @@ std::vector<int> world_gen(int sizex , int sizey){
 
 }
 
+void setPlayerState(glm::vec3 playerPos, auto &chunks){
+    std::optional<Chunk*> res = getChunkByPos(playerPos,chunks);
+    if (!res.has_value()){
+        playerState = IN_AIR;
+        return ;
+    }
+    
+    Chunk* chunk = res.value();
+    std::optional< Block* > blockRes = chunk->getBlock(playerPos);
+    if (!blockRes.has_value()){ //NONE BLOCK so player is in AIR
+        playerState = IN_AIR;
+        return ;
+    } //return because ground checking logic isn't done ! TODO !
+    Block* block = blockRes.value();
+    // std::cout << "block found\n";
+    switch (block->type)
+    {
+    case WATER:
+        playerState = IN_WATER;
+        break;
+    default:
+        playerState = ON_GROUND;
+        break;
+    }
+
+}
+
 int main()
 {
     
@@ -442,7 +473,7 @@ int main()
    
 
 
-    const int WORLD_WIDTH = 1000;
+    const int WORLD_WIDTH = 512;
     const unsigned long long WORLD_BLOCKS_COUNT = WORLD_WIDTH * WORLD_WIDTH;
     const unsigned long long WORLD_CHUNKS_COUNT = WORLD_BLOCKS_COUNT / ((unsigned long long)CHUNK_WIDTH * CHUNK_WIDTH);
     std::vector<int> world = world_gen(WORLD_WIDTH,WORLD_WIDTH);
@@ -486,20 +517,21 @@ int main()
                 }
             }
             chunk.fillWater();
-            
+            chunk.genChunkMesh();
             
             
             
             
             if (column == 0){
                 chunks.push_back(std::vector<Chunk>(1,chunk));
+                
             }
             else{
                 chunks[row].push_back(chunk);
             }
             
             startX += CHUNK_WIDTH;
-            std::cout << startX << "\n";
+            
         }
     }
     for (int row =0; row < chunks.size(); row++){
@@ -517,8 +549,8 @@ int main()
     /* Loop until the user closes the window */
     double avgFPS = 0;
     std::vector<double> fpsS;
-    // GLCall( glEnable(GL_CULL_FACE) );  
-    // GLCall( glCullFace(GL_BACK) );  
+ 
+    
     std::cout << "SIEMA" << "\n";
     while (!glfwWindowShouldClose(window))
     {
@@ -542,6 +574,7 @@ int main()
 
         last = glfwGetTime();
         process_input(window,chunks);
+        setPlayerState(cameraPos,chunks);
         std::sort(chunkRefs.begin(),chunkRefs.end(),[&](Chunk *a, Chunk *b){ 
             
             float aDist = glm::distance(a->position,cameraPos);
@@ -558,6 +591,7 @@ int main()
 
         view = glm::lookAt(cameraPos,cameraPos - cameraFront, cameraUp);
         
+        shader.setInt("playerState",playerState);
         shader.setVec3Float("LightPos",cameraPos);
         shader.setMatrixFloat("projection",GL_FALSE,projection);
         shader.setMatrixFloat("view",GL_FALSE,view);
@@ -574,6 +608,12 @@ int main()
             shader.setVec3Float("chunkPos",(*chunk).position);
             
             (*chunk).renderOpaque();
+        }   
+        for (Chunk* chunk : chunkRefs){
+         
+            shader.setVec3Float("chunkPos",(*chunk).position);
+            
+            (*chunk).renderTransparent();
         }   
         
                 

@@ -8,6 +8,7 @@ out vec4 Color;
 
 uniform sampler2D text;
 uniform vec3 LightPos;
+uniform int playerState;
 
 void main()
 {
@@ -26,8 +27,21 @@ void main()
 
     vec3 result = (ambient + diffuse) * vec3(objectColor);
 
+    if (playerState == 0){
+        Color = vec4(result,objectColor[3]);
+    }
+    else if (playerState == 1){
+        Color = vec4(result + vec3(0.0,0.069,0.247),objectColor[3]);
+    }
+    else if (playerState == 2){
+        Color = vec4(result,objectColor[3]);
+    }
     
-    Color = vec4(result,objectColor[3]);
+    
+    
+
+
+    
     
     
 }
