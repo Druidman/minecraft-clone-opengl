@@ -48,8 +48,9 @@ glm::mat4 view = glm::lookAt(cameraPos,cameraPos + cameraFront,cameraUp);
 glm::mat4 projection = glm::perspective(glm::radians(45.0),(double)WINDOW_WIDTH/WINDOW_HEIGHT,0.1,1000.0);
 
 PlayerState playerState = IN_AIR;
+std::vector< std::vector <Chunk> > chunks;
 bool removeChunk = false;
-
+bool stopMovingCamera = false;
 template <typename T>
 struct Result
 {
@@ -219,9 +220,11 @@ void process_key_release(GLFWwindow *window, int key){
     }
      
     if (key == GLFW_KEY_ENTER){
+        stopMovingCamera = true;
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     }
     if (key == GLFW_KEY_SPACE){
+        stopMovingCamera = false;
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     }
 }
@@ -249,12 +252,7 @@ void process_input(GLFWwindow *window, auto &chunks){
         
     }
 
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS){
-        destroyBlock(chunks);
-    }
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS){
-        placeBlock(chunks);
-    }
+    
 }
 
 void input_callback(GLFWwindow *window, int key, int scancode, int action, int mods){
@@ -269,6 +267,10 @@ void input_callback(GLFWwindow *window, int key, int scancode, int action, int m
 }
 void cursor_position_callback(GLFWwindow *window, double xpos, double ypos){
     
+    if (stopMovingCamera){
+        return ;
+    }
+
     if (firstMouse)
     {
         
@@ -379,6 +381,16 @@ void setPlayerState(glm::vec3 playerPos, auto &chunks){
 
 }
 
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS){
+        placeBlock(chunks);
+    }
+    else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS){
+        destroyBlock(chunks);
+    }
+}
+
 int main()
 {
     
@@ -399,9 +411,18 @@ int main()
     }
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
+
+
+
+
     glfwSetWindowSizeCallback(window,resize_callback);
     glfwSetCursorPosCallback(window, cursor_position_callback);
     glfwSetKeyCallback(window,input_callback);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
+
+
+
+
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSwapInterval( 0 );
     
@@ -474,7 +495,7 @@ int main()
     const unsigned long long WORLD_CHUNKS_COUNT = WORLD_BLOCKS_COUNT / ((unsigned long long)CHUNK_WIDTH * CHUNK_WIDTH);
     std::vector<int> world = world_gen(WORLD_WIDTH,WORLD_WIDTH);
 
-    std::vector< std::vector <Chunk> > chunks;
+    
     std::vector<Chunk*> chunkRefs;
 
 
