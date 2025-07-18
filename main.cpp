@@ -233,22 +233,25 @@ void process_key_press(GLFWwindow *window, int key){
     
 }
 
-void process_input(GLFWwindow *window, auto &chunks){
-    float speed = 1;
+void process_input(GLFWwindow *window, auto &chunks, double delta){
+    float speed = 0.1;
     if (glfwGetKey(window,GLFW_KEY_W)){
-        cameraPos += speed * cameraFront;
+        cameraPos += speed * cameraFront * delta;
+        setPlayerState(cameraPos,chunks);
     
     }
     if (glfwGetKey(window,GLFW_KEY_S)){
-        cameraPos -= speed * cameraFront;
-
+        cameraPos -= speed * cameraFront * delta;
+        setPlayerState(cameraPos,chunks);
     }
     if (glfwGetKey(window,GLFW_KEY_D)){
-        cameraPos -= speed * glm::normalize(glm::cross(cameraUp,cameraFront));
+        cameraPos -= speed * glm::normalize(glm::cross(cameraUp,cameraFront)) * delta;
+        setPlayerState(cameraPos,chunks);
     
     }
     if (glfwGetKey(window,GLFW_KEY_A)){
-        cameraPos += speed * glm::normalize(glm::cross(cameraUp,cameraFront));
+        cameraPos += speed * glm::normalize(glm::cross(cameraUp,cameraFront)) * delta;
+        setPlayerState(cameraPos,chunks);
         
     }
 
@@ -322,7 +325,7 @@ std::vector<int> world_gen(int sizex , int sizey){
     noise.octaves = 4;
     noise.seed = 1652;
 
-    noise.noise_type = FNL_NOISE_CELLULAR;
+    noise.noise_type = FNL_NOISE_PERLIN;
 
     // Gather noise data
     
@@ -473,8 +476,8 @@ int main()
     ebo.fillData<int>(BLOCK_FACE_INDICES);
 
     vbo.bind();
-    vao.setAttr(0,3,GL_FLOAT,5 * sizeof(float),0);
-    vao.setAttr(1,2,GL_FLOAT,5 * sizeof(float),3 * sizeof(float));
+    vao.setAttr(0,3,GL_FLOAT,4 * sizeof(float),0);
+    vao.setAttr(1,1,GL_FLOAT,4 * sizeof(float),3 * sizeof(float));
     vboInst.bind();
     vao.setAttrI(2,1,sizeof(VertexDataInt),0);
     GLCall( glVertexAttribDivisor(2,1) );
@@ -560,7 +563,10 @@ int main()
         }   
     }
 
-  
+   
+
+    
+    
     
         
     
@@ -593,14 +599,14 @@ int main()
         
 
         last = glfwGetTime();
-        process_input(window,chunks);
-        setPlayerState(cameraPos,chunks);
-        std::sort(chunkRefs.begin(),chunkRefs.end(),[&](Chunk *a, Chunk *b){ 
-            
-            float aDist = glm::distance(a->position,cameraPos);
-            float bDist = glm::distance(b->position,cameraPos);
-            return aDist > bDist; 
-        });
+        process_input(window,chunks,delta);
+        
+        // std::sort(chunkRefs.begin(),chunkRefs.end(),[&](Chunk *a, Chunk *b){ 
+ 
+        //     float aDist = glm::distance(a->position,cameraPos);
+        //     float bDist = glm::distance(b->position,cameraPos);
+        //     return aDist > bDist; 
+        // });
         /* Render here */
         
         
@@ -620,9 +626,8 @@ int main()
         vao.bind();
         vbo.bind();
         ebo.bind();
-
     
-        
+    
         for (Chunk* chunk : chunkRefs){
          
             shader.setVec3Float("chunkPos",(*chunk).position);

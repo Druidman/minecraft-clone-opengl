@@ -45,10 +45,10 @@ glm::vec3 LEFT_FACE_POS = glm::vec3(-0.5,0.0,0.0);
 glm::vec3 RIGHT_FACE_POS = glm::vec3(0.5,0.0,0.0);
 
 const std::vector<float> BLOCK_FACE_VERTEX_POS = {
-    -0.5f,  0.0f, -0.5f, 0.0, 0.75,
-    -0.5f,  0.0f,  0.5f, 0.0, 1.0,
-     0.5f,  0.0f,  0.5f, 0.25, 1.0,
-     0.5f,  0.0f, -0.5f, 0.25, 0.75
+    -0.5f,  0.0f, -0.5f, 1,               // 0.0, 1.0,  top left
+    -0.5f,  0.0f,  0.5f, 0,               // 0.0, 0.75, bottom left
+     0.5f,  0.0f,  0.5f, 3,               // 0.25, 0.75 bottom right
+     0.5f,  0.0f, -0.5f, 2                // 0.25, 1.0, top right
      
      
 };

@@ -3,8 +3,8 @@
 #version 330 core
 
 layout (location = 0) in vec3 aBasePosition;
-layout (location = 1) in vec2 aBaseTexCoord;
-layout (location = 2) in int vertexData;  // <- Input int directly
+layout (location = 1) in float vertexType;
+layout (location = 2) in int vertexData;  
 
 out vec2 TexCoords;
 out vec3 Normal;
@@ -14,8 +14,7 @@ uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
 uniform vec3 chunkPos;
-
-
+    
 vec3 rotateVertexPosition(vec3 pos, int face) {
     if (face == 0) { // top (Y+)
         pos.y += 0.5;
@@ -64,28 +63,88 @@ vec3 rotateVertexPosition(vec3 pos, int face) {
     return pos; // fallback
 }
 
-vec2 rotateUV(vec2 uv, int face) {
-    // Rotate around center (0.5, 0.5)
-    vec2 centered = uv - vec2(0.5);
 
-    if (face == 2) { // front
-        // No rotation
-    } else if (face == 3) { // back
-        // 180 degrees
-        centered = -centered;
-    } else if (face == 4) { // left
-        // 90 degrees
-        centered = vec2(-centered.y, centered.x);
-    } else if (face == 5) { // right
-        // -90 degrees
-        centered = vec2(centered.y, -centered.x);
-    } else if (face == 0 || face == 1) {
-        // You can choose how top/bottom faces are oriented
-        // This example rotates them 90 degrees for top and -90 for bottom
-        centered = (face == 0) ? vec2(-centered.y, centered.x) : vec2(centered.y, -centered.x);
+vec2 getUV(int vertexType, int face) {
+    // vertex type is int 0,1,2,3
+
+    // 0: 0.0, 0.75, bottom left
+    // 1: 0.0, 1.0,  top left
+    // 2: 0.25, 1.0, top right
+    // 3: 0.25, 0.75 bottom right
+
+    if (face == 0) { 
+        // top (Y+) 
+    }
+    else if (face == 1) { 
+        // bottom (Y-) 
+    }
+    else if (face == 2) { 
+        // front (Z+) 
+    }
+    else if (face == 3) { 
+        // back
+        if (vertexType == 0) { 
+            vertexType = 2; 
+        }
+        else if (vertexType == 1) { 
+            vertexType = 3; 
+        }
+        else if (vertexType == 2) { 
+            vertexType = 0; 
+        }
+        else if (vertexType == 3) { 
+            vertexType = 1; 
+        }
+    }
+    else if (face == 4) { 
+        // left (X-)
+        if (vertexType == 0) { 
+            vertexType = 2; 
+        }
+        else if (vertexType == 1) { 
+            vertexType = 1; 
+        }
+        else if (vertexType == 2) { 
+            vertexType = 0; 
+        }
+        else if (vertexType == 3) { 
+            vertexType = 3; 
+        }
+        
+    }
+    else if (face == 5) { 
+        // right (X+)
+        if (vertexType == 0) { 
+            vertexType = 0; 
+        }
+        else if (vertexType == 1) { 
+            vertexType = 3; 
+        }
+        else if (vertexType == 2) { 
+            vertexType = 2; 
+        }
+        else if (vertexType == 3) { 
+            vertexType = 1; 
+        }
     }
 
-    return centered + vec2(0.5);
+    vec2 uvCoord;
+    if (vertexType == 0){
+        uvCoord = vec2(0.0, 0.75);
+    }
+    else if (vertexType == 1){
+        uvCoord = vec2(0.0, 1.0);
+    }
+    else if (vertexType == 2){
+        uvCoord = vec2(0.25, 1.0);
+    }
+    else if (vertexType == 3){
+        uvCoord = vec2(0.25, 0.75);
+    }
+    return uvCoord;
+
+
+
 }
 
 
@@ -123,6 +182,6 @@ void main()
     float yChange = - ( floor( textureId / 4.0) * 0.25 );
     float xChange = (textureId / 4.0 - int(textureId / 4));
     
-  
-    TexCoords = aBaseTexCoord + vec2(xChange,yChange); 
+    vec2 vertexUvs = getUV(int(vertexType),face);
+    TexCoords = vertexUvs + vec2(xChange,yChange); 
 }
