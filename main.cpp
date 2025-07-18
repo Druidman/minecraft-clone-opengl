@@ -366,7 +366,7 @@ std::vector<int> world_gen(int sizex , int sizey){
         for (int x = 0; x < sizex; x++) 
         {
             float gen = fnlGetNoise2D(&noise, y, x);
-            gen = (gen + 1) / 2 * 100;
+            gen = pow(2,((gen + 1) / 2 * 10));
 
             world[index++] = (int)gen;
             if ((int)gen < min){
