@@ -234,23 +234,23 @@ void process_key_press(GLFWwindow *window, int key){
 }
 
 void process_input(GLFWwindow *window, auto &chunks, double delta){
-    float speed = 0.1;
+    float speed = 100 * delta;
     if (glfwGetKey(window,GLFW_KEY_W)){
-        cameraPos += speed * cameraFront * delta;
+        cameraPos += speed * cameraFront;
         setPlayerState(cameraPos,chunks);
     
     }
     if (glfwGetKey(window,GLFW_KEY_S)){
-        cameraPos -= speed * cameraFront * delta;
+        cameraPos -= speed * cameraFront;
         setPlayerState(cameraPos,chunks);
     }
     if (glfwGetKey(window,GLFW_KEY_D)){
-        cameraPos -= speed * glm::normalize(glm::cross(cameraUp,cameraFront)) * delta;
+        cameraPos -= speed * glm::normalize(glm::cross(cameraUp,cameraFront));
         setPlayerState(cameraPos,chunks);
     
     }
     if (glfwGetKey(window,GLFW_KEY_A)){
-        cameraPos += speed * glm::normalize(glm::cross(cameraUp,cameraFront)) * delta;
+        cameraPos += speed * glm::normalize(glm::cross(cameraUp,cameraFront));
         setPlayerState(cameraPos,chunks);
         
     }
@@ -313,6 +313,36 @@ void cursor_position_callback(GLFWwindow *window, double xpos, double ypos){
     cursorPos.x = xpos;
     cursorPos.y = ypos;
 
+}
+
+std::vector<float> tree_gen(int sizex , int sizey){
+    std::vector<float> trees(sizex * sizey, 0.0f);
+
+        // Create and configure noise state
+    fnl_state noise = fnlCreateState();
+    noise.fractal_type = FNL_FRACTAL_NONE;
+    noise.frequency = 0.011;
+    noise.octaves = 3;
+    noise.seed = 1337;
+
+    noise.noise_type = FNL_NOISE_VALUE;
+
+    // Gather noise data
+    
+    unsigned long int index = 0;
+    for (int y = 0; y < sizey; y++)
+    {
+        for (int x = 0; x < sizex; x++) 
+        {
+            float gen = fnlGetNoise2D(&noise, y, x);
+            gen = (gen + 1) / 2;
+
+            trees[index++] = gen;
+            
+        }
+    }
+    
+    return trees;
 }
 
 std::vector<int> world_gen(int sizex , int sizey){
@@ -493,10 +523,11 @@ int main()
    
 
 
-    const int WORLD_WIDTH = 512;
+    const int WORLD_WIDTH = 768;
     const unsigned long long WORLD_BLOCKS_COUNT = WORLD_WIDTH * WORLD_WIDTH;
     const unsigned long long WORLD_CHUNKS_COUNT = WORLD_BLOCKS_COUNT / ((unsigned long long)CHUNK_WIDTH * CHUNK_WIDTH);
     std::vector<int> world = world_gen(WORLD_WIDTH,WORLD_WIDTH);
+    std::vector<float> trees = tree_gen(WORLD_WIDTH,WORLD_WIDTH);
 
     
     std::vector<Chunk*> chunkRefs;
@@ -536,14 +567,35 @@ int main()
                     
                     chunk.fillUnderBlock(block);
                     
+                }
+            }
+            
+            chunk.fillWater();
+
+            for (int i =startX + 3; i< startX + CHUNK_WIDTH - 3; i+= 6){
+                for (int j =startY + 3; j< startY + CHUNK_WIDTH - 3; j+=6){
+
+                    float treeChance = trees[j * WORLD_WIDTH + i];
+                    if (treeChance < 0.5){
+                        continue ;
+                    }
+                    float zCoord = world[j * WORLD_WIDTH + i] + 0.5;
+                    
+                    glm::vec3 treePos = glm::vec3(i + 0.5 + (rand() % 6), zCoord ,j + 0.5 + (rand() % 6));
+                    auto blockRes = chunk.getBlock(treePos);
+                    if (!blockRes.has_value()){ // cause that means smth went really wrong 
+                        continue ;
+                    }
+                    
+                    Block *block = blockRes.value();
+                    if (block->type != GRASS_DIRT){
+                        continue ;
+                    }
+                    chunk.addTree(block->position + glm::vec3(0.0,1.0,0.0));
+
                     
                 }
             }
-            chunk.fillWater();
-            chunk.genChunkMesh();
-            
-            
-            
             
             if (column == 0){
                 chunks.push_back(std::vector<Chunk>(1,chunk));
@@ -562,13 +614,9 @@ int main()
             chunkRefs.push_back(&chunks[row][col]);
         }   
     }
-
-   
-
-    
-    
-    
-        
+    for (Chunk* chunk : chunkRefs){
+        chunk->genChunkMesh();
+    }
     
 
     double last = glfwGetTime();
@@ -578,6 +626,8 @@ int main()
  
     
     std::cout << "SIEMA" << "\n";
+    
+
     while (!glfwWindowShouldClose(window))
     {
         

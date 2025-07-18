@@ -26,6 +26,7 @@ void main()
     vec3 diffuse = diff * lightColor;
 
     vec3 result = (ambient + diffuse) * vec3(objectColor);
+    // Color =  vec4(normalize(Normal) * 0.5 + 0.5, 1.0);
 
     if (playerState == 0){
         Color = vec4(result,objectColor[3]);

@@ -1,5 +1,3 @@
-
-
 #version 330 core
 
 layout (location = 0) in vec3 aBasePosition;
@@ -130,7 +128,7 @@ vec2 getUV(int vertexType, int face) {
 
     vec2 uvCoord;
     if (vertexType == 0){
-        uvCoord = vec2(0.0, 0.75);
+        uvCoord = vec2(0.0, 0.9);
     }
     else if (vertexType == 1){
         uvCoord = vec2(0.0, 1.0);
@@ -139,7 +137,7 @@ vec2 getUV(int vertexType, int face) {
         uvCoord = vec2(0.25, 1.0);
     }
     else if (vertexType == 3){
-        uvCoord = vec2(0.25, 0.75);
+        uvCoord = vec2(0.25, 0.9);
     }
     return uvCoord;
 
@@ -179,7 +177,7 @@ void main()
     Normal = NORMALS[face];
 
 
-    float yChange = - ( floor( textureId / 4.0) * 0.25 );
+    float yChange = - ( floor( textureId / 4.0) * 0.1 );
     float xChange = (textureId / 4.0 - int(textureId / 4));
     
     vec2 vertexUvs = getUV(int(vertexType),face);

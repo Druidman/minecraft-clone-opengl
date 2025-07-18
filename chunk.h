@@ -9,6 +9,7 @@
 
 #include "block.h"
 #include "vertexBuffer.h"
+#include "models.h"
 
 const int CHUNK_WIDTH = 16;
 const int CHUNK_HEIGHT = 256;
@@ -62,7 +63,7 @@ public:
     };
     bool isBlockTransparent(Block *block)
     {
-        if (block->type == WATER)
+        if (block->type == WATER || block->type == LEAF)
         {
             return true;
         }
@@ -209,7 +210,7 @@ public:
                     Block *block = res.value();
 
                     std::vector<VertexDataInt> *buffer;
-                    if (block->type == WATER)
+                    if (block->type == WATER || block->type == LEAF)
                     {
                         buffer = &transparentFacesData;
                     }
@@ -252,9 +253,10 @@ public:
             }
         }
     }
-
+    
     void renderOpaque()
     {
+        
         vboInst.fillData<VertexDataInt>(opaqueFacesData);
         glDrawElementsInstanced(GL_TRIANGLES, BLOCK_FACE_INDICES.size(), GL_UNSIGNED_INT, 0, opaqueFacesData.size());
     };
@@ -277,7 +279,7 @@ public:
             block.position.z < this->position.z - CHUNK_WIDTH ||
             block.position.y < this->position.y)
         {
-            ExitError("CHUNK", "adding block to chunk outside its borders");
+            // ExitError("CHUNK", "adding block to chunk outside its borders");
             return;
         }
         int platform = block.position.y - 0.5 - position.y;
@@ -290,7 +292,7 @@ public:
             column < 0 ||
             platform < 0)
         {
-            ExitError("CHUNK", "invalid row or column");
+            // ExitError("CHUNK", "invalid row or column");
             return;
         }
 
@@ -376,6 +378,17 @@ public:
             
         }
     }
+
+    void addTree(glm::vec3 positionInWorld){
+        for (glm::vec3 blockPos : TREE::woodPositions){
+            addBlock(Block(WOOD,blockPos + positionInWorld));
+        }
+        for (glm::vec3 blockPos : TREE::leafPositions){
+            addBlock(Block(LEAF,blockPos + positionInWorld));
+        }
+    }
+
 };
+
 
 #endif

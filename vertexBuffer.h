@@ -21,4 +21,5 @@ inline void VertexBuffer::fillData(const std::vector< T > &vertices){
     bind();
     GLCall( glBufferData(GL_ARRAY_BUFFER,vertices.size() * sizeof(T),vertices.data(),GL_DYNAMIC_DRAW) );
 }
+
 #endif
