@@ -322,7 +322,7 @@ std::vector<int> world_gen(int sizex , int sizey){
     noise.octaves = 4;
     noise.seed = 1652;
 
-    noise.noise_type = FNL_NOISE_PERLIN;
+    noise.noise_type = FNL_NOISE_CELLULAR;
 
     // Gather noise data
     
@@ -530,6 +530,9 @@ int main()
                     Block block(blockType,glm::vec3(i + 0.5, zCoord ,j + 0.5));
                     
                     chunk.addBlock(block);
+                    
+                    chunk.fillUnderBlock(block);
+                    
                     
                 }
             }
