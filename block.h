@@ -35,14 +35,14 @@ const std::vector< FaceData > FACES_DATA = {
     {glm::vec3(0.5,0.0,0.0) , glm::vec3(1.0f, 0.0f, 0.0f)},//right
 };
 
-glm::vec3 TOP_FACE_POS = glm::vec3(0.0,0.5,0.0);
-glm::vec3 BOTTOM_FACE_POS = glm::vec3(0.0,-0.5,0.0);
+const glm::vec3 TOP_FACE_POS = glm::vec3(0.0,0.5,0.0);
+const glm::vec3 BOTTOM_FACE_POS = glm::vec3(0.0,-0.5,0.0);
 
-glm::vec3 FRONT_FACE_POS = glm::vec3(0.0,0.0,0.5);
-glm::vec3 BACK_FACE_POS = glm::vec3(0.0,0.0,-0.5);
+const glm::vec3 FRONT_FACE_POS = glm::vec3(0.0,0.0,0.5);
+const glm::vec3 BACK_FACE_POS = glm::vec3(0.0,0.0,-0.5);
 
-glm::vec3 LEFT_FACE_POS = glm::vec3(-0.5,0.0,0.0);
-glm::vec3 RIGHT_FACE_POS = glm::vec3(0.5,0.0,0.0);
+const glm::vec3 LEFT_FACE_POS = glm::vec3(-0.5,0.0,0.0);
+const glm::vec3 RIGHT_FACE_POS = glm::vec3(0.5,0.0,0.0);
 
 const std::vector<float> BLOCK_FACE_VERTEX_POS = {
     -0.5f,  0.0f, -0.5f, 1,               // 0.0, 1.0,  top left
@@ -108,7 +108,7 @@ const std::vector<float> RIGHTFACEVERTICES = {
      0.5f, -0.5f, -0.5f,  0.5f, 0.75f,  1.0f, 0.0f, 0.0f
 
 };
-std::vector<std::vector<float>> FACEVERTICES = {
+const std::vector<std::vector<float>> FACEVERTICES = {
     TOPFACEVERTICES, BOTTOMFACEVERTICES, FRONTFACEVERTICES,BACKFACEVERTICES, LEFTFACEVERTICES, RIGHTFACEVERTICES  
 };
 
@@ -152,7 +152,7 @@ const std::vector<float> blockVertices = {
      0.5f,  0.5f, -0.5f,  0.5f, 1.0f,   1.0f, 0.0f, 0.0f
 };
 
-unsigned int blockIndicies[BLOCK_INDICIES_COUNT] = {
+const unsigned int blockIndicies[BLOCK_INDICIES_COUNT] = {
     0, 1, 2, 1, 0, 3,        // Top
     4, 5, 6, 6, 7, 4,        // Bottom
     8, 9,10,10,11, 8,        // Front

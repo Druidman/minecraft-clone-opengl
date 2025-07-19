@@ -3,8 +3,7 @@
 #include <filesystem>
 #include <optional>
 
-#define FNL_IMPL
-#include "vendor/fastNoise/FastNoiseLite.h"
+
 
 #include "betterGL.h"
 
@@ -20,55 +19,22 @@
 #include "elementBuffer.h"
 #include "block.h"
 #include "chunk.h"
-
-
-enum PlayerState{
-    IN_AIR, IN_WATER
-};
-enum PlayerPosition{
-    WALKING, FLYING
-};
+#include "camera.h"
+#include "player.h"
+#include "world.h"
 
 
 typedef unsigned int uint;
 
-const int PLAYER_RANGE = 100;
 int WINDOW_WIDTH = 800;
 int WINDOW_HEIGHT = 600;
-glm::vec3 cameraPos = glm::vec3(0.0,60.0,0.0);
-glm::vec3 playerPos = cameraPos - glm::vec3(0.0,2.0,0.0);
-glm::vec3 cameraFront = glm::vec3(0.0,0.0,3.0);
-glm::vec3 cameraUp = glm::vec3(0.0,1.0,0.0);
 
-glm::vec2 cursorPos = glm::vec2(0.0,0.0);
 
-glm::vec2 mouseoffset = glm::vec2(0.0,0.0);
-
-double yaw = 90, pitch = 0;
-
-bool firstMouse = true;
 glm::mat4 model(1.0f);
-glm::mat4 view = glm::lookAt(cameraPos,cameraPos + cameraFront,cameraUp);
 glm::mat4 projection = glm::perspective(glm::radians(45.0),(double)WINDOW_WIDTH/WINDOW_HEIGHT,0.1,1000.0);
+glm::mat4 view;
+Camera camera = Camera();
 
-PlayerState playerState = IN_AIR;
-PlayerPosition playerPositionState = FLYING;
-std::vector< std::vector <Chunk> > chunks;
-bool removeChunk = false;
-bool stopMovingCamera = false;
-template <typename T>
-struct Result
-{
-    T *result; 
-    bool success;
-};
-
-struct BlockIntersection{
-    Block *block;
-    Chunk *chunk;
-    glm::vec3 hitPos;
-
-};
 
 void resize_callback(GLFWwindow *window, int width, int height){
     glViewport(0,0,width,height);
@@ -76,421 +42,29 @@ void resize_callback(GLFWwindow *window, int width, int height){
     WINDOW_WIDTH = width;
     WINDOW_HEIGHT = height;
 }
-std::optional<Chunk*> getChunkByPos(glm::vec3 pointPositionInWorld, auto &chunks){
-    int chunkRow = (int)(std::floor(pointPositionInWorld.z / (float)CHUNK_WIDTH));
-    int chunkCol = (int)(std::floor(pointPositionInWorld.x / (float)CHUNK_WIDTH));
-    if (chunkRow >= chunks.size() ||
-        chunkCol >= chunks[chunkRow].size()
-    ){
-        return std::nullopt;
-    }
-
-    
-
-    if (pointPositionInWorld.y < chunks[chunkRow][chunkCol].position.y){
-        return std::nullopt;
-    }
-
-    return &chunks[chunkRow][chunkCol];
-}
-
-void placeBlock(auto &chunks){
-    std::optional<BlockIntersection> result = lookAtBlock(chunks);
-    if (!result.has_value()){
-        return ;
-    }
-    BlockIntersection intersection = result.value();
-
-    Block *currentBlock = intersection.block;
-    glm::vec3 hitPos = intersection.hitPos;
-
-    std::vector <float > distanceToFaces = {
-        glm::distance(hitPos, currentBlock->position + FRONT_FACE_POS),
-        glm::distance(hitPos, currentBlock->position + BACK_FACE_POS),
-        glm::distance(hitPos, currentBlock->position + TOP_FACE_POS),
-        glm::distance(hitPos, currentBlock->position + BOTTOM_FACE_POS),
-        glm::distance(hitPos, currentBlock->position + LEFT_FACE_POS),
-        glm::distance(hitPos, currentBlock->position + RIGHT_FACE_POS)
-    };
-    float minDistance = 100;
-    int minDistanceInd = 0;
-
-    for (int i=0; i<distanceToFaces.size();i++){
-        if (distanceToFaces[i] < minDistance){
-            minDistance = distanceToFaces[i];
-            minDistanceInd = i;
-        }
-    }
-    glm::vec3 placePos = currentBlock->position;
-    switch (minDistanceInd)
-    {
-        case 0:
-            placePos.z += 1;
-            break;
-        case 1:
-            placePos.z -= 1;
-            break;
-        case 2:
-            placePos.y += 1;
-            break;
-        case 3:
-            placePos.y -= 1;
-            break;
-        case 4:
-            placePos.x -= 1;
-            break;
-        case 5:
-            placePos.x += 1;
-            break;
-        
-        default:
-            break;
-    }
-    
-
-    std::optional<Chunk*> res = getChunkByPos(placePos,chunks);
-    if (!res.has_value()){
-        return ;
-    }
-
-    Chunk *placeChunk = res.value();
-    placeChunk->addBlock(Block(STONE,placePos));
-    placeChunk->genChunkMesh();
-    
-}
-
-void destroyBlock(auto &chunks){
-    std::optional<BlockIntersection> result = lookAtBlock(chunks);
-    if (!result.has_value()){
-        return ;
-    }
-    BlockIntersection intersection = result.value();
-
-    Block *currentBlock = intersection.block;
-    Chunk *chunk = intersection.chunk;
-    glm::vec3 hitPos = intersection.hitPos;
-
-    
-    int platform = floor(hitPos.y) - chunk->position.y;
-    int col = floor(hitPos.x) - (chunk->position.x - (CHUNK_WIDTH / 2));
-    int row = floor(hitPos.z) - (chunk->position.z - (CHUNK_WIDTH / 2));
-    chunk->removeBlock(platform,row,col);
-    chunk->genChunkMesh();
-    
-    
-}
-
-std::optional<BlockIntersection> lookAtBlock(std::vector< std::vector< Chunk > > &chunks){
-    glm::vec3 playerPos = cameraPos;
-    glm::vec3 playerDirection = glm::normalize(cameraFront);
-
-    glm::vec3 target = playerPos;
-    bool targetFound = false;
-    for (int i=0; i<PLAYER_RANGE * 50; i++){
-    
-        target += playerDirection / 50.0f;
-
-        std::optional<Chunk*> result = getChunkByPos(target,chunks);
-        if (!result.has_value()){
-            continue ;
-        }
-
-        Chunk *currentChunk = result.value();
-
-        std::optional<Block*> blockRes = currentChunk->getBlock(target);
-        if (!blockRes.has_value()){
-            continue ;
-        }
-        Block *currentBlock = blockRes.value();
-
-        if (currentBlock->type == WATER){
-            continue ;
-        }
-
-        BlockIntersection intersection;
-        intersection.block = currentBlock;
-        intersection.chunk = currentChunk;
-        intersection.hitPos = target;
-        
-        return intersection;
-        
-    }
-    
-    return std::nullopt;
-}
 
 void process_key_release(GLFWwindow *window, int key){
     if (key ==GLFW_KEY_ESCAPE){
         glfwSetWindowShouldClose(window,true);
     }
      
-    if (key == GLFW_KEY_ENTER){
-        stopMovingCamera = true;
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-    }
-    if (key == GLFW_KEY_SPACE){
-        stopMovingCamera = false;
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    }
-}
-
-void process_key_press(GLFWwindow *window, int key){
-    
-}
-
-void process_input(GLFWwindow *window, auto &chunks, double delta){
-    float speed = 10 * delta;
-    if (glfwGetKey(window,GLFW_KEY_W)){
-        cameraPos += speed * glm::vec3(cameraFront.x,0.0,cameraFront.z);
-        playerPos = cameraPos - glm::vec3(0.0,2.0,0.0);
-      
-    
-    }
-    if (glfwGetKey(window,GLFW_KEY_S)){
-        cameraPos -= speed * glm::vec3(cameraFront.x,0.0,cameraFront.z);
-        playerPos = cameraPos - glm::vec3(0.0,2.0,0.0);
-       
-    }
-    if (glfwGetKey(window,GLFW_KEY_D)){
-        glm::vec3 camRight = glm::normalize(glm::cross(cameraUp,cameraFront));
-        cameraPos -= speed * glm::vec3(camRight.x,0.0,camRight.z);
-        playerPos = cameraPos - glm::vec3(0.0,2.0,0.0);
-   
-    
-    }
-    if (glfwGetKey(window,GLFW_KEY_A)){
-        glm::vec3 camRight = glm::normalize(glm::cross(cameraUp,cameraFront));
-        cameraPos += speed * glm::vec3(camRight.x,0.0,camRight.z);
-        playerPos = cameraPos - glm::vec3(0.0,2.0,0.0);
-       
-        
-    }
-
-    
+    camera.keyReleaseEvent(window,key); 
 }
 
 void input_callback(GLFWwindow *window, int key, int scancode, int action, int mods){
     if (action == GLFW_RELEASE){
         process_key_release(window,key);
     }
-    else if (action == GLFW_PRESS){
-        process_key_press(window,key);
-    }
     
-
-}
-void cursor_position_callback(GLFWwindow *window, double xpos, double ypos){
-    
-    if (stopMovingCamera){
-        return ;
-    }
-
-    if (firstMouse)
-    {
-        
-        cursorPos.x = xpos;
-        cursorPos.y = ypos;
-        firstMouse = false;
-    }
-    
-    
-    
-    double changeX = cursorPos.x - xpos;
-    double changeY = cursorPos.y - ypos;
-
-    
-
-    yaw -= changeX * 0.1;
-    pitch += changeY * 0.1;
-
-    if (pitch <= -89.0){
-        pitch = -89.0;
-    }
-    else if (pitch >= 89.0){
-        pitch = 89.0;
-    }
-
-
-    glm::vec3 direction;
-
-        
-    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    direction.y = sin(glm::radians(pitch));
-    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-
-
-    cameraFront = glm::normalize(direction);
-
-    cursorPos.x = xpos;
-    cursorPos.y = ypos;
-
-}
-
-std::vector<float> tree_gen(int sizex , int sizey){
-    std::vector<float> trees(sizex * sizey, 0.0f);
-
-        // Create and configure noise state
-    fnl_state noise = fnlCreateState();
-    noise.fractal_type = FNL_FRACTAL_NONE;
-    noise.frequency = 0.011;
-    noise.octaves = 3;
-    noise.seed = 1337;
-
-    noise.noise_type = FNL_NOISE_VALUE;
-
-    // Gather noise data
-    
-    unsigned long int index = 0;
-    for (int y = 0; y < sizey; y++)
-    {
-        for (int x = 0; x < sizex; x++) 
-        {
-            float gen = fnlGetNoise2D(&noise, y, x);
-            gen = (gen + 1) / 2;
-
-            trees[index++] = gen;
-            
-        }
-    }
-    
-    return trees;
-}
-
-std::vector<int> world_gen(int sizex , int sizey){
-    std::vector<int> world(sizex * sizey, 0.0f);
-
-        // Create and configure noise state
-    fnl_state noise = fnlCreateState();
-    noise.fractal_type = FNL_FRACTAL_FBM;
-    noise.frequency = 0.005;
-    noise.octaves = 4;
-    noise.seed = 1652;
-
-    noise.noise_type = FNL_NOISE_PERLIN;
-
-    // Gather noise data
-    
-    unsigned long int index = 0;
-    int min = 1000;
-    for (int y = 0; y < sizey; y++)
-    {
-        for (int x = 0; x < sizex; x++) 
-        {
-            float gen = fnlGetNoise2D(&noise, y, x);
-            gen = pow(2,((gen + 1) / 2 * 10));
-
-            world[index++] = (int)gen;
-            if ((int)gen < min){
-                min = (int)gen;
-            }
-        }
-    }
-    // lets make world's wfirst block be settled on 0.0
-    for (int i=0; i<world.size();i++){
-        world[i] -= min;
-    } 
-
-
-    
-        
-
-    return world;
-
-}
-
-void setPlayerState(glm::vec3 playerPos, auto &chunks){
-    std::optional<Chunk*> res = getChunkByPos(playerPos + glm::vec3(0.0,0.5,0.0),chunks);
-    if (!res.has_value()){
-        playerState = IN_AIR;
-        playerPositionState = FLYING;
-
-        return ;
-    }
-    
-    Chunk* chunk = res.value();
-    std::optional< Block* > blockRes = chunk->getBlock(playerPos - glm::vec3(0.0,0.5,0.0)); //to see on what are we standing at
-    std::optional< Block* > blockRes2 = chunk->getBlock(playerPos + glm::vec3(0.0,0.5,0.0)); //to see on what are we IN
-    if (!blockRes.has_value()){ //NONE BLOCK so player is not standing on anything
-        if (!blockRes2.has_value()){ //NONE BLOCK so we are in none block block
-            playerPositionState = FLYING;
-            return ;
-        }
-        Block* blockIn = blockRes2.value();
-        switch (blockIn->type)
-        {
-        case WATER:
-            playerPositionState = FLYING;
-            break;
-        default:
-            playerPositionState = WALKING;
-            playerPos.y = blockIn->position.y + 0.5;
-            cameraPos = playerPos + glm::vec3(0.0,2.0,0.0);
-            break;
-        }
-
-        
-
-        return ;
-    } 
-
-    if (blockRes2.has_value()){ //NONE BLOCK so we are in none block block
-        Block* blockIn = blockRes2.value();
-        switch (blockIn->type)
-        {
-        case WATER:
-            break;
-        default:
-            playerPositionState = WALKING;
-            playerPos.y = blockIn->position.y + 0.5;
-            cameraPos = playerPos + glm::vec3(0.0,2.0,0.0);
-
-            return ;
-        }
-    }
-    
-    
-    Block* block = blockRes.value();
-    // std::cout << "block found\n";
-    switch (block->type)
-    {
-    case WATER:
-        playerPositionState = FLYING;
-        break;
-    default:
-        playerPositionState = WALKING;
-        playerPos.y = block->position.y + 0.5;
-        cameraPos = playerPos + glm::vec3(0.0,2.0,0.0);
-        break;
-    }
-
-    std::optional< Block* > blockRes3 = chunk->getBlock(playerPos + glm::vec3(0.0,2.0,0.0));
-    if (!blockRes3.has_value()){ //NONE BLOCK so player is in AIR
-        playerState = IN_AIR;
-        return ;
-    } //return because ground checking logic isn't done ! TODO !
-
-    Block* block3 = blockRes3.value();
-
-    switch (block3->type)
-    {
-    case WATER:
-        playerState = IN_WATER;  
-        break;
-    default:
-        playerState = IN_AIR;
-        break;
-    }
-
 }
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS){
-        placeBlock(chunks);
-    }
-    else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS){
-        destroyBlock(chunks);
-    }
+    
+}
+
+void cursor_pos_callback(GLFWwindow *window, double xpos, double ypos){
+    camera.process_cursor_position_change(xpos,ypos);
 }
 
 int main()
@@ -518,8 +92,8 @@ int main()
 
 
     glfwSetWindowSizeCallback(window,resize_callback);
-    glfwSetCursorPosCallback(window, cursor_position_callback);
     glfwSetKeyCallback(window,input_callback);
+    glfwSetCursorPosCallback(window,cursor_pos_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
 
 
@@ -587,116 +161,16 @@ int main()
     GLCall( glBindVertexArray(0) );
 
 
-
-
-   
-
-
-    const int WORLD_WIDTH = 480;
-    const unsigned long long WORLD_BLOCKS_COUNT = WORLD_WIDTH * WORLD_WIDTH;
-    const unsigned long long WORLD_CHUNKS_COUNT = WORLD_BLOCKS_COUNT / ((unsigned long long)CHUNK_WIDTH * CHUNK_WIDTH);
-    std::vector<int> world = world_gen(WORLD_WIDTH,WORLD_WIDTH);
-    std::vector<float> trees = tree_gen(WORLD_WIDTH,WORLD_WIDTH);
+    World world = World(512);
+    world.genWorld();
 
     
-    std::vector<Chunk*> chunkRefs;
+    Player player = Player(glm::vec3(0.0,60.0,0.0),&world,&camera,window);
 
-
-    int startX = 0;
-    int startY = 0;
-
-    for (int row = 0; row < WORLD_WIDTH / CHUNK_WIDTH; row++){
-        for (int column = 0; column < WORLD_WIDTH / CHUNK_WIDTH; column++){
-            if (startX >= WORLD_WIDTH){
-                startX = 0;
-                startY += CHUNK_WIDTH;
-            }
-
-            glm::vec3 chunkPos = glm::vec3(startX + (CHUNK_WIDTH / 2), 0.0, startY + (CHUNK_WIDTH / 2));
-            Chunk chunk = Chunk(chunkPos,vboInst,&cameraPos);
-            
-            
-            for (int i =startX; i< startX + CHUNK_WIDTH ; i++){
-                for (int j =startY; j< startY + CHUNK_WIDTH; j++){
-
-                    float zCoord = world[j * WORLD_WIDTH + i] + 0.5;
-                    BlockType blockType = GRASS_DIRT;
-                    if (zCoord < 20){
-                     
-                        blockType = SAND;
-                    }
-                    
-                    else if (zCoord > 60){
-                        blockType = STONE;
-                    }
-                    
-                    Block block(blockType,glm::vec3(i + 0.5, zCoord ,j + 0.5));
-                    
-                    chunk.addBlock(block);
-                    
-                    chunk.fillUnderBlock(block);
-                    
-                }
-            }
-            
-            chunk.fillWater();
-
-            for (int i =startX + 3; i< startX + CHUNK_WIDTH - 3; i+= 6){
-                for (int j =startY + 3; j< startY + CHUNK_WIDTH - 3; j+=6){
-
-                    float treeChance = trees[j * WORLD_WIDTH + i];
-                    if (treeChance < 0.5){
-                        continue ;
-                    }
-                    float zCoord = world[j * WORLD_WIDTH + i] + 0.5;
-                    
-                    glm::vec3 treePos = glm::vec3(i + 0.5 + (rand() % 6), zCoord ,j + 0.5 + (rand() % 6));
-                    auto blockRes = chunk.getBlock(treePos);
-                    if (!blockRes.has_value()){ // cause that means smth went really wrong 
-                        continue ;
-                    }
-                    
-                    Block *block = blockRes.value();
-                    if (block->type != GRASS_DIRT){
-                        continue ;
-                    }
-                    chunk.addTree(block->position + glm::vec3(0.0,1.0,0.0));
-
-                    
-                }
-            }
-            
-            if (column == 0){
-                chunks.push_back(std::vector<Chunk>(1,chunk));
-                
-            }
-            else{
-                chunks[row].push_back(chunk);
-            }
-            
-            startX += CHUNK_WIDTH;
-            
-        }
-    }
-    for (int row =0; row < chunks.size(); row++){
-        for (int col =0; col < chunks[row].size(); col++){
-            chunkRefs.push_back(&chunks[row][col]);
-        }   
-    }
-    for (Chunk* chunk : chunkRefs){
-        chunk->genChunkMesh();
-    }
-    
 
     double last = glfwGetTime();
-    /* Loop until the user closes the window */
     double avgFPS = 0;
     std::vector<double> fpsS;
- 
-    
-    std::cout << "SIEMA" << "\n";
-    
-
     while (!glfwWindowShouldClose(window))
     {
         
@@ -717,34 +191,16 @@ int main()
             fpsS.push_back(fps);
         }
         
-
-        setPlayerState(playerPos,chunks);
-        if (playerPositionState == FLYING){
-            playerPos -= glm::vec3(0.0,10.0,0.0) * (float)delta;
-            cameraPos = playerPos + glm::vec3(0.0,2.0,0.0);
-        }
+        player.update(delta);
         
-        process_input(window,chunks,delta);
-        
-        
-        // std::sort(chunkRefs.begin(),chunkRefs.end(),[&](Chunk *a, Chunk *b){ 
- 
-        //     float aDist = glm::distance(a->position,cameraPos);
-        //     float bDist = glm::distance(b->position,cameraPos);
-        //     return aDist > bDist; 
-        // });
-        /* Render here */
-        
-        
+        view = camera.getViewMatrix();
         GLCall( glClearColor(0.68f, 0.84f, 0.9f, 1.0f) );
         GLCall( glClear(GL_COLOR_BUFFER_BIT) );
 
         shader.use();
-
-        view = glm::lookAt(cameraPos,cameraPos + cameraFront, cameraUp);
         
-        shader.setInt("playerState",playerState);
-        shader.setVec3Float("LightPos",cameraPos);
+        shader.setInt("playerState",player.state);
+        shader.setVec3Float("LightPos",glm::vec3(0.0,60,0.0));
         shader.setMatrixFloat("projection",GL_FALSE,projection);
         shader.setMatrixFloat("view",GL_FALSE,view);
         shader.setMatrixFloat("model",GL_FALSE,model);
@@ -754,23 +210,20 @@ int main()
         ebo.bind();
     
     
-        for (Chunk* chunk : chunkRefs){
+        for (Chunk* chunk : world.chunkRefs){
          
             shader.setVec3Float("chunkPos",(*chunk).position);
             
-            (*chunk).renderOpaque();
+            (*chunk).renderOpaque(&vboInst);
         }   
-        for (Chunk* chunk : chunkRefs){
+        for (Chunk* chunk : world.chunkRefs){
          
             shader.setVec3Float("chunkPos",(*chunk).position);
             
-            (*chunk).renderTransparent();
+            (*chunk).renderTransparent(&vboInst);
         }   
         
                 
-          
-        
-
 
         crosshairShader.use();
         crosshairVAO.bind();

@@ -11,6 +11,8 @@
 #include "vertexBuffer.h"
 #include "models.h"
 
+#include <optional>
+
 const int CHUNK_WIDTH = 16;
 const int CHUNK_HEIGHT = 256;
 
@@ -42,22 +44,16 @@ class Chunk
 
 public:
     glm::vec3 position;
-    glm::vec3 *cameraPos;
+
 
     std::vector<std::vector<std::vector<Block>>> blocks;
-
-    VertexBuffer vboInst;
 
     std::vector<VertexDataInt> opaqueFacesData;
     std::vector<VertexDataInt> transparentFacesData;
 
-    Chunk(glm::vec3 chunkPosition, VertexBuffer vboInst, glm::vec3 *cameraPos)
+    Chunk(glm::vec3 chunkPosition)
     {
         this->position = chunkPosition;
-
-        this->vboInst = vboInst;
-
-        this->cameraPos = cameraPos;
 
         createBlockPlatform();
     };
@@ -73,7 +69,7 @@ public:
         }
     }
 
-    std::optional<Block *> getBlock(int plat, int row, int col)
+    std::optional<Block *> getBlock(int plat, int row, int col, bool noneBlock = false)
     {
         if (
             plat >= blocks.size() ||
@@ -86,21 +82,22 @@ public:
             return std::nullopt;
         }
         Block *block = &blocks[plat][row][col];
-        if (block->type == NONE_BLOCK)
+        if (block->type == NONE_BLOCK && !noneBlock)
         {
             return std::nullopt;
         }
         return block;
     }
 
-    std::optional<Block *> getBlock(glm::vec3 positionInWorld)
+    std::optional<Block *> getBlock(glm::vec3 positionInWorld, bool noneBlock = false)
     {
         int platform = floor(positionInWorld.y) - position.y;
         int col = floor(positionInWorld.x) - (position.x - (CHUNK_WIDTH / 2));
         int row = floor(positionInWorld.z) - (position.z - (CHUNK_WIDTH / 2));
         // std::cout << "p: " << platform << " c: " << this->position.x << " r: " << row << "\n";
-        return getBlock(platform, row, col);
+        return getBlock(platform, row, col, noneBlock);
     }
+    
     void addBlockFace(BlockFace face, Block *block, std::vector<VertexDataInt> *buffer)
     {
         glm::vec3 blockPositionChunk = block->position - position + glm::vec3(CHUNK_WIDTH / 2, 0.0, CHUNK_WIDTH / 2);
@@ -254,16 +251,16 @@ public:
         }
     }
     
-    void renderOpaque()
+    void renderOpaque(VertexBuffer *vboInst)
     {
         
-        vboInst.fillData<VertexDataInt>(opaqueFacesData);
+        vboInst->fillData<VertexDataInt>(opaqueFacesData);
         glDrawElementsInstanced(GL_TRIANGLES, BLOCK_FACE_INDICES.size(), GL_UNSIGNED_INT, 0, opaqueFacesData.size());
     };
 
-    void renderTransparent()
+    void renderTransparent(VertexBuffer *vboInst)
     {
-        vboInst.fillData<VertexDataInt>(transparentFacesData);
+        vboInst->fillData<VertexDataInt>(transparentFacesData);
         glDrawElementsInstanced(GL_TRIANGLES, BLOCK_FACE_INDICES.size(), GL_UNSIGNED_INT, 0, transparentFacesData.size());
     }
 
@@ -323,9 +320,29 @@ public:
         this->blocks.push_back(platform);
     }
 
-    void removeBlock(int platform, int row, int col)
+    bool removeBlock(int platform, int row, int col)
     {
+        if (
+            platform >= this->blocks.size() ||
+            row >= CHUNK_WIDTH ||
+            col >= CHUNK_WIDTH ||
+            platform < 0 ||
+            row < 0 ||
+            col < 0
+        ){
+            return false;
+        }
         blocks[platform][row][col].type = NONE_BLOCK;
+        return true;
+    }
+
+    bool removeBlock(glm::vec3 blockPositionInWorld){
+        int platform = floor(blockPositionInWorld.y) - this->position.y;
+        int col = floor(blockPositionInWorld.x) - (this->position.x - (CHUNK_WIDTH / 2));
+        int row = floor(blockPositionInWorld.z) - (this->position.z - (CHUNK_WIDTH / 2));
+
+        return removeBlock(platform,row,col);
+
     }
 
     void fillWater()
