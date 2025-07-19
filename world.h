@@ -21,6 +21,7 @@ class World{
         void genWorld();
 
         std::optional<Chunk*> getChunkByPos(glm::vec3 pointPositionInWorld);
+        std::optional<Block*> getBlockByPos(glm::vec3 pointPositionInWorld, bool noneBlock = false);
 
         
 };

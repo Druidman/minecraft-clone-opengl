@@ -76,9 +76,50 @@ void Player::updateAction()
 
 void Player::move_by(glm::vec3 dir)
 {
+    glm::vec3 changePos = position + dir;
+
+    std::optional<Block *> blockRes = world->getBlockByPos(changePos, true);
+    if (!blockRes.has_value()){
+        return ;
+    }
+    if (
+        blockRes.value()->type == NONE_BLOCK ||
+        blockRes.value()->type == WATER
+    ){
+        position += dir;
+        adjustCamera();
+        return;
+    }
+    // now we have block where we want to move so we will move player on top of it
+    // BUT only when there is no block above
+
+    std::optional<Block *> blockRes2 = world->getBlockByPos(changePos + glm::vec3(0.0,1.0,0.0)); // + 1.0 on y axis
+    if (blockRes2.has_value()){
+        if (blockRes2.value()->type != WATER){
+            return; // there is block on our height so we can't move
+        }   
+        
+    }
+    // there was no block so we move player up 
+    // BUT only if the block we want to get in isn't noneblock, water ...
     position += dir;
+    if (
+        blockRes.value()->type != NONE_BLOCK &&
+        blockRes.value()->type != WATER
+    ){
+        position.y = blockRes.value()->position.y;
+    }
+    
+    
     adjustCamera();
+
+
+
+
+    
+    
     // check if move allowed and if so then do some stuff
+
     
 }
 void Player::move_to(glm::vec3 pos)

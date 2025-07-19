@@ -194,3 +194,19 @@ std::optional<Chunk *> World::getChunkByPos(glm::vec3 pointPositionInWorld)
 
     return &chunks[chunkRow][chunkCol];
 }
+
+std::optional<Block *> World::getBlockByPos(glm::vec3 pointPositionInWorld, bool noneBlock)
+{
+    std::optional<Chunk *> chunkRes = getChunkByPos(pointPositionInWorld);
+    if (!chunkRes.has_value()){
+        
+        return std::nullopt; 
+    }
+    
+    std::optional<Block *> blockRes = (chunkRes.value())->getBlock(pointPositionInWorld, noneBlock);
+    if (!blockRes.has_value()){
+
+        return std::nullopt; 
+    }
+    return blockRes.value();
+}

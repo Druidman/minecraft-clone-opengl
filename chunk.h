@@ -71,6 +71,14 @@ public:
 
     std::optional<Block *> getBlock(int plat, int row, int col, bool noneBlock = false)
     {
+        if (plat >= blocks.size()){
+            int platformsToAdd = plat - this->blocks.size() + 1;
+            for (int i = 0; i < platformsToAdd; i++)
+            {
+                createBlockPlatform();
+            }
+        } //just so chunks feel infinite
+        
         if (
             plat >= blocks.size() ||
             plat < 0 ||
@@ -79,11 +87,14 @@ public:
             col >= CHUNK_WIDTH ||
             col < 0)
         {
+            
             return std::nullopt;
         }
+        
         Block *block = &blocks[plat][row][col];
         if (block->type == NONE_BLOCK && !noneBlock)
         {
+           
             return std::nullopt;
         }
         return block;
