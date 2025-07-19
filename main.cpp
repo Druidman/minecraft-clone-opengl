@@ -23,7 +23,10 @@
 
 
 enum PlayerState{
-    IN_AIR, IN_WATER, ON_GROUND
+    IN_AIR, IN_WATER
+};
+enum PlayerPosition{
+    WALKING, FLYING
 };
 
 
@@ -32,7 +35,8 @@ typedef unsigned int uint;
 const int PLAYER_RANGE = 100;
 int WINDOW_WIDTH = 800;
 int WINDOW_HEIGHT = 600;
-glm::vec3 cameraPos = glm::vec3(0.0,0.0,0.0);
+glm::vec3 cameraPos = glm::vec3(0.0,60.0,0.0);
+glm::vec3 playerPos = cameraPos - glm::vec3(0.0,2.0,0.0);
 glm::vec3 cameraFront = glm::vec3(0.0,0.0,3.0);
 glm::vec3 cameraUp = glm::vec3(0.0,1.0,0.0);
 
@@ -48,6 +52,7 @@ glm::mat4 view = glm::lookAt(cameraPos,cameraPos + cameraFront,cameraUp);
 glm::mat4 projection = glm::perspective(glm::radians(45.0),(double)WINDOW_WIDTH/WINDOW_HEIGHT,0.1,1000.0);
 
 PlayerState playerState = IN_AIR;
+PlayerPosition playerPositionState = FLYING;
 std::vector< std::vector <Chunk> > chunks;
 bool removeChunk = false;
 bool stopMovingCamera = false;
@@ -234,24 +239,30 @@ void process_key_press(GLFWwindow *window, int key){
 }
 
 void process_input(GLFWwindow *window, auto &chunks, double delta){
-    float speed = 100 * delta;
+    float speed = 10 * delta;
     if (glfwGetKey(window,GLFW_KEY_W)){
-        cameraPos += speed * cameraFront;
-        setPlayerState(cameraPos,chunks);
+        cameraPos += speed * glm::vec3(cameraFront.x,0.0,cameraFront.z);
+        playerPos = cameraPos - glm::vec3(0.0,2.0,0.0);
+      
     
     }
     if (glfwGetKey(window,GLFW_KEY_S)){
-        cameraPos -= speed * cameraFront;
-        setPlayerState(cameraPos,chunks);
+        cameraPos -= speed * glm::vec3(cameraFront.x,0.0,cameraFront.z);
+        playerPos = cameraPos - glm::vec3(0.0,2.0,0.0);
+       
     }
     if (glfwGetKey(window,GLFW_KEY_D)){
-        cameraPos -= speed * glm::normalize(glm::cross(cameraUp,cameraFront));
-        setPlayerState(cameraPos,chunks);
+        glm::vec3 camRight = glm::normalize(glm::cross(cameraUp,cameraFront));
+        cameraPos -= speed * glm::vec3(camRight.x,0.0,camRight.z);
+        playerPos = cameraPos - glm::vec3(0.0,2.0,0.0);
+   
     
     }
     if (glfwGetKey(window,GLFW_KEY_A)){
-        cameraPos += speed * glm::normalize(glm::cross(cameraUp,cameraFront));
-        setPlayerState(cameraPos,chunks);
+        glm::vec3 camRight = glm::normalize(glm::cross(cameraUp,cameraFront));
+        cameraPos += speed * glm::vec3(camRight.x,0.0,camRight.z);
+        playerPos = cameraPos - glm::vec3(0.0,2.0,0.0);
+       
         
     }
 
@@ -388,27 +399,85 @@ std::vector<int> world_gen(int sizex , int sizey){
 }
 
 void setPlayerState(glm::vec3 playerPos, auto &chunks){
-    std::optional<Chunk*> res = getChunkByPos(playerPos,chunks);
+    std::optional<Chunk*> res = getChunkByPos(playerPos + glm::vec3(0.0,0.5,0.0),chunks);
     if (!res.has_value()){
         playerState = IN_AIR;
+        playerPositionState = FLYING;
+
         return ;
     }
     
     Chunk* chunk = res.value();
-    std::optional< Block* > blockRes = chunk->getBlock(playerPos);
-    if (!blockRes.has_value()){ //NONE BLOCK so player is in AIR
-        playerState = IN_AIR;
+    std::optional< Block* > blockRes = chunk->getBlock(playerPos - glm::vec3(0.0,0.5,0.0)); //to see on what are we standing at
+    std::optional< Block* > blockRes2 = chunk->getBlock(playerPos + glm::vec3(0.0,0.5,0.0)); //to see on what are we IN
+    if (!blockRes.has_value()){ //NONE BLOCK so player is not standing on anything
+        if (!blockRes2.has_value()){ //NONE BLOCK so we are in none block block
+            playerPositionState = FLYING;
+            return ;
+        }
+        Block* blockIn = blockRes2.value();
+        switch (blockIn->type)
+        {
+        case WATER:
+            playerPositionState = FLYING;
+            break;
+        default:
+            playerPositionState = WALKING;
+            playerPos.y = blockIn->position.y + 0.5;
+            cameraPos = playerPos + glm::vec3(0.0,2.0,0.0);
+            break;
+        }
+
+        
+
         return ;
-    } //return because ground checking logic isn't done ! TODO !
+    } 
+
+    if (blockRes2.has_value()){ //NONE BLOCK so we are in none block block
+        Block* blockIn = blockRes2.value();
+        switch (blockIn->type)
+        {
+        case WATER:
+            break;
+        default:
+            playerPositionState = WALKING;
+            playerPos.y = blockIn->position.y + 0.5;
+            cameraPos = playerPos + glm::vec3(0.0,2.0,0.0);
+
+            return ;
+        }
+    }
+    
+    
     Block* block = blockRes.value();
     // std::cout << "block found\n";
     switch (block->type)
     {
     case WATER:
-        playerState = IN_WATER;
+        playerPositionState = FLYING;
         break;
     default:
-        playerState = ON_GROUND;
+        playerPositionState = WALKING;
+        playerPos.y = block->position.y + 0.5;
+        cameraPos = playerPos + glm::vec3(0.0,2.0,0.0);
+        break;
+    }
+
+    std::optional< Block* > blockRes3 = chunk->getBlock(playerPos + glm::vec3(0.0,2.0,0.0));
+    if (!blockRes3.has_value()){ //NONE BLOCK so player is in AIR
+        playerState = IN_AIR;
+        return ;
+    } //return because ground checking logic isn't done ! TODO !
+
+    Block* block3 = blockRes3.value();
+
+    switch (block3->type)
+    {
+    case WATER:
+        playerState = IN_WATER;  
+        break;
+    default:
+        playerState = IN_AIR;
         break;
     }
 
@@ -523,7 +592,7 @@ int main()
    
 
 
-    const int WORLD_WIDTH = 768;
+    const int WORLD_WIDTH = 480;
     const unsigned long long WORLD_BLOCKS_COUNT = WORLD_WIDTH * WORLD_WIDTH;
     const unsigned long long WORLD_CHUNKS_COUNT = WORLD_BLOCKS_COUNT / ((unsigned long long)CHUNK_WIDTH * CHUNK_WIDTH);
     std::vector<int> world = world_gen(WORLD_WIDTH,WORLD_WIDTH);
@@ -632,6 +701,7 @@ int main()
     {
         
         double delta = glfwGetTime() - last;
+        last = glfwGetTime();
         double fps = 1 / delta;
         if (fpsS.size() >= 10){
             avgFPS = 0;
@@ -648,8 +718,14 @@ int main()
         }
         
 
-        last = glfwGetTime();
+        setPlayerState(playerPos,chunks);
+        if (playerPositionState == FLYING){
+            playerPos -= glm::vec3(0.0,10.0,0.0) * (float)delta;
+            cameraPos = playerPos + glm::vec3(0.0,2.0,0.0);
+        }
+        
         process_input(window,chunks,delta);
+        
         
         // std::sort(chunkRefs.begin(),chunkRefs.end(),[&](Chunk *a, Chunk *b){ 
  
