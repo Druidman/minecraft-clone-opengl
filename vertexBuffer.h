@@ -1,12 +1,20 @@
 #ifndef VERTEX_BUFFER_H
 #define VERTEX_BUFFER_H
+
+#ifdef __EMSCRIPTEN__
+    #include <GLES3/gl3.h>
+#else
+    #include <GL/glew.h>
+#endif
+
 #include <vector>
 #include "vendor/glm/glm.hpp"
 #include "vendor/glm/gtc/type_ptr.hpp"
 
 class VertexBuffer{
     private:
-        unsigned int m_vbo;
+
+    unsigned int m_vbo;
     public:
         VertexBuffer();
         void bind();

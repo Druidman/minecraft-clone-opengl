@@ -82,15 +82,17 @@ void Chunk::addBlockFace(BlockFace face, Block *block, std::vector<VertexDataInt
     int zCoord = blockPositionChunk.z - 0.5;
     int yCoord = blockPositionChunk.y - 0.5;
     int xCoord = blockPositionChunk.x - 0.5;
-    VertexDataInt data = 0;
+    int32_t data = 0;
 
-    data |= ((VertexDataInt)(textId & 127)) << 19; // TTTTTTT: 7 bitów
-    data |= ((VertexDataInt)(face & 7)) << 16;     // NNN: 3 bity
-    data |= ((VertexDataInt)(xCoord & 15)) << 12;  // XXXX: 4 bity
-    data |= ((VertexDataInt)(yCoord & 255)) << 4;  // YYYYYYYY: 8 bitów
-    data |= ((VertexDataInt)(zCoord & 15));        // ZZZZ: 4 bity
+    data |= ((int32_t)(textId & 127)) << 19; // TTTTTTT: 7 bitów
+    data |= ((int32_t)(face & 7)) << 16;     // NNN: 3 bity
+    data |= ((int32_t)(xCoord & 15)) << 12;  // XXXX: 4 bity
+    data |= ((int32_t)(yCoord & 255)) << 4;  // YYYYYYYY: 8 bitów
+    data |= ((int32_t)(zCoord & 15));        // ZZZZ: 4 bity
 
-    buffer->push_back(data);
+    VertexDataInt packedFloat;
+    std::memcpy(&packedFloat,&data,sizeof(float));
+    buffer->push_back(packedFloat);
 }
 
 bool Chunk::canAddFace(BlockFace face, Block *currentBlock)

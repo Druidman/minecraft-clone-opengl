@@ -1,10 +1,14 @@
 #ifndef SHADER_C
 #define SHADER_C
+#ifdef __EMSCRIPTEN__
+    #include <GLES3/gl3.h>
+#else
+    #include <GL/glew.h>
+#endif
 
 #include "vendor/glm/glm.hpp"
 #include <string>
 #include <iostream>
-#include <GL/glew.h>
 // load shader from file name
 // program operations
 // uniforms

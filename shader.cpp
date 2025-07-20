@@ -15,16 +15,32 @@ std::string Shader::readFile(std::string path)
         fileContent += line + "\n";
     }
     file.close();
+    
     return fileContent;
 }
 
 unsigned int Shader::attachShader(std::string shaderSource, GLenum shaderType)
 {
     GLuint shader = glCreateShader(shaderType);
+    if (shader == 0) {
+        std::cerr << "ERROR::SHADER::CREATION_FAILED" << std::endl;
+        return 0;
+    }
     const char* source = shaderSource.c_str();
     GLCall( glShaderSource(shader,1,&source,NULL) );
     GLCall( glCompileShader(shader) );
+
+    GLint success;
+    GLCall( glGetShaderiv(shader, GL_COMPILE_STATUS, &success) );
+    if (!success) {
+        char infoLog[512];
+        GLCall( glGetShaderInfoLog(shader, 512, NULL, infoLog) );
+        std::cerr << "ERROR::SHADER::COMPILATION_FAILED\n" << infoLog << std::endl;
+    }
+
     GLCall( glAttachShader(m_programID,shader) );
+
+    
 
     return shader;
 
@@ -37,15 +53,25 @@ Shader::~Shader()
 
 Shader::Shader(std::string vertexPath, std::string fragmentPath)
 {
+
     m_programID = glCreateProgram();
 
     // handle shaders
+
     std::string vertexSource = readFile(vertexPath);
     std::string fragmentSource = readFile(fragmentPath);
+
     unsigned int vertexShader = attachShader(vertexSource,GL_VERTEX_SHADER);
     unsigned int fragmentShader = attachShader(fragmentSource,GL_FRAGMENT_SHADER);
 
     GLCall( glLinkProgram(m_programID) );
+    GLint success;
+    GLCall( glGetProgramiv(m_programID, GL_LINK_STATUS, &success) );
+    if (!success) {
+        char infoLog[512];
+        GLCall( glGetProgramInfoLog(m_programID, 512, NULL, infoLog) );
+        std::cerr << "ERROR::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+    }
 
     GLCall( glDeleteShader(vertexShader) );
     GLCall( glDeleteShader(fragmentShader) );  

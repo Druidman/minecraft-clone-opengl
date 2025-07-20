@@ -4,7 +4,8 @@
 #include <vector>
 #include <cstdint>
 
-typedef uint32_t VertexDataInt;
+
+typedef float VertexDataInt;
 struct Vertex{
     glm::vec3 position;
     glm::vec2 uvCoord;

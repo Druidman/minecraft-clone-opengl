@@ -1,4 +1,5 @@
-#version 330 core
+#version 300 es
+precision mediump float;
 
 
 in vec2 TexCoords;
@@ -37,12 +38,5 @@ void main()
     else if (playerState == 2){
         Color = vec4(result,objectColor[3]);
     }
-    
-    
-    
-
-
-    
-    
     
 }

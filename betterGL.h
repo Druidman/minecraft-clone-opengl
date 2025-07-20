@@ -1,6 +1,12 @@
 #ifndef BETTER_GL_H
 #define BETTER_GL_H
-#include <GL/glew.h>
+
+#ifdef __EMSCRIPTEN__
+    #include <GLES3/gl3.h>
+#else
+    #include <GL/glew.h>
+#endif
+
 #include <iostream>
 #include <string>
 

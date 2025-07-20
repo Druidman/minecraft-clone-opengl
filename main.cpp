@@ -1,9 +1,12 @@
-#include <GL/glew.h>
+#ifdef __EMSCRIPTEN__
+    #include <emscripten/emscripten.h>
+    #include <GLES3/gl3.h>
+#else
+    #include <GL/glew.h>
+#endif
+
 #include <GLFW/glfw3.h>
-#include <filesystem>
 #include <optional>
-
-
 
 #include "betterGL.h"
 
@@ -36,6 +39,25 @@ glm::mat4 view;
 Camera camera = Camera();
 
 
+struct AppState {
+    double *last;
+    std::vector<double> *fpsS;
+
+    Player *player;
+    Shader *shader;
+    VertexBuffer *vbo;
+    VertexBuffer *vboInst;
+    VertexArray *vao;
+    ElementBuffer *ebo;
+    World *world;
+    GLFWwindow *window;
+
+    Shader *crosshairShader;
+    VertexBuffer *crosshairVBO;
+    VertexArray *crosshairVAO;
+};
+
+AppState *state;
 void resize_callback(GLFWwindow *window, int width, int height){
     glViewport(0,0,width,height);
     projection = glm::perspective(glm::radians(45.0),(double)width/height,0.1,1000.0);
@@ -67,6 +89,74 @@ void cursor_pos_callback(GLFWwindow *window, double xpos, double ypos){
     camera.process_cursor_position_change(xpos,ypos);
 }
 
+void loop(){
+    double delta = glfwGetTime() - *(state->last);
+    *(state->last) = glfwGetTime();
+    double fps = 1 / delta;
+    if (state->fpsS->size() >= 10){
+        double avgFPS = 0;
+        int divide = state->fpsS->size();
+        for (int i=state->fpsS->size() -1 ; i>= 0; i--){
+            avgFPS += state->fpsS->at(i);
+            state->fpsS->pop_back();
+        }
+        avgFPS /= divide;
+        std::cout << "FPS: " << avgFPS << "\n";
+    }
+    else{
+        state->fpsS->push_back(fps);
+    }
+    
+    state->player->update(delta);
+    
+    view = camera.getViewMatrix();
+    GLCall( glClearColor(0.68f, 0.84f, 0.9f, 1.0f) );
+    GLCall( glClear(GL_COLOR_BUFFER_BIT) );
+    GLCall( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
+
+    state->shader->use();
+    
+    state->shader->setInt("playerState",state->player->state);
+    state->shader->setVec3Float("LightPos",glm::vec3(256,100,256));
+    state->shader->setMatrixFloat("projection",GL_FALSE,projection);
+    state->shader->setMatrixFloat("view",GL_FALSE,view);
+    state->shader->setMatrixFloat("model",GL_FALSE,model);
+
+    state->vao->bind();
+    state->vbo->bind();
+    state->ebo->bind();
+
+
+    for (Chunk* chunk : state->world->chunkRefs){
+        
+        state->shader->setVec3Float("chunkPos",chunk->position);
+        
+        chunk->renderOpaque(state->vboInst);
+    }   
+    for (Chunk* chunk : state->world->chunkRefs){
+        
+        state->shader->setVec3Float("chunkPos",chunk->position);
+        
+        chunk->renderTransparent(state->vboInst);
+    }   
+    
+            
+
+    state->crosshairShader->use();
+    state->crosshairVAO->bind();
+    state->crosshairVBO->bind();
+    GLCall( glDrawArrays(GL_TRIANGLES,0,3) );
+    
+    
+    
+    /* Swap front and back buffers */
+    glfwSwapBuffers(state->window);
+
+    /* Poll for and process events */
+    glfwPollEvents();
+    
+}
+
 int main()
 {
     
@@ -75,10 +165,18 @@ int main()
     if (!glfwInit())
         return -1;
     /* Create a windowed mode window and its OpenGL context */
+    #ifdef __EMSCRIPTEN__
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0); // WebGL 2.0 maps to ES 3.0
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+    #else
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    #endif
     
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    
     window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Hello World", NULL, NULL);
     if (!window)
     {
@@ -97,34 +195,30 @@ int main()
     glfwSetMouseButtonCallback(window, mouse_button_callback);
 
 
+    #ifndef  __EMSCRIPTEN__
+        glewInit();
+    #endif
 
-
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSwapInterval( 0 );
-    
-    glewInit();
 
     stbi_set_flip_vertically_on_load(true);
     
     GLCall( glViewport(0,0,WINDOW_WIDTH,WINDOW_HEIGHT) ) ;
     GLCall( glEnable(GL_DEPTH_TEST) );
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    GLCall( glEnable(GL_BLEND) ) ;
+    GLCall( glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) ) ;
+
+
+    std::string vsPath = "shaders/vertexShader.vs";
+    std::string fsPath = "shaders/fragmentShader.fs";
+    std::string cvsPath = "shaders/vertexShaderCrosshair.vs";
+
+    std::string cfsPath = "shaders/fragmentShaderCrosshair.fs";
     
+    Shader shader = Shader(vsPath, fsPath);
+    Shader crosshairShader = Shader(cvsPath,cfsPath);
 
-    std::filesystem::path cwd = std::filesystem::current_path();
-
-    std::filesystem::path vsPath = cwd / "shaders/vertexShader.vs";
-    std::filesystem::path fsPath = cwd / "shaders/fragmentShader.fs";
-
-
-    std::filesystem::path cvsPath = cwd / "shaders/vertexShaderCrosshair.vs";
-    std::filesystem::path cfsPath = cwd / "shaders/fragmentShaderCrosshair.fs";
-    
-    Shader shader = Shader(vsPath.string(), fsPath.string());
-    Shader crosshairShader = Shader(cvsPath.string(),cfsPath.string());
-
-    std::filesystem::path texturePath = cwd / "textures/texture.png";
+    std::string texturePath = "textures/texture.png";
 
     Texture texture = Texture(texturePath, "png");
 
@@ -152,7 +246,7 @@ int main()
     vao.setAttr(0,3,GL_FLOAT,4 * sizeof(float),0);
     vao.setAttr(1,1,GL_FLOAT,4 * sizeof(float),3 * sizeof(float));
     vboInst.bind();
-    vao.setAttrI(2,1,sizeof(VertexDataInt),0);
+    vao.setAttr(2,1,GL_FLOAT, sizeof(VertexDataInt),0);
     GLCall( glVertexAttribDivisor(2,1) );
     
 
@@ -161,86 +255,41 @@ int main()
     GLCall( glBindVertexArray(0) );
 
 
-    World world = World(512);
+    World world = World(16);
     world.genWorld();
 
     
     Player player = Player(glm::vec3(0.0,60.0,0.0),&world,&camera,window);
-
-
     double last = glfwGetTime();
     double avgFPS = 0;
     std::vector<double> fpsS;
-    while (!glfwWindowShouldClose(window))
-    {
-        
-        double delta = glfwGetTime() - last;
-        last = glfwGetTime();
-        double fps = 1 / delta;
-        if (fpsS.size() >= 10){
-            avgFPS = 0;
-            int divide = fpsS.size();
-            for (int i=fpsS.size() -1 ; i>= 0; i--){
-                avgFPS += fpsS[i];
-                fpsS.pop_back();
-            }
-            avgFPS /= divide;
-            std::cout << "FPS: " << avgFPS << "\n";
+
+    AppState cState = {
+        &last,
+        &fpsS,
+        &player,
+        &shader,
+        &vbo,
+        &vboInst,
+        &vao,
+        &ebo,
+        &world,
+        window,
+        &crosshairShader,
+        &crosshairVBO,
+        &crosshairVAO,
+    };
+    state = &cState;
+    #ifdef __EMSCRIPTEN__
+        emscripten_set_main_loop(loop, 0, true);  // 0 = use requestAnimationFrame()
+    #else
+        while (!glfwWindowShouldClose(window)) {
+            loop();
         }
-        else{
-            fpsS.push_back(fps);
-        }
-        
-        player.update(delta);
-        
-        view = camera.getViewMatrix();
-        GLCall( glClearColor(0.68f, 0.84f, 0.9f, 1.0f) );
-        GLCall( glClear(GL_COLOR_BUFFER_BIT) );
-
-        shader.use();
-        
-        shader.setInt("playerState",player.state);
-        shader.setVec3Float("LightPos",glm::vec3(256,100,256));
-        shader.setMatrixFloat("projection",GL_FALSE,projection);
-        shader.setMatrixFloat("view",GL_FALSE,view);
-        shader.setMatrixFloat("model",GL_FALSE,model);
-
-        vao.bind();
-        vbo.bind();
-        ebo.bind();
+        glfwTerminate();
+    #endif
     
-    
-        for (Chunk* chunk : world.chunkRefs){
-         
-            shader.setVec3Float("chunkPos",(*chunk).position);
-            
-            (*chunk).renderOpaque(&vboInst);
-        }   
-        for (Chunk* chunk : world.chunkRefs){
-         
-            shader.setVec3Float("chunkPos",(*chunk).position);
-            
-            (*chunk).renderTransparent(&vboInst);
-        }   
-        
-                
 
-        crosshairShader.use();
-        crosshairVAO.bind();
-        crosshairVBO.bind();
-        GLCall( glDrawArrays(GL_TRIANGLES,0,3) );
-        
-        
-        
-        /* Swap front and back buffers */
-        glfwSwapBuffers(window);
-
-        /* Poll for and process events */
-        glfwPollEvents();
-        GLCall( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
-    }
-    
-    glfwTerminate();
     return 0;
 }
 

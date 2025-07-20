@@ -1,8 +1,9 @@
-#version 330 core
+#version 300 es
+precision mediump float;
 
 layout (location = 0) in vec3 aBasePosition;
 layout (location = 1) in float vertexType;
-layout (location = 2) in int vertexData;  
+layout (location = 2) in float vertexData;  
 
 out vec2 TexCoords;
 out vec3 Normal;
@@ -60,7 +61,6 @@ vec3 rotateVertexPosition(vec3 pos, int face) {
 
     return pos; // fallback
 }
-
 
 vec2 getUV(int vertexType, int face) {
     // vertex type is int 0,1,2,3
@@ -141,8 +141,6 @@ vec2 getUV(int vertexType, int face) {
     }
     return uvCoord;
 
-
-
 }
 
 
@@ -160,12 +158,13 @@ vec3 NORMALS[6] = vec3[](
 void main()
 {
     // Decode position from bit-packed int
-    float zPos = float((vertexData >> 0) & 0xF) + 0.5;
-    float yPos = float((vertexData >> 4) & 0xFF) + 0.5;
-    float xPos = float((vertexData >> 12) & 0xF) + 0.5;
+    int intBits = floatBitsToInt(vertexData);
+    float zPos = float((intBits >> 0) & 0xF) + 0.5;
+    float yPos = float((intBits >> 4) & 0xFF) + 0.5;
+    float xPos = float((intBits >> 12) & 0xF) + 0.5;
 
-    int face = (vertexData >> 16) & 0x7;
-    int textureId = (vertexData >> 19) & 0x7F;
+    int face = (intBits >> 16) & 0x7;
+    int textureId = (intBits >> 19) & 0x7F;
     vec3 rotatedBasePos = rotateVertexPosition(aBasePosition,face);
     
 
@@ -177,8 +176,8 @@ void main()
     Normal = NORMALS[face];
 
 
-    float yChange = - ( floor( textureId / 4.0) * 0.1 );
-    float xChange = (textureId / 4.0 - int(textureId / 4));
+    float yChange = - ( float( textureId / 4 ) * 0.1 );
+    float xChange = (float(textureId) / 4.0) - float(textureId / 4);
     
     vec2 vertexUvs = getUV(int(vertexType),face);
     TexCoords = vertexUvs + vec2(xChange,yChange); 
