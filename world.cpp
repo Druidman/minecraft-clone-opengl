@@ -100,7 +100,7 @@ void World::genWorld()
             }
 
             glm::vec3 chunkPos = glm::vec3(startX + (CHUNK_WIDTH / 2), 0.0, startY + (CHUNK_WIDTH / 2));
-            Chunk chunk = Chunk(chunkPos);
+            Chunk chunk = Chunk(chunkPos, this);
             
             
             for (int i =startX; i< startX + CHUNK_WIDTH ; i++){
