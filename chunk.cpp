@@ -96,26 +96,37 @@ void Chunk::addBlockFace(BlockFace face, Block *block, std::vector<VertexDataInt
 bool Chunk::canAddFace(BlockFace face, Block *currentBlock)
 {
     glm::vec3 checkBlockPos = currentBlock->position;
+    glm::vec3 checkBlockFacePos = checkBlockPos;
     switch (face)
     {
     case TOP_FACE:
         checkBlockPos.y += 1;
+        checkBlockFacePos += TOP_FACE_POS;
         break;
     case BOTTOM_FACE:
         checkBlockPos.y -= 1;
+        checkBlockFacePos += BOTTOM_FACE_POS;
         break;
     case FRONT_FACE:
         checkBlockPos.z += 1;
+        checkBlockFacePos += FRONT_FACE_POS;
         break;
     case BACK_FACE:
         checkBlockPos.z -= 1;
+        checkBlockFacePos += BACK_FACE_POS;
         break;
     case LEFT_FACE:
         checkBlockPos.x -= 1;
+        checkBlockFacePos += LEFT_FACE_POS;
         break;
     case RIGHT_FACE:
         checkBlockPos.x += 1;
+        checkBlockFacePos += RIGHT_FACE_POS;
         break;
+    }
+    // lets check if face is on border of world
+    if (checkBlockFacePos.y == 0 || checkBlockFacePos.x == 0 || checkBlockFacePos.z == 0 || checkBlockFacePos.x == world->WIDTH || checkBlockFacePos.z == world->WIDTH){
+        return false; //face is on world border
     }
     
     std::optional<Block *> res = this->world->getBlockByPos(checkBlockPos);
@@ -206,14 +217,18 @@ void Chunk::genChunkMesh()
 
 void Chunk::renderOpaque(VertexBuffer *vboInst)
 {
-        
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     vboInst->fillData<VertexDataInt>(opaqueFacesData);
     glDrawElementsInstanced(GL_TRIANGLES, BLOCK_FACE_INDICES.size(), GL_UNSIGNED_INT, 0, opaqueFacesData.size());
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    
 };
 void Chunk::renderTransparent(VertexBuffer *vboInst)
 {
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     vboInst->fillData<VertexDataInt>(transparentFacesData);
     glDrawElementsInstanced(GL_TRIANGLES, BLOCK_FACE_INDICES.size(), GL_UNSIGNED_INT, 0, transparentFacesData.size());
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 void Chunk::addBlock(Block block)

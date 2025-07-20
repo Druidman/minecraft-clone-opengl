@@ -200,7 +200,7 @@ int main()
         shader.use();
         
         shader.setInt("playerState",player.state);
-        shader.setVec3Float("LightPos",glm::vec3(0.0,60,0.0));
+        shader.setVec3Float("LightPos",glm::vec3(256,100,256));
         shader.setMatrixFloat("projection",GL_FALSE,projection);
         shader.setMatrixFloat("view",GL_FALSE,view);
         shader.setMatrixFloat("model",GL_FALSE,model);

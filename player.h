@@ -34,6 +34,9 @@ class Player{
         const int rightMouseButton = GLFW_MOUSE_BUTTON_RIGHT;
         int lastRightButtonState = GLFW_RELEASE;
         int lastLeftButtonState = GLFW_RELEASE;
+
+        bool fly = false;
+        int lastFlyButtonState = GLFW_RELEASE;
     private:
         void updateState();
         void updateAction();

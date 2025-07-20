@@ -76,6 +76,11 @@ void Player::updateAction()
 
 void Player::move_by(glm::vec3 dir)
 {
+    if (this->fly){
+        position += dir;
+        adjustCamera();
+        return;
+    }
     glm::vec3 changePos = position + dir;
 
     std::optional<Block *> blockRes = world->getBlockByPos(changePos, true);
@@ -137,9 +142,20 @@ void Player::adjustCamera()
 void Player::process_input(double delta)
 {
     float speed = PLAYER_SPEED * delta;
-    glm::vec3 walkDir = glm::vec3(this->camera->direction.x,0.0,this->camera->direction.z);
     glm::vec3 camRight = this->camera->getRightVec();
-    glm::vec3 walkSideDir = glm::vec3(camRight.x,0.0,camRight.z);
+    glm::vec3 walkDir;
+    glm::vec3 walkSideDir;
+
+    if (this->fly){
+        speed *= 5;
+        walkDir = camera->direction;
+        walkSideDir = camRight;
+    }
+    else {
+        walkDir = glm::vec3(this->camera->direction.x,0.0,this->camera->direction.z);
+        walkSideDir = glm::vec3(camRight.x,0.0,camRight.z);
+    }
+    
 
     glm::vec3 stepForward = speed * walkDir;
     glm::vec3 stepRight = speed * walkSideDir;
@@ -168,6 +184,12 @@ void Player::process_input(double delta)
         buttonPressed(rightMouseButton);
     }
     this->lastRightButtonState = rightState;
+
+    int flyState = glfwGetKey(window,GLFW_KEY_F);
+    if (flyState == GLFW_PRESS && this->lastFlyButtonState == GLFW_RELEASE){
+        fly = !fly;
+    }
+    this->lastFlyButtonState = flyState;
 }
 
 void Player::destroy_block()
@@ -259,7 +281,7 @@ void Player::update(double delta)
     updateState();
 
     
-    if (action == FALLING){
+    if (action == FALLING && !fly){
         move_by(glm::vec3(0.0,-5.0,0.0) * (float)delta);
         
     }
