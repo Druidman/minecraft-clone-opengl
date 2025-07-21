@@ -58,6 +58,7 @@ public:
     
     bool isBlockTransparent(Block *block);
     
+    glm::vec3 getPos(int platform, int row, int column);
 
     std::optional<Block *> getBlock(int plat, int row, int col, bool noneBlock = false);
     
@@ -82,9 +83,8 @@ public:
 
     void addBlock(Block block);
     
-
-    void createBlockPlatform();
-    
+    void addBlockPlatform();
+    void addBlockRow(int platform);
 
     bool removeBlock(int platform, int row, int col);
     

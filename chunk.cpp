@@ -5,8 +5,7 @@ Chunk::Chunk(glm::vec3 chunkPosition, World *world)
 {
     this->position = chunkPosition;
     this->world = world;
-
-    createBlockPlatform();
+    addBlockPlatform();
 }
 
 bool Chunk::isBlockTransparent(Block *block)
@@ -23,13 +22,13 @@ bool Chunk::isBlockTransparent(Block *block)
 
 std::optional<Block *> Chunk::getBlock(int plat, int row, int col, bool noneBlock)
 {
-    if (plat >= blocks.size()){
-        int platformsToAdd = plat - this->blocks.size() + 1;
-        for (int i = 0; i < platformsToAdd; i++)
-        {
-            createBlockPlatform();
-        }
-    } //just so chunks feel infinite
+    // if (plat >= blocks.size()){
+    //     int platformsToAdd = plat - this->blocks.size() + 1;
+    //     for (int i = 0; i < platformsToAdd; i++)
+    //     {
+    //         createBlockPlatform();
+    //     }
+    // } //just so chunks feel infinite
     
     if (
         plat >= blocks.size() ||
@@ -37,16 +36,21 @@ std::optional<Block *> Chunk::getBlock(int plat, int row, int col, bool noneBloc
         row >= CHUNK_WIDTH ||
         row < 0 ||
         col >= CHUNK_WIDTH ||
-        col < 0)
-    {
-        
+        col < 0 
+    ) return std::nullopt; 
+    //those were boundaries checks
+
+    if (row >= blocks[plat].size()){
         return std::nullopt;
-    }
+    } // no blocks from here on
+    if (col >= blocks[plat][row].size()){
+        return std::nullopt;
+    }// no blocks from here on too
+
     
     Block *block = &blocks[plat][row][col];
     if (block->type == NONE_BLOCK && !noneBlock)
     {
-       
         return std::nullopt;
     }
     return block;
@@ -232,6 +236,14 @@ void Chunk::renderTransparent(VertexBuffer *vboInst)
     glDrawElementsInstanced(GL_TRIANGLES, BLOCK_FACE_INDICES.size(), GL_UNSIGNED_INT, 0, transparentFacesData.size());
     // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
+glm::vec3 Chunk::getPos(int platform, int row, int column){
+    float y = platform + 0.5 + this->position.y;
+    float x = column + 0.5 + (this->position.x - (CHUNK_WIDTH / 2));
+    float z = row + 0.5 + (this->position.z - (CHUNK_WIDTH / 2));
+
+    return glm::vec3(x,y,z);
+
+}
 
 void Chunk::addBlock(Block block)
 {
@@ -262,32 +274,46 @@ void Chunk::addBlock(Block block)
         return;
     }
 
+    
+
     if (platform > this->blocks.size() - 1)
     {
         int platformsToAdd = platform - this->blocks.size() + 1;
         for (int i = 0; i < platformsToAdd; i++)
         {
-            createBlockPlatform();
+            addBlockPlatform();
         }
     }
+    if (row > this->blocks[platform].size()-1){
+        int rowsToAdd = row - this->blocks[platform].size() + 1;
+        for (int i = 0; i < rowsToAdd; i++)
+        {
+            addBlockRow(platform);
+        }
+    }
+    if (column > this->blocks[platform][row].size()-1){
+        int blocksToAdd = column - this->blocks[platform][row].size() + 1;
+        for (int i = 0; i < blocksToAdd; i++)
+        {
+            Block block = Block(NONE_BLOCK,getPos(platform,row,column));
+            this->blocks[platform][row].push_back(block);
+        }
+    }
+    
     this->blocks[platform][row][column] = block;
 }
 
-void Chunk::createBlockPlatform()
+void Chunk::addBlockPlatform()
 {
-    std::vector<std::vector<Block>> platform = std::vector<std::vector<Block>>(CHUNK_WIDTH, std::vector<Block>(CHUNK_WIDTH, Block(NONE_BLOCK, glm::vec3(1.0f))));
-    for (int row = 0; row < platform.size(); row++)
-    {
-        for (int col = 0; col < platform[row].size(); col++)
-        {
-            float y = this->blocks.size() + 0.5 + this->position.y;
-            float x = col + 0.5 + (this->position.x - (CHUNK_WIDTH / 2));
-            float z = row + 0.5 + (this->position.z - (CHUNK_WIDTH / 2));
-            platform[row][col].position = glm::vec3(x, y, z);
-        }
-    }
+    std::vector<std::vector<Block>> platform = std::vector<std::vector<Block>>(1, std::vector<Block>(1,Block(NONE_BLOCK,getPos(this->blocks.size(),0,0))));
     this->blocks.push_back(platform);
 }
+
+void Chunk::addBlockRow(int platform)
+{
+    std::vector<Block> row = std::vector<Block>(1,Block(NONE_BLOCK,getPos(platform,this->blocks[platform].size(),0)));
+    this->blocks[platform].push_back(row);
+}   
 
 bool Chunk::removeBlock(int platform, int row, int col)
 {
@@ -319,25 +345,26 @@ void Chunk::fillWater()
 {
     for (int platform = 0; platform < 20; platform++)
     {
-        if (platform > this->blocks.size() - 1)
+        if (platform >= this->blocks.size())
         {
-            createBlockPlatform();
+            addBlockPlatform();
         }
-        for (int row = 0; row < blocks[platform].size(); row++)
+        for (int row = 0; row < CHUNK_WIDTH; row++)
         {
-            for (int col = 0; col < blocks[platform][row].size(); col++)
+            if (row >= this->blocks[platform].size())
+            {
+                addBlockRow(platform);
+            }
+            for (int col = 0; col < CHUNK_WIDTH; col++)
             {
                 
-                Block &block = blocks[platform][row][col];
-                if (block.type != NONE_BLOCK)
+                auto blockRes = getBlock(platform,row,col);
+                if (blockRes.has_value())
                 {
                     continue;
                 }
-                block.type = WATER;
-                float y = platform + 0.5 + position.y;
-                float x = col + 0.5 + (position.x - (CHUNK_WIDTH / 2));
-                float z = row + 0.5 + (position.z - (CHUNK_WIDTH / 2));
-                block.position = glm::vec3(x,y,z);
+                addBlock(Block(WATER,getPos(platform,row,col)));
+                
             }
         }
     }
@@ -354,13 +381,10 @@ void Chunk::fillUnderBlock(Block &block)
         
         
 
-        Block &underBlock = this->blocks[platform][row][col];
+        Block underBlock = Block(STONE, underBlockPos);
+        addBlock(underBlock);
         
-        if (underBlock.type == NONE_BLOCK){
-            
-            underBlock.type = STONE;
-
-        }
+        
         underBlockPos.y -= 1;
         
     }

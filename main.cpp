@@ -255,7 +255,7 @@ int main()
     GLCall( glBindVertexArray(0) );
 
 
-    World world = World(16);
+    World world = World(1024);
     world.genWorld();
 
     
