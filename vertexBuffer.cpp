@@ -23,7 +23,7 @@ void VertexBuffer::unBind()
 void VertexBuffer::allocateBuffer(unsigned long long int size)
 {
     bind();
-    GLCall( glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_DYNAMIC_DRAW) );
+    GLCall( glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_STATIC_DRAW) );
     this->bufferSize = size;
     this->dataFilled = 0;
 }

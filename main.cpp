@@ -115,11 +115,12 @@ void loop(){
     state->shader->use();
     
     state->shader->setInt("playerState",state->player->state);
-    state->shader->setVec3Float("LightPos",glm::vec3(256,100,256));
     state->shader->setMatrixFloat("projection",GL_FALSE,projection);
     state->shader->setMatrixFloat("view",GL_FALSE,view);
     state->shader->setMatrixFloat("model",GL_FALSE,model);
-
+    #ifndef __EMSCRIPTEN__
+        state->shader->setVec3Float("LightPos",glm::vec3(256,100,256));
+    #endif
     state->vbo->bind();
     state->ebo->bind();
 
@@ -199,11 +200,14 @@ int main()
     GLCall( glEnable(GL_BLEND) ) ;
     GLCall( glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) ) ;
 
-
-    std::string vsPath = "shaders/vertexShader.vs";
-    std::string fsPath = "shaders/fragmentShader.fs";
+    #ifdef __EMSCRIPTEN__
+        std::string vsPath = "shaders/vertexShaderWeb.vs";
+        std::string fsPath = "shaders/fragmentShaderWeb.fs";
+    #else
+        std::string vsPath = "shaders/vertexShader.vs";
+        std::string fsPath = "shaders/fragmentShader.fs";
+    #endif
     std::string cvsPath = "shaders/vertexShaderCrosshair.vs";
-
     std::string cfsPath = "shaders/fragmentShaderCrosshair.fs";
     
     Shader shader = Shader(vsPath, fsPath);
@@ -224,21 +228,21 @@ int main()
     crosshairVBO.fillData<float>(crosshairVertices);
     crosshairVAO.setAttr(0,3,GL_FLOAT, 3 * sizeof(float), 0);
 
-    VertexBuffer vbo = VertexBuffer();
+    VertexBuffer vertexVbo = VertexBuffer();
     ElementBuffer ebo = ElementBuffer();
     
-    vbo.fillData<float>(BLOCK_FACE_VERTEX_POS);
+    vertexVbo.fillData<float>(BLOCK_FACE_VERTEX_POS);
     ebo.fillData<int>(BLOCK_FACE_INDICES);
 
     GLCall( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0) );
     GLCall( glBindVertexArray(0) );
 
-    int worldWidth = 512;
+    int worldWidth = 160;
     World world = World(worldWidth);
     world.genWorld();
 
     for (Chunk* chunk: world.chunkRefs){
-        chunk->createBuffer(&vbo,&ebo);
+        chunk->createBuffer(&vertexVbo,&ebo);
         chunk->fillBuffer();
 
     }
@@ -255,7 +259,7 @@ int main()
         &fpsS,
         &player,
         &shader,
-        &vbo,
+        &vertexVbo,
         &ebo,
         &world,
         window,

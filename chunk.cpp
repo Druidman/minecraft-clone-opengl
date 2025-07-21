@@ -233,6 +233,7 @@ void Chunk::createBuffer(VertexBuffer *vbo, ElementBuffer *ebo)
     vbo->bind();
     vao.setAttr(0,3,GL_FLOAT,4 * sizeof(float),0);
     vao.setAttr(1,1,GL_FLOAT,4 * sizeof(float),3 * sizeof(float));
+  
 
     this->vbo.bind();
     this->vao.setAttr(2,1,GL_FLOAT, sizeof(VertexDataInt),0);

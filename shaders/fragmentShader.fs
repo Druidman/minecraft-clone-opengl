@@ -5,6 +5,7 @@ precision mediump float;
 in vec2 TexCoords;
 in vec3 Normal;
 in vec3 Pos;
+
 out vec4 Color;
 
 uniform sampler2D text;
@@ -18,8 +19,6 @@ void main()
     vec3 ambient = 0.1 * lightColor;
     vec4 objectColor = texture(text,TexCoords);
     
-
-
     vec3 norm = normalize(Normal);
     vec3 lightDir = normalize(LightPos - Pos) ;
     float diff = max(dot(norm,lightDir),0.0);
@@ -27,8 +26,7 @@ void main()
     vec3 diffuse = diff * lightColor;
 
     vec3 result = (ambient + diffuse) * vec3(objectColor);
-    // Color =  vec4(normalize(Normal) * 0.5 + 0.5, 1.0);
-
+  
     if (playerState == 0){
         Color = vec4(result,objectColor[3]);
     }
