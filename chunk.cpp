@@ -1,5 +1,8 @@
 #include "chunk.h"
 #include "world.h"
+#include "vertexArray.h"
+#include "elementBuffer.h"
+#include "vertexBuffer.h"
 
 Chunk::Chunk(glm::vec3 chunkPosition, World *world)
 {
@@ -221,21 +224,50 @@ void Chunk::genChunkMesh()
     }
 }
 
-void Chunk::renderOpaque(VertexBuffer *vboInst)
-{
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    vboInst->fillData<VertexDataInt>(opaqueFacesData);
-    glDrawElementsInstanced(GL_TRIANGLES, BLOCK_FACE_INDICES.size(), GL_UNSIGNED_INT, 0, opaqueFacesData.size());
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+void Chunk::createBuffer(VertexBuffer *vbo, ElementBuffer *ebo)
+{   
+    this->vao.bind();
+
+    ebo->bind();
+    vbo->bind();
+    vao.setAttr(0,3,GL_FLOAT,4 * sizeof(float),0);
+    vao.setAttr(1,1,GL_FLOAT,4 * sizeof(float),3 * sizeof(float));
+
+    this->vbo.bind();
+    this->vao.setAttr(2,1,GL_FLOAT, sizeof(VertexDataInt),0);
+    GLCall( glVertexAttribDivisor(2,1) );
+
+
+    this->vbo.unBind();
     
-};
-void Chunk::renderTransparent(VertexBuffer *vboInst)
-{
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    vboInst->fillData<VertexDataInt>(transparentFacesData);
-    glDrawElementsInstanced(GL_TRIANGLES, BLOCK_FACE_INDICES.size(), GL_UNSIGNED_INT, 0, transparentFacesData.size());
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
+
+void Chunk::fillBuffer()
+{
+    this->vbo.allocateBuffer((sizeof(VertexDataInt) * opaqueFacesData.size()) + (sizeof(VertexDataInt) * transparentFacesData.size()));
+    if (opaqueFacesData.size() > 0){
+        if (!this->vbo.addData<VertexDataInt>(opaqueFacesData)){
+
+            ExitError("CHUNK","error adding opaque data to buffer");
+        }
+    }
+    if (transparentFacesData.size() > 0){
+        if (!this->vbo.addData<VertexDataInt>(transparentFacesData)){
+            ExitError("CHUNK","error adding transparent data to buffer");
+        }
+    }
+    
+    
+}
+
+void Chunk::render()
+{
+    
+    this->vao.bind();
+    GLCall( glDrawElementsInstanced(GL_TRIANGLES, BLOCK_FACE_INDICES.size(), GL_UNSIGNED_INT, 0, opaqueFacesData.size() + transparentFacesData.size()) );
+}
+
 glm::vec3 Chunk::getPos(int platform, int row, int column){
     float y = platform + 0.5 + this->position.y;
     float x = column + 0.5 + (this->position.x - (CHUNK_WIDTH / 2));

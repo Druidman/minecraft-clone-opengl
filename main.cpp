@@ -46,8 +46,6 @@ struct AppState {
     Player *player;
     Shader *shader;
     VertexBuffer *vbo;
-    VertexBuffer *vboInst;
-    VertexArray *vao;
     ElementBuffer *ebo;
     World *world;
     GLFWwindow *window;
@@ -122,23 +120,16 @@ void loop(){
     state->shader->setMatrixFloat("view",GL_FALSE,view);
     state->shader->setMatrixFloat("model",GL_FALSE,model);
 
-    state->vao->bind();
     state->vbo->bind();
     state->ebo->bind();
 
-
     for (Chunk* chunk : state->world->chunkRefs){
         
         state->shader->setVec3Float("chunkPos",chunk->position);
         
-        chunk->renderOpaque(state->vboInst);
+        chunk->render();
     }   
-    for (Chunk* chunk : state->world->chunkRefs){
-        
-        state->shader->setVec3Float("chunkPos",chunk->position);
-        
-        chunk->renderTransparent(state->vboInst);
-    }   
+    
     
             
 
@@ -233,30 +224,25 @@ int main()
     crosshairVBO.fillData<float>(crosshairVertices);
     crosshairVAO.setAttr(0,3,GL_FLOAT, 3 * sizeof(float), 0);
 
-    VertexArray vao = VertexArray();
     VertexBuffer vbo = VertexBuffer();
     ElementBuffer ebo = ElementBuffer();
-    VertexBuffer vboInst = VertexBuffer();
     
- 
     vbo.fillData<float>(BLOCK_FACE_VERTEX_POS);
     ebo.fillData<int>(BLOCK_FACE_INDICES);
 
-    vbo.bind();
-    vao.setAttr(0,3,GL_FLOAT,4 * sizeof(float),0);
-    vao.setAttr(1,1,GL_FLOAT,4 * sizeof(float),3 * sizeof(float));
-    vboInst.bind();
-    vao.setAttr(2,1,GL_FLOAT, sizeof(VertexDataInt),0);
-    GLCall( glVertexAttribDivisor(2,1) );
-    
-
-    GLCall( glBindBuffer(GL_ARRAY_BUFFER, 0) );
     GLCall( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0) );
     GLCall( glBindVertexArray(0) );
 
-
-    World world = World(1024);
+    int worldWidth = 512;
+    World world = World(worldWidth);
     world.genWorld();
+
+    for (Chunk* chunk: world.chunkRefs){
+        chunk->createBuffer(&vbo,&ebo);
+        chunk->fillBuffer();
+
+    }
+    
 
     
     Player player = Player(glm::vec3(0.0,60.0,0.0),&world,&camera,window);
@@ -270,8 +256,6 @@ int main()
         &player,
         &shader,
         &vbo,
-        &vboInst,
-        &vao,
         &ebo,
         &world,
         window,

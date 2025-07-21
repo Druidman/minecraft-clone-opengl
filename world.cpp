@@ -172,6 +172,7 @@ void World::genWorld()
     }
     for (Chunk* chunk : this->chunkRefs){
         chunk->genChunkMesh();
+        
     }
     
 }

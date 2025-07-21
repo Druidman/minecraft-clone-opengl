@@ -10,6 +10,10 @@
 #include "block.h"
 #include "vertexBuffer.h"
 #include "models.h"
+#include "vertexArray.h"
+#include "elementBuffer.h"
+#include "vertexBuffer.h"
+
 
 
 #include <optional>
@@ -48,6 +52,8 @@ class Chunk
 public:
     glm::vec3 position;
     World *world;
+    VertexArray vao;
+    VertexBuffer vbo;
 
     std::vector<std::vector<std::vector<Block>>> blocks;
 
@@ -74,11 +80,9 @@ public:
 
     void genChunkMesh();
     
-    
-    void renderOpaque(VertexBuffer *vboInst);
-    
-
-    void renderTransparent(VertexBuffer *vboInst);
+    void createBuffer(VertexBuffer *vbo, ElementBuffer *ebo);
+    void fillBuffer();
+    void render();
     
 
     void addBlock(Block block);
