@@ -52,8 +52,8 @@ class Chunk
 public:
     glm::vec3 position;
     World *world;
-    VertexArray vao;
-    VertexBuffer vbo;
+  
+    VertexBuffer *vbo;
 
     std::vector<std::vector<std::vector<Block>>> blocks;
 
@@ -80,7 +80,8 @@ public:
 
     void genChunkMesh();
     
-    void createBuffer(VertexBuffer *vbo, ElementBuffer *ebo);
+    void createBuffer(VertexBuffer *dataVbo);
+    unsigned long long getMeshSize();
     void fillBuffer();
     void render();
     

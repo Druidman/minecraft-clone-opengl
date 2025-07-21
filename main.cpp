@@ -47,12 +47,15 @@ struct AppState {
     Shader *shader;
     VertexBuffer *vbo;
     ElementBuffer *ebo;
+    VertexBuffer *vboInst;
+    VertexArray *vao;
     World *world;
     GLFWwindow *window;
 
     Shader *crosshairShader;
     VertexBuffer *crosshairVBO;
     VertexArray *crosshairVAO;
+    std::vector<glm::vec3> *chunkPositions;
 };
 
 AppState *state;
@@ -121,15 +124,17 @@ void loop(){
     #ifndef __EMSCRIPTEN__
         state->shader->setVec3Float("LightPos",glm::vec3(256,100,256));
     #endif
+    state->vao->bind();
     state->vbo->bind();
     state->ebo->bind();
+    // state->vboInst->bind();
+    
 
-    for (Chunk* chunk : state->world->chunkRefs){
-        
-        state->shader->setVec3Float("chunkPos",chunk->position);
-        
-        chunk->render();
-    }   
+    state->shader->setVec3Float("chunkPositions",glm::vec3(0,0,0));
+
+
+    unsigned long long instances = state->vboInst->getBufferSize() / sizeof(VertexDataInt);
+    GLCall( glDrawElementsInstanced(GL_TRIANGLES, BLOCK_FACE_INDICES.size(), GL_UNSIGNED_INT, 0, instances) );
     
     
             
@@ -228,23 +233,47 @@ int main()
     crosshairVBO.fillData<float>(crosshairVertices);
     crosshairVAO.setAttr(0,3,GL_FLOAT, 3 * sizeof(float), 0);
 
+    VertexArray vao;
     VertexBuffer vertexVbo = VertexBuffer();
+    VertexBuffer vboInst = VertexBuffer();
     ElementBuffer ebo = ElementBuffer();
-    
+
+   
     vertexVbo.fillData<float>(BLOCK_FACE_VERTEX_POS);
     ebo.fillData<int>(BLOCK_FACE_INDICES);
 
+    vertexVbo.bind();
+    vao.setAttr(0,3,GL_FLOAT,4 * sizeof(float),0);
+    vao.setAttr(1,1,GL_FLOAT,4 * sizeof(float),3 * sizeof(float));
+
+    vboInst.bind();
+    vao.setAttr(2,1,GL_FLOAT,sizeof(VertexDataInt),0);
+    GLCall( glVertexAttribDivisor(2,1) );
+
+    GLCall( glBindBuffer(GL_ARRAY_BUFFER, 0) );
     GLCall( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0) );
     GLCall( glBindVertexArray(0) );
 
-    int worldWidth = 160;
+    int worldWidth = 1024;
     World world = World(worldWidth);
     world.genWorld();
-
+    unsigned long long sizeToAlloc = 0;
     for (Chunk* chunk: world.chunkRefs){
-        chunk->createBuffer(&vertexVbo,&ebo);
-        chunk->fillBuffer();
+        chunk->createBuffer(&vboInst);
+        sizeToAlloc += chunk->getMeshSize();
+    }
+    std::cout << sizeToAlloc << "\n";
 
+    vboInst.allocateBuffer(sizeToAlloc);
+    for (Chunk* chunk: world.chunkRefs){
+        chunk->fillBuffer();
+        
+    }
+
+    std::vector<glm::vec3> chunkPositions;
+    for (Chunk* chunk: world.chunkRefs){
+        chunkPositions.push_back(chunk->position);
+        
     }
     
 
@@ -261,11 +290,14 @@ int main()
         &shader,
         &vertexVbo,
         &ebo,
+        &vboInst,
+        &vao,
         &world,
         window,
         &crosshairShader,
         &crosshairVBO,
         &crosshairVAO,
+        &chunkPositions
     };
     state = &cState;
     #ifdef __EMSCRIPTEN__

@@ -15,13 +15,16 @@ class VertexBuffer{
     private:
 
         unsigned int m_vbo;
-        unsigned long long int bufferSize = 0;
+        
         unsigned long long int dataFilled = 0;
+        unsigned long long int bufferSize = 0;
   
     public:
+        
         VertexBuffer();
         void bind();
         void unBind();
+        unsigned long long getBufferSize(){ return bufferSize; };
 
         void allocateBuffer(unsigned long long int size);
 
