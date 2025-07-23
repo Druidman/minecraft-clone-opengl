@@ -49,14 +49,12 @@ const std::vector<float> BLOCK_FACE_VERTEX_POS = {
     -0.5f,  0.0f, -0.5f, 1,               // 0.0, 1.0,  top left
     -0.5f,  0.0f,  0.5f, 0,               // 0.0, 0.75, bottom left
      0.5f,  0.0f,  0.5f, 3,               // 0.25, 0.75 bottom right
+    -0.5f,  0.0f, -0.5f, 1,               // 0.0, 1.0,  top left
+     0.5f,  0.0f,  0.5f, 3,               // 0.25, 0.75 bottom right
      0.5f,  0.0f, -0.5f, 2                // 0.25, 1.0, top right
-     
-     
-};
-const std::vector<int> BLOCK_FACE_INDICES = {
-    0,1,2,2,3,0
-};
 
+};
+const int BLOCK_FACE_VERTICES_COUNT = 6;
 
 const std::vector<float> TOPFACEVERTICES = {
     -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,   0.0f, 1.0f, 0.0f,

@@ -1,9 +1,13 @@
-#version 300 es
-precision mediump float;
+#version 460 core
 
 layout (location = 0) in vec3 aBasePosition;
 layout (location = 1) in float vertexType;
-layout (location = 2) in float vertexData;  
+layout (location = 2) in float vertexData; 
+
+layout(std430, binding = 3) buffer ssbo{
+    vec3 chunkPositions[4];
+};
+
 
 out vec2 TexCoords;
 out vec3 Normal;
@@ -12,7 +16,6 @@ out vec3 Pos;
 uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
-uniform vec3 chunkPos;
     
 vec3 rotateVertexPosition(vec3 pos, int face) {
     if (face == 0) { // top (Y+)
@@ -169,6 +172,7 @@ void main()
     
 
     vec3 blockOffset = vec3(xPos, yPos, zPos);
+    vec3 chunkPos = chunkPositions[gl_DrawID];
     vec3 worldPosition = rotatedBasePos + chunkPos + blockOffset - vec3(8.0,0.0,8.0);
 
     gl_Position = projection * view * model * vec4(worldPosition, 1.0);

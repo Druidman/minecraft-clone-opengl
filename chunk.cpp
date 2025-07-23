@@ -1,8 +1,7 @@
 #include "chunk.h"
 #include "world.h"
 #include "vertexArray.h"
-#include "elementBuffer.h"
-#include "vertexBuffer.h"
+#include "buffer.h"
 
 Chunk::Chunk(glm::vec3 chunkPosition, World *world)
 {
@@ -225,23 +224,10 @@ void Chunk::genChunkMesh()
 }
 
 
-void Chunk::createBuffer(VertexBuffer *dataVBO)
+void Chunk::createBuffer(Buffer *dataVBO)
 {   
     this->vbo = dataVBO;
-    // this->vao.bind();
-
-    // ebo->bind();
-    // vbo->bind();
-    // vao.setAttr(0,3,GL_FLOAT,4 * sizeof(float),0);
-    // vao.setAttr(1,1,GL_FLOAT,4 * sizeof(float),3 * sizeof(float));
   
-
-    // this->vbo.bind();
-    // this->vao.setAttr(2,1,GL_FLOAT, sizeof(VertexDataInt),0);
-    // GLCall( glVertexAttribDivisor(2,1) );
-
-
-    // this->vbo.unBind();
     
 }
 
@@ -269,11 +255,7 @@ void Chunk::fillBuffer()
     
 }
 
-void Chunk::render()
-{
-    
-    GLCall( glDrawElementsInstanced(GL_TRIANGLES, BLOCK_FACE_INDICES.size(), GL_UNSIGNED_INT, 0, opaqueFacesData.size() + transparentFacesData.size()) );
-}
+
 
 glm::vec3 Chunk::getPos(int platform, int row, int column){
     float y = platform + 0.5 + this->position.y;

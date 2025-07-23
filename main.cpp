@@ -18,8 +18,7 @@
 #include "shader.h"
 #include "texture.h"
 #include "vertexArray.h"
-#include "vertexBuffer.h"
-#include "elementBuffer.h"
+#include "buffer.h"
 #include "block.h"
 #include "chunk.h"
 #include "camera.h"
@@ -45,17 +44,19 @@ struct AppState {
 
     Player *player;
     Shader *shader;
-    VertexBuffer *vbo;
-    ElementBuffer *ebo;
-    VertexBuffer *vboInst;
     VertexArray *vao;
     World *world;
     GLFWwindow *window;
 
     Shader *crosshairShader;
-    VertexBuffer *crosshairVBO;
     VertexArray *crosshairVAO;
-    std::vector<glm::vec3> *chunkPositions;
+};
+
+struct DrawArraysIndirectCommand{
+    uint  count;
+    uint  instanceCount;
+    uint  first;
+    uint  baseInstance;
 };
 
 AppState *state;
@@ -125,23 +126,15 @@ void loop(){
         state->shader->setVec3Float("LightPos",glm::vec3(256,100,256));
     #endif
     state->vao->bind();
-    state->vbo->bind();
-    state->ebo->bind();
-    // state->vboInst->bind();
     
+    GLCall( glMultiDrawArraysIndirect(GL_TRIANGLES,0,state->world->chunkRefs.size(),sizeof(DrawArraysIndirectCommand)) );
 
-    state->shader->setVec3Float("chunkPositions",glm::vec3(0,0,0));
-
-
-    unsigned long long instances = state->vboInst->getBufferSize() / sizeof(VertexDataInt);
-    GLCall( glDrawElementsInstanced(GL_TRIANGLES, BLOCK_FACE_INDICES.size(), GL_UNSIGNED_INT, 0, instances) );
     
     
             
 
     state->crosshairShader->use();
     state->crosshairVAO->bind();
-    state->crosshairVBO->bind();
     GLCall( glDrawArrays(GL_TRIANGLES,0,3) );
     
     
@@ -167,8 +160,8 @@ int main()
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0); // WebGL 2.0 maps to ES 3.0
         glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
     #else
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     #endif
     
@@ -229,18 +222,20 @@ int main()
     };
 
     VertexArray crosshairVAO = VertexArray();
-    VertexBuffer crosshairVBO = VertexBuffer();
+    Buffer crosshairVBO = Buffer(GL_ARRAY_BUFFER);
     crosshairVBO.fillData<float>(crosshairVertices);
     crosshairVAO.setAttr(0,3,GL_FLOAT, 3 * sizeof(float), 0);
 
     VertexArray vao;
-    VertexBuffer vertexVbo = VertexBuffer();
-    VertexBuffer vboInst = VertexBuffer();
-    ElementBuffer ebo = ElementBuffer();
+    Buffer vertexVbo = Buffer(GL_ARRAY_BUFFER);
+    Buffer vboInst = Buffer(GL_ARRAY_BUFFER);
+    Buffer indirectBuffer = Buffer(GL_DRAW_INDIRECT_BUFFER);
+    Buffer ssbo = Buffer(GL_SHADER_STORAGE_BUFFER);
 
    
+
+    
     vertexVbo.fillData<float>(BLOCK_FACE_VERTEX_POS);
-    ebo.fillData<int>(BLOCK_FACE_INDICES);
 
     vertexVbo.bind();
     vao.setAttr(0,3,GL_FLOAT,4 * sizeof(float),0);
@@ -251,10 +246,9 @@ int main()
     GLCall( glVertexAttribDivisor(2,1) );
 
     GLCall( glBindBuffer(GL_ARRAY_BUFFER, 0) );
-    GLCall( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0) );
     GLCall( glBindVertexArray(0) );
 
-    int worldWidth = 1024;
+    int worldWidth = 2048;
     World world = World(worldWidth);
     world.genWorld();
     unsigned long long sizeToAlloc = 0;
@@ -265,16 +259,25 @@ int main()
     std::cout << sizeToAlloc << "\n";
 
     vboInst.allocateBuffer(sizeToAlloc);
+    indirectBuffer.allocateBuffer(sizeof(DrawArraysIndirectCommand) * world.chunkRefs.size());
+    ssbo.allocateBuffer(sizeof(glm::vec4) * world.chunkRefs.size()); // vec4 due to std430 in shader
     for (Chunk* chunk: world.chunkRefs){
+        DrawArraysIndirectCommand data = {
+            BLOCK_FACE_VERTICES_COUNT,
+            (uint)chunk->transparentFacesData.size() + (uint)chunk->opaqueFacesData.size(),
+            0,
+            vboInst.getFilledDataSize() / sizeof(VertexDataInt)
+        };
+        indirectBuffer.addData<DrawArraysIndirectCommand>(data);
         chunk->fillBuffer();
-        
-    }
 
-    std::vector<glm::vec3> chunkPositions;
-    for (Chunk* chunk: world.chunkRefs){
-        chunkPositions.push_back(chunk->position);
+        
+        ssbo.addData<glm::vec4>(glm::vec4(chunk->position,0.0)); // vec4 due to std430 in shader
+        
         
     }
+    GLCall( glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ssbo.getId()) );
+    
     
 
     
@@ -288,16 +291,11 @@ int main()
         &fpsS,
         &player,
         &shader,
-        &vertexVbo,
-        &ebo,
-        &vboInst,
         &vao,
         &world,
         window,
         &crosshairShader,
-        &crosshairVBO,
-        &crosshairVAO,
-        &chunkPositions
+        &crosshairVAO
     };
     state = &cState;
     #ifdef __EMSCRIPTEN__
