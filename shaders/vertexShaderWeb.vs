@@ -5,6 +5,7 @@ layout (location = 0) in vec3 aBasePosition;
 layout (location = 1) in float vertexType;
 layout (location = 2) in float vertexData;  
 
+
 out vec2 TexCoords;
 out vec3 playerStateColorChange;
 
@@ -151,6 +152,7 @@ void main()
 
     int face = (intBits >> 16) & 0x7;
     int textureId = (intBits >> 19) & 0x7F;
+
     vec3 rotatedBasePos = rotateVertexPosition(aBasePosition,face);
     
 
