@@ -25,6 +25,8 @@
 #include "player.h"
 #include "world.h"
 
+#include "renderer.h"
+
 
 typedef unsigned int uint;
 
@@ -38,28 +40,15 @@ glm::mat4 view;
 Camera camera = Camera();
 
 
-struct AppState {
-    double *last;
-    std::vector<double> *fpsS;
 
-    Player *player;
-    Shader *shader;
-    VertexArray *vao;
-    World *world;
-    GLFWwindow *window;
 
-    Shader *crosshairShader;
-    VertexArray *crosshairVAO;
-};
 
-struct DrawArraysIndirectCommand{
-    uint  count;
-    uint  instanceCount;
-    uint  first;
-    uint  baseInstance;
-};
 
-AppState *state;
+GameState *state;
+Renderer renderer;
+double lastDeltaTime = 0;
+std::vector<double> renderFpsS;
+
 void resize_callback(GLFWwindow *window, int width, int height){
     glViewport(0,0,width,height);
     projection = glm::perspective(glm::radians(45.0),(double)width/height,0.1,1000.0);
@@ -92,57 +81,28 @@ void cursor_pos_callback(GLFWwindow *window, double xpos, double ypos){
 }
 
 void loop(){
-    double delta = glfwGetTime() - *(state->last);
-    *(state->last) = glfwGetTime();
+    double delta = glfwGetTime() - lastDeltaTime;
+    lastDeltaTime = glfwGetTime();
     double fps = 1 / delta;
-    if (state->fpsS->size() >= 10){
+    if (renderFpsS.size() >= 10){
         double avgFPS = 0;
-        int divide = state->fpsS->size();
-        for (int i=state->fpsS->size() -1 ; i>= 0; i--){
-            avgFPS += state->fpsS->at(i);
-            state->fpsS->pop_back();
+        int divide = renderFpsS.size();
+        for (int i=renderFpsS.size() -1 ; i>= 0; i--){
+            avgFPS += renderFpsS.at(i);
+            renderFpsS.pop_back();
         }
         avgFPS /= divide;
         std::cout << "FPS: " << avgFPS << "\n";
     }
     else{
-        state->fpsS->push_back(fps);
+        renderFpsS.push_back(fps);
     }
-    
+
     state->player->update(delta);
     
     view = camera.getViewMatrix();
-    GLCall( glClearColor(0.68f, 0.84f, 0.9f, 1.0f) );
-    GLCall( glClear(GL_COLOR_BUFFER_BIT) );
-    GLCall( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
-
-    state->shader->use();
     
-    state->shader->setInt("playerState",state->player->state);
-    state->shader->setMatrixFloat("projection",GL_FALSE,projection);
-    state->shader->setMatrixFloat("view",GL_FALSE,view);
-    state->shader->setMatrixFloat("model",GL_FALSE,model);
-    #ifndef __EMSCRIPTEN__
-        state->shader->setVec3Float("LightPos",glm::vec3(256,100,256));
-    #endif
-    state->vao->bind();
-    GLCall( glMultiDrawArraysIndirect(GL_TRIANGLES,0,state->world->chunkRefs.size(),sizeof(DrawArraysIndirectCommand)) );
-   
-    
-    
-            
-
-    state->crosshairShader->use();
-    state->crosshairVAO->bind();
-    GLCall( glDrawArrays(GL_TRIANGLES,0,3) );
-    
-    
-    
-    /* Swap front and back buffers */
-    glfwSwapBuffers(state->window);
-
-    /* Poll for and process events */
-    glfwPollEvents();
+    renderer.render(state);
     
 }
 
@@ -284,16 +244,17 @@ int main()
     double avgFPS = 0;
     std::vector<double> fpsS;
 
-    AppState cState = {
-        &last,
-        &fpsS,
+    GameState cState = {
         &player,
+        &world,
         &shader,
         &vao,
-        &world,
         window,
         &crosshairShader,
-        &crosshairVAO
+        &crosshairVAO,
+        &model,
+        &view,
+        &projection
     };
     state = &cState;
     #ifdef __EMSCRIPTEN__
