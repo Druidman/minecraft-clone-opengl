@@ -34,6 +34,7 @@ int WINDOW_WIDTH = 800;
 int WINDOW_HEIGHT = 600;
 
 
+
 glm::mat4 model(1.0f);
 glm::mat4 projection = glm::perspective(glm::radians(45.0),(double)WINDOW_WIDTH/WINDOW_HEIGHT,0.1,1000.0);
 glm::mat4 view;

@@ -54,9 +54,9 @@ std::vector<int> World::blocks_area_gen(int size)
     
     unsigned long int index = 0;
     int min = 1000;
-    for (int y = 0; y < size; y++)
+    for (int y =0; y < size ; y++)
     {
-        for (int x = 0; x < size; x++) 
+        for (int x =0; x < size ; x++) 
         {
             float gen = fnlGetNoise2D(&noise, y, x);
             gen = pow(2,((gen + 1) / 2 * 10));
