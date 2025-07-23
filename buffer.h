@@ -31,10 +31,10 @@ class Buffer{
         void allocateBuffer(unsigned long long int size);
 
         template <typename T>
-        void fillData(const std::vector< T > &data);
+        void fillData(const std::vector< T > *data);
 
         template <typename T>
-        bool addData(const std::vector< T > &data);
+        bool addData(const std::vector< T > *data);
 
         template <typename T>
         bool addData(const T data);
@@ -42,26 +42,26 @@ class Buffer{
 
 
 template <typename T>
-inline void Buffer::fillData(const std::vector< T > &data){
+inline void Buffer::fillData(const std::vector< T > *data){
     // allocates new memory
     bind();
-    allocateBuffer(data.size() * sizeof(T));
+    allocateBuffer(data->size() * sizeof(T));
     addData<T>(data);
     
 }
 
 template <typename T>
-bool Buffer::addData(const std::vector< T > &data){
+bool Buffer::addData(const std::vector< T > *data){
     bind();
     if (this->bufferSize == 0){
-        return false;
+        return false;   
     }
     if (this->dataFilled == this->bufferSize){
         return false;
         
     }
-    GLCall( glBufferSubData(bufferType, this->dataFilled, sizeof(T) * data.size(), data.data()) );
-    this->dataFilled += sizeof(T) * data.size();
+    GLCall( glBufferSubData(bufferType, this->dataFilled, sizeof(T) * data->size(), data->data()) );
+    this->dataFilled += sizeof(T) * data->size();
     return true;
 
 }

@@ -1,7 +1,7 @@
 #include "chunk.h"
 #include "world.h"
-#include "vertexArray.h"
-#include "buffer.h"
+#include <cstring>
+#include <optional>
 
 Chunk::Chunk(glm::vec3 chunkPosition, World *world)
 {
@@ -10,28 +10,9 @@ Chunk::Chunk(glm::vec3 chunkPosition, World *world)
     addBlockPlatform();
 }
 
-bool Chunk::isBlockTransparent(Block *block)
-{
-    if (block->type == WATER || block->type == LEAF)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
 
 std::optional<Block *> Chunk::getBlock(int plat, int row, int col, bool noneBlock)
 {
-    // if (plat >= blocks.size()){
-    //     int platformsToAdd = plat - this->blocks.size() + 1;
-    //     for (int i = 0; i < platformsToAdd; i++)
-    //     {
-    //         createBlockPlatform();
-    //     }
-    // } //just so chunks feel infinite
-    
     if (
         plat >= blocks.size() ||
         plat < 0 ||
@@ -63,11 +44,11 @@ std::optional<Block *> Chunk::getBlock(glm::vec3 positionInWorld, bool noneBlock
     int platform = floor(positionInWorld.y) - position.y;
     int col = floor(positionInWorld.x) - (position.x - (CHUNK_WIDTH / 2));
     int row = floor(positionInWorld.z) - (position.z - (CHUNK_WIDTH / 2));
-    // std::cout << "p: " << platform << " c: " << this->position.x << " r: " << row << "\n";
+    
     return getBlock(platform, row, col, noneBlock);
 }
 
-void Chunk::addBlockFace(BlockFace face, Block *block, std::vector<VertexDataInt> *buffer)
+void Chunk::addBlockFace(Face face, Block *block, std::vector<CHUNK_MESH_DATATYPE> *buffer)
 {
     glm::vec3 blockPositionChunk = block->position - position + glm::vec3(CHUNK_WIDTH / 2, 0.0, CHUNK_WIDTH / 2);
 
@@ -96,12 +77,12 @@ void Chunk::addBlockFace(BlockFace face, Block *block, std::vector<VertexDataInt
     data |= ((int32_t)(yCoord & 255)) << 4;  // YYYYYYYY: 8 bitów
     data |= ((int32_t)(zCoord & 15));        // ZZZZ: 4 bity
 
-    VertexDataInt packedFloat;
-    std::memcpy(&packedFloat,&data,sizeof(float));
+    CHUNK_MESH_DATATYPE packedFloat;
+    std::memcpy(&packedFloat,&data,sizeof(CHUNK_MESH_DATATYPE));
     buffer->push_back(packedFloat);
 }
 
-bool Chunk::canAddFace(BlockFace face, Block *currentBlock)
+bool Chunk::canAddBlockFace(Face face, Block *currentBlock)
 {
     glm::vec3 checkBlockPos = currentBlock->position;
     glm::vec3 checkBlockFacePos = checkBlockPos;
@@ -145,12 +126,12 @@ bool Chunk::canAddFace(BlockFace face, Block *currentBlock)
     
     Block *checkBlock = res.value();
 
-    if (!isBlockTransparent(checkBlock))
+    if (!checkBlock->isTransparent())
     {
         return false;
         
     }
-    if (isBlockTransparent(currentBlock)){
+    if (currentBlock->isTransparent()){
         return false;
     }
 
@@ -161,7 +142,8 @@ bool Chunk::canAddFace(BlockFace face, Block *currentBlock)
 
 void Chunk::genChunkMesh()
 {
-    opaqueFacesData.clear();
+    opaqueMesh.clear();
+    transparentMesh.clear();
 
     for (int platform = 0; platform < blocks.size(); platform++)
     {
@@ -178,43 +160,43 @@ void Chunk::genChunkMesh()
                 }
                 Block *block = res.value();
 
-                std::vector<VertexDataInt> *buffer;
+                std::vector<CHUNK_MESH_DATATYPE> *buffer;
                 if (block->type == WATER || block->type == LEAF)
                 {
-                    buffer = &transparentFacesData;
+                    buffer = &transparentMesh;
                 }
                 else
                 {
-                    buffer = &opaqueFacesData;
+                    buffer = &opaqueMesh;
                 }
 
                 // top
-                if (canAddFace(TOP_FACE, block))
+                if (canAddBlockFace(TOP_FACE, block))
                 {
                     addBlockFace(TOP_FACE, block, buffer);
                 }
                 // bottom
-                if (canAddFace(BOTTOM_FACE, block))
+                if (canAddBlockFace(BOTTOM_FACE, block))
                 {
                     addBlockFace(BOTTOM_FACE, block, buffer);
                 }
                 // front
-                if (canAddFace(FRONT_FACE, block))
+                if (canAddBlockFace(FRONT_FACE, block))
                 {
                     addBlockFace(FRONT_FACE, block, buffer);
                 }
                 // back
-                if (canAddFace(BACK_FACE, block))
+                if (canAddBlockFace(BACK_FACE, block))
                 {
                     addBlockFace(BACK_FACE, block, buffer);
                 }
                 // left
-                if (canAddFace(LEFT_FACE, block))
+                if (canAddBlockFace(LEFT_FACE, block))
                 {
                     addBlockFace(LEFT_FACE, block, buffer);
                 }
                 // right
-                if (canAddFace(RIGHT_FACE, block))
+                if (canAddBlockFace(RIGHT_FACE, block))
                 {
                     addBlockFace(RIGHT_FACE, block, buffer);
                 }
@@ -224,40 +206,14 @@ void Chunk::genChunkMesh()
 }
 
 
-void Chunk::createBuffer(Buffer *dataVBO)
-{   
-    this->vbo = dataVBO;
-  
-    
-}
-
 unsigned long long Chunk::getMeshSize()
 {
-    unsigned long long size = sizeof(VertexDataInt) * (transparentFacesData.size() + opaqueFacesData.size());
+    unsigned long long size = sizeof(CHUNK_MESH_DATATYPE) * (transparentMesh.size() + opaqueMesh.size());
     return size;
 }
 
-void Chunk::fillBuffer()
-{
-    // this->vbo.allocateBuffer((sizeof(VertexDataInt) * opaqueFacesData.size()) + (sizeof(VertexDataInt) * transparentFacesData.size()));
-    if (opaqueFacesData.size() > 0){
-        if (!this->vbo->addData<VertexDataInt>(opaqueFacesData)){
 
-            ExitError("CHUNK","error adding opaque data to buffer");
-        }
-    }
-    if (transparentFacesData.size() > 0){
-        if (!this->vbo->addData<VertexDataInt>(transparentFacesData)){
-            ExitError("CHUNK","error adding transparent data to buffer");
-        }
-    }
-    
-    
-}
-
-
-
-glm::vec3 Chunk::getPos(int platform, int row, int column){
+glm::vec3 Chunk::getPositionInWorld(int platform, int row, int column){
     float y = platform + 0.5 + this->position.y;
     float x = column + 0.5 + (this->position.x - (CHUNK_WIDTH / 2));
     float z = row + 0.5 + (this->position.z - (CHUNK_WIDTH / 2));
@@ -266,36 +222,30 @@ glm::vec3 Chunk::getPos(int platform, int row, int column){
 
 }
 
-void Chunk::addBlock(Block block)
-{
-    if (block.type == NONE_BLOCK)
-    {
-        return;
-    }
+bool Chunk::isInChunkBorder(Block &block){
     if (block.position.x > this->position.x + CHUNK_WIDTH ||
         block.position.x < this->position.x - CHUNK_WIDTH ||
         block.position.z > this->position.z + CHUNK_WIDTH ||
         block.position.z < this->position.z - CHUNK_WIDTH ||
         block.position.y < this->position.y)
     {
-        // ExitError("CHUNK", "adding block to chunk outside its borders");
-        return;
+        return false;// adding to chunk outside its border
     }
+    return true;
+}
+bool Chunk::addBlock(Block &block)
+{
+    if (!isInChunkBorder(block)){
+        return false;
+    }
+    
     int platform = block.position.y - 0.5 - position.y;
     int column = block.position.x - 0.5 - (position.x - (CHUNK_WIDTH / 2));
     int row = block.position.z - 0.5 - (position.z - (CHUNK_WIDTH / 2));
 
-    if (row > CHUNK_WIDTH - 1 ||
-        column > CHUNK_WIDTH - 1 ||
-        row < 0 ||
-        column < 0 ||
-        platform < 0)
-    {
-        // ExitError("CHUNK", "invalid row or column");
-        return;
+    if (getBlock(platform,row,column).has_value()){
+        return false; //block already exists /or invalid row,col,platform
     }
-
-    
 
     if (platform > this->blocks.size() - 1)
     {
@@ -316,23 +266,37 @@ void Chunk::addBlock(Block block)
         int blocksToAdd = column - this->blocks[platform][row].size() + 1;
         for (int i = 0; i < blocksToAdd; i++)
         {
-            Block block = Block(NONE_BLOCK,getPos(platform,row,column));
-            this->blocks[platform][row].push_back(block);
+            Block fillBlock = Block(NONE_BLOCK,getPositionInWorld(platform,row,column));
+            this->blocks[platform][row].push_back(fillBlock);
         }
     }
     
+    
     this->blocks[platform][row][column] = block;
+    return true;
+}
+
+bool Chunk::updateBlock(Block &block)
+{   
+    std::optional<Block*> targetBlockRes = getBlock(block.position);
+    if (!targetBlockRes.has_value()){
+        return false; // no block here or block outside border or none block here
+    }
+    Block *targetBlock = targetBlockRes.value();
+    targetBlock->position = block.position;
+    targetBlock->type = block.type;
+    return true;
 }
 
 void Chunk::addBlockPlatform()
 {
-    std::vector<std::vector<Block>> platform = std::vector<std::vector<Block>>(1, std::vector<Block>(1,Block(NONE_BLOCK,getPos(this->blocks.size(),0,0))));
+    std::vector<std::vector<Block>> platform = std::vector<std::vector<Block>>(1, std::vector<Block>(1,Block(NONE_BLOCK,getPositionInWorld(this->blocks.size(),0,0))));
     this->blocks.push_back(platform);
 }
 
 void Chunk::addBlockRow(int platform)
 {
-    std::vector<Block> row = std::vector<Block>(1,Block(NONE_BLOCK,getPos(platform,this->blocks[platform].size(),0)));
+    std::vector<Block> row = std::vector<Block>(1,Block(NONE_BLOCK,getPositionInWorld(platform,this->blocks[platform].size(),0)));
     this->blocks[platform].push_back(row);
 }   
 
@@ -354,6 +318,7 @@ bool Chunk::removeBlock(int platform, int row, int col)
 
 bool Chunk::removeBlock(glm::vec3 blockPositionInWorld)
 {
+    // removes block at pos
     int platform = floor(blockPositionInWorld.y) - this->position.y;
     int col = floor(blockPositionInWorld.x) - (this->position.x - (CHUNK_WIDTH / 2));
     int row = floor(blockPositionInWorld.z) - (this->position.z - (CHUNK_WIDTH / 2));
@@ -384,7 +349,8 @@ void Chunk::fillWater()
                 {
                     continue;
                 }
-                addBlock(Block(WATER,getPos(platform,row,col)));
+                Block waterBlock = Block(WATER,getPositionInWorld(platform,row,col));
+                addBlock(waterBlock);
                 
             }
         }
@@ -414,9 +380,11 @@ void Chunk::fillUnderBlock(Block &block)
 void Chunk::addTree(glm::vec3 positionInWorld)
 {
     for (glm::vec3 blockPos : TREE::woodPositions){
-        addBlock(Block(WOOD,blockPos + positionInWorld));
+        Block woodBlock = Block(WOOD,blockPos + positionInWorld);
+        addBlock(woodBlock);
     }
     for (glm::vec3 blockPos : TREE::leafPositions){
-        addBlock(Block(LEAF,blockPos + positionInWorld));
+        Block leafBlock = Block(LEAF,blockPos + positionInWorld);
+        addBlock(leafBlock);
     }
 }

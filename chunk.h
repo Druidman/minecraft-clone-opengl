@@ -9,14 +9,12 @@
 
 #include "block.h"
 #include "models.h"
-#include "vertexArray.h"
-#include "buffer.h"
-
 
 #include <optional>
 
 
 class World;
+typedef FaceData CHUNK_MESH_DATATYPE;
 const int CHUNK_WIDTH = 16;
 const int CHUNK_HEIGHT = 256;
 
@@ -38,66 +36,51 @@ const int CHUNK_HEIGHT = 256;
 
 // NOW we are gonna do a lot we will have buffer of faces
 
-struct BlockSortData
-{
-    float distance;
-    Block block;
-};
 class Chunk
 {
 
 public:
+    
+
     glm::vec3 position;
     World *world;
-  
-    Buffer *vbo;
 
     std::vector<std::vector<std::vector<Block>>> blocks;
 
-    std::vector<VertexDataInt> opaqueFacesData;
-    std::vector<VertexDataInt> transparentFacesData;
+    std::vector<CHUNK_MESH_DATATYPE> opaqueMesh;
+    std::vector<CHUNK_MESH_DATATYPE> transparentMesh;
 
+public:
     Chunk(glm::vec3 chunkPosition, World* world);
     
-    bool isBlockTransparent(Block *block);
-    
-    glm::vec3 getPos(int platform, int row, int column);
 
+    glm::vec3 getPositionInWorld(int platform, int row, int column);
     std::optional<Block *> getBlock(int plat, int row, int col, bool noneBlock = false);
-    
-
     std::optional<Block *> getBlock(glm::vec3 positionInWorld, bool noneBlock = false);
-    
-    
-    void addBlockFace(BlockFace face, Block *block, std::vector<VertexDataInt> *buffer);
-    
 
-    bool canAddFace(BlockFace face, Block *currentBlock);
+    void addBlockFace(Face face, Block *block, std::vector<CHUNK_MESH_DATATYPE> *buffer);
+    bool canAddBlockFace(Face face, Block *currentBlock);
+    bool isInChunkBorder(Block &block);
     
-
     void genChunkMesh();
-    
-    void createBuffer(Buffer *dataVbo);
     unsigned long long getMeshSize();
-    void fillBuffer();
+    std::vector<CHUNK_MESH_DATATYPE>* getOpaqueMesh(){return &opaqueMesh;};
+    std::vector<CHUNK_MESH_DATATYPE>* getTransparentMesh(){return &transparentMesh;};
 
-    
 
-    void addBlock(Block block);
-    
+    bool addBlock(Block &block);
+    bool updateBlock(Block &block);
+
     void addBlockPlatform();
     void addBlockRow(int platform);
-
-    bool removeBlock(int platform, int row, int col);
     
-
+    bool removeBlock(int platform, int row, int col);
     bool removeBlock(glm::vec3 blockPositionInWorld);
 
-    void fillWater();
-    
 
+    void fillWater();
     void fillUnderBlock(Block &block);
-    
+
 
     void addTree(glm::vec3 positionInWorld);
 

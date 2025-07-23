@@ -126,9 +126,8 @@ void loop(){
         state->shader->setVec3Float("LightPos",glm::vec3(256,100,256));
     #endif
     state->vao->bind();
-    
     GLCall( glMultiDrawArraysIndirect(GL_TRIANGLES,0,state->world->chunkRefs.size(),sizeof(DrawArraysIndirectCommand)) );
-
+   
     
     
             
@@ -223,59 +222,58 @@ int main()
 
     VertexArray crosshairVAO = VertexArray();
     Buffer crosshairVBO = Buffer(GL_ARRAY_BUFFER);
-    crosshairVBO.fillData<float>(crosshairVertices);
+    crosshairVBO.fillData<float>(&crosshairVertices);
     crosshairVAO.setAttr(0,3,GL_FLOAT, 3 * sizeof(float), 0);
 
     VertexArray vao;
-    Buffer vertexVbo = Buffer(GL_ARRAY_BUFFER);
-    Buffer vboInst = Buffer(GL_ARRAY_BUFFER);
+    Buffer baseVbo = Buffer(GL_ARRAY_BUFFER);
+    Buffer instanceBuffer = Buffer(GL_ARRAY_BUFFER);
     Buffer indirectBuffer = Buffer(GL_DRAW_INDIRECT_BUFFER);
     Buffer ssbo = Buffer(GL_SHADER_STORAGE_BUFFER);
 
    
 
     
-    vertexVbo.fillData<float>(BLOCK_FACE_VERTEX_POS);
+    baseVbo.fillData<float>(&BLOCK_FACE_VERTICES);
 
-    vertexVbo.bind();
+    baseVbo.bind();
     vao.setAttr(0,3,GL_FLOAT,4 * sizeof(float),0);
     vao.setAttr(1,1,GL_FLOAT,4 * sizeof(float),3 * sizeof(float));
 
-    vboInst.bind();
-    vao.setAttr(2,1,GL_FLOAT,sizeof(VertexDataInt),0);
+    instanceBuffer.bind();
+    vao.setAttr(2,1,GL_FLOAT,sizeof(CHUNK_MESH_DATATYPE),0);
     GLCall( glVertexAttribDivisor(2,1) );
 
     GLCall( glBindBuffer(GL_ARRAY_BUFFER, 0) );
     GLCall( glBindVertexArray(0) );
 
-    int worldWidth = 2048;
+    int worldWidth = 160;
     World world = World(worldWidth);
     world.genWorld();
     unsigned long long sizeToAlloc = 0;
     for (Chunk* chunk: world.chunkRefs){
-        chunk->createBuffer(&vboInst);
         sizeToAlloc += chunk->getMeshSize();
     }
     std::cout << sizeToAlloc << "\n";
 
-    vboInst.allocateBuffer(sizeToAlloc);
+    instanceBuffer.allocateBuffer(sizeToAlloc);
     indirectBuffer.allocateBuffer(sizeof(DrawArraysIndirectCommand) * world.chunkRefs.size());
     ssbo.allocateBuffer(sizeof(glm::vec4) * world.chunkRefs.size()); // vec4 due to std430 in shader
     for (Chunk* chunk: world.chunkRefs){
         DrawArraysIndirectCommand data = {
             BLOCK_FACE_VERTICES_COUNT,
-            (uint)chunk->transparentFacesData.size() + (uint)chunk->opaqueFacesData.size(),
+            (uint)chunk->transparentMesh.size() + (uint)chunk->opaqueMesh.size(),
             0,
-            vboInst.getFilledDataSize() / sizeof(VertexDataInt)
+            (uint)(instanceBuffer.getFilledDataSize() / sizeof(CHUNK_MESH_DATATYPE))
         };
         indirectBuffer.addData<DrawArraysIndirectCommand>(data);
-        chunk->fillBuffer();
-
-        
         ssbo.addData<glm::vec4>(glm::vec4(chunk->position,0.0)); // vec4 due to std430 in shader
-        
-        
+        instanceBuffer.addData< CHUNK_MESH_DATATYPE >(chunk->getOpaqueMesh());
+        instanceBuffer.addData< CHUNK_MESH_DATATYPE >(chunk->getTransparentMesh());
     }
+    
+    
+    
     GLCall( glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ssbo.getId()) );
     
     
