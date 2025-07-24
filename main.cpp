@@ -40,11 +40,6 @@ glm::mat4 projection = glm::perspective(glm::radians(45.0),(double)WINDOW_WIDTH/
 glm::mat4 view;
 Camera camera = Camera();
 
-
-
-
-
-
 GameState *state;
 Renderer renderer;
 double lastDeltaTime = 0;
@@ -208,9 +203,8 @@ int main()
     GLCall( glBindBuffer(GL_ARRAY_BUFFER, 0) );
     GLCall( glBindVertexArray(0) );
 
-    int worldWidth = 160;
+    int worldWidth = 1024;
     World world = World(worldWidth);
-    world.genWorld();
     unsigned long long sizeToAlloc = 0;
     for (Chunk* chunk: world.chunkRefs){
         sizeToAlloc += chunk->getMeshSize();
@@ -220,6 +214,8 @@ int main()
     instanceBuffer.allocateBuffer(sizeToAlloc);
     indirectBuffer.allocateBuffer(sizeof(DrawArraysIndirectCommand) * world.chunkRefs.size());
     ssbo.allocateBuffer(sizeof(glm::vec4) * world.chunkRefs.size()); // vec4 due to std430 in shader
+
+    std::cout << "Filling buffers\n";
     for (Chunk* chunk: world.chunkRefs){
         DrawArraysIndirectCommand data = {
             BLOCK_FACE_VERTICES_COUNT,

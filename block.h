@@ -13,9 +13,8 @@ enum BlockType{
 enum Face {
     TOP_FACE, BOTTOM_FACE, FRONT_FACE, BACK_FACE, LEFT_FACE, RIGHT_FACE
 };
-const std::vector<BlockType> transparentBlocks = {
-    WATER, LEAF, NONE_BLOCK
-};
+const std::vector<bool> transparentBlocks = {0,0,0,1,0,1,1};
+
 
 const int BLOCK_WIDTH = 1;
 
@@ -50,12 +49,8 @@ class Block{
         glm::vec3 position;
 
         bool isTransparent(){
-            for (BlockType type : transparentBlocks){
-                if (this->type == type){
-                    return true;
-                }
-            }
-            return false;
+        
+            return transparentBlocks[type];
         }
 };
 

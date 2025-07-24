@@ -80,7 +80,7 @@ std::vector<int> World::blocks_area_gen(int size)
 
 }
 
-void World::genWorld()
+void World::genWorldBase()
 {
     const unsigned long long WORLD_BLOCKS_COUNT = WIDTH * WIDTH;
     const unsigned long long WORLD_CHUNKS_COUNT = WORLD_BLOCKS_COUNT / ((unsigned long long)CHUNK_WIDTH * CHUNK_WIDTH);
@@ -170,6 +170,7 @@ void World::genWorld()
             this->chunkRefs.push_back(&chunks[row][col]);
         }   
     }
+    std::cout << "Generating world meshes...\n";
     for (Chunk* chunk : this->chunkRefs){
         chunk->genChunkMesh();
         
