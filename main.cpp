@@ -95,6 +95,7 @@ void loop(){
     }
 
     state->player->update(delta);
+    state->world->prepareChunks(state->player->position);
     
     view = camera.getViewMatrix();
     
@@ -203,7 +204,7 @@ int main()
     GLCall( glBindBuffer(GL_ARRAY_BUFFER, 0) );
     GLCall( glBindVertexArray(0) );
 
-    int worldWidth = 1024;
+    int worldWidth = 160;
     World world = World(worldWidth);
     unsigned long long sizeToAlloc = 0;
     for (Chunk* chunk: world.chunkRefs){
