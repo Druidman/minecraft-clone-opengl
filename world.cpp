@@ -141,7 +141,7 @@ void World::addChunkToBuffers(Chunk *chunk)
     // this->chunkStorageBuffer->addData<glm::vec4>(glm::vec4(chunk->position,0.0)); 
     // SO we shift chunks pos by camera position
     this->chunkStorageBuffer->addData<glm::vec4>(glm::vec4(chunk->position - camera->position,0.0)); 
-    
+
     this->meshBuffer->addData< CHUNK_MESH_DATATYPE >(chunk->getOpaqueMesh());
     this->meshBuffer->addData< CHUNK_MESH_DATATYPE >(chunk->getTransparentMesh());
 }
@@ -160,6 +160,21 @@ void World::fillBuffers()
         
     }
     GLCall( glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, this->chunkStorageBuffer->getId()) );
+}
+
+void World::fillChunkStorageBuffer()
+{   
+    std::vector<glm::vec4> chunkPositions;
+    for (Chunk* chunk : chunkRefs){
+        chunkPositions.push_back(glm::vec4(chunk->position - camera->position,0.0));
+    }       
+    
+    this->chunkStorageBuffer->updateData<glm::vec4>(&chunkPositions,0);
+        
+    
+    
+    
+    
 }
 
 unsigned long long World::getWorldMeshSize()

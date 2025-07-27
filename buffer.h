@@ -35,9 +35,13 @@ class Buffer{
 
         template <typename T>
         bool addData(const std::vector< T > *data);
-
         template <typename T>
         bool addData(const T data);
+
+        template <typename T>
+        bool updateData(const std::vector< T > *data, unsigned long long int dataByteOffset);
+        template <typename T>
+        bool updateData(const T data, unsigned long long int dataByteOffset);
 };
 
 
@@ -80,6 +84,31 @@ bool Buffer::addData(const T data){
     this->dataFilled += sizeof(T);
     return true;
 
+}
+template <typename T>
+bool Buffer::updateData(const std::vector< T > *data, unsigned long long int dataByteOffset){
+    bind();
+
+    unsigned long long dataByteSize = data->size() * sizeof(T);
+    if (dataByteOffset + dataByteSize > this->bufferSize){
+        return false;
+    }
+    GLCall( glBufferSubData(bufferType, dataByteOffset, dataByteSize, data->data()) );
+    this->dataFilled += (dataByteOffset + dataByteSize) - dataFilled; //calc if update filled more data then there already was
+    return true;
+}
+
+template <typename T>
+bool Buffer::updateData(const T data, unsigned long long int dataByteOffset){
+    bind();
+    
+    unsigned long long dataByteSize = sizeof(T);
+    if (dataByteOffset + dataByteSize > this->bufferSize){
+        return false;
+    }
+    GLCall( glBufferSubData(bufferType, dataByteOffset, dataByteSize, &data) );
+    this->dataFilled += (dataByteOffset + dataByteSize) - dataFilled; //calc if update filled more data then there already was
+    return true;
 }
 
 

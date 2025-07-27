@@ -139,7 +139,7 @@ void Player::adjustCamera()
     camera->position = position + CAMERA_OFFSET;
 }
 
-void Player::process_input(double delta)
+void Player::process_input(double delta, bool &playerMoved)
 {
     float speed = PLAYER_SPEED * delta;
     glm::vec3 camRight = this->camera->getRightVec();
@@ -162,15 +162,19 @@ void Player::process_input(double delta)
 
     if (glfwGetKey(window,GLFW_KEY_W)){
         move_by(stepForward);
+        playerMoved = true;
     }
     if (glfwGetKey(window,GLFW_KEY_S)){
         move_by(-stepForward);
+        playerMoved = true;
     }
     if (glfwGetKey(window,GLFW_KEY_D)){
         move_by(stepRight);
+        playerMoved = true;
     }
     if (glfwGetKey(window,GLFW_KEY_A)){
         move_by(-stepRight);
+        playerMoved = true;
     }
 
     int leftState = glfwGetMouseButton(window,leftMouseButton);
@@ -280,14 +284,19 @@ void Player::update(double delta)
     
     // updateAction();
     // updateState();
-
+    bool playerMoved = false;
     
     if (action == FALLING && !fly){
         move_by(glm::vec3(0.0,-5.0,0.0) * (float)delta);
-        
+        playerMoved = true;
     }
 
-    process_input(delta);
+    process_input(delta, playerMoved);
+
+    
+    world->fillChunkStorageBuffer();
+    
+
 }
 
 void Player::buttonPressed(int button)

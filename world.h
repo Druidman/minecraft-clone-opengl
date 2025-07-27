@@ -71,6 +71,7 @@ class World{
 
         void addChunkToBuffers(Chunk* chunk);
         void fillBuffers();
+        void fillChunkStorageBuffer();
 
         unsigned long long getWorldMeshSize();
 
