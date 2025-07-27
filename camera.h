@@ -28,7 +28,11 @@ class Camera {
         }
 
         glm::mat4 getViewMatrix(){
-            return glm::lookAt(this->position,this->position + this->direction, this->up);
+            // problem with that is that camera can be at very big coord and then out precision drops
+            // return glm::lookAt(this->position,this->position + this->direction, this->up);
+            // SO we use this
+            // however it places camera always at 0,0,0 so we need to shift our world!
+            return glm::lookAt(glm::vec3(0.0f),this->direction, this->up);
         };
         void process_cursor_position_change(double xpos, double ypos){
 

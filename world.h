@@ -6,6 +6,7 @@
 #include "chunk.h"
 #include "vendor/fastNoise/FastNoiseLite.h"
 #include "buffer.h"
+#include "camera.h"
 #include <optional>
 
 class Player;
@@ -53,6 +54,7 @@ class World{
         Buffer* chunkStorageBuffer;
 
         Player* player;
+        Camera* camera;
     public:
         World(int width, Buffer* meshBuffer, Buffer* chunkDrawBuffer, Buffer* chunkStorageBuffer){ 
             this->WIDTH = width;

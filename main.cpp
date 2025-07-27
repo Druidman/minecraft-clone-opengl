@@ -305,6 +305,7 @@ int main()
     Player player = Player(glm::vec3(30000,60.0,30000),&world,&camera,window);
 
     world.player = &player;
+    world.camera = &camera;
 
     world.genWorldBase();
     world.fillBuffers();
