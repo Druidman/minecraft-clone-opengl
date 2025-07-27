@@ -5,9 +5,10 @@
 
 #include "chunk.h"
 #include "vendor/fastNoise/FastNoiseLite.h"
+#include "buffer.h"
 #include <optional>
 
-
+class Player;
 
 
 class World{
@@ -38,22 +39,43 @@ class World{
         
         int genBlockHeight(glm::vec2 positionXZ);
         float genTreeChance(glm::vec2 positionXZ);
+        
     public:
-        int worldOriginx = 1073741823; // float max / 2
-        int worldOriginz = 1073741823; // float max / 2
+        
         int WIDTH;
+        
 
         std::vector< std::vector <Chunk> > chunks;
         std::vector<Chunk* > chunkRefs;
+
+        Buffer* meshBuffer;
+        Buffer* chunkDrawBuffer;
+        Buffer* chunkStorageBuffer;
+
+        Player* player;
     public:
-        World(int width){ 
+        World(int width, Buffer* meshBuffer, Buffer* chunkDrawBuffer, Buffer* chunkStorageBuffer){ 
             this->WIDTH = width;
-            std::cout << "Generating world...\n";
-            genWorldBase(); 
+            this->meshBuffer = meshBuffer;
+            this->chunkDrawBuffer = chunkDrawBuffer;
+            this->chunkStorageBuffer = chunkStorageBuffer;
+
+
         }
+        void genChunkRefs();
         void genWorldBase();
         void prepareChunks(glm::vec3 playerPos){};
         void genChunk(glm::vec3 position);
+
+        void addChunkToBuffers(Chunk* chunk);
+        void fillBuffers();
+
+        unsigned long long getWorldMeshSize();
+
+        int getChunkRow(Chunk* chunk);
+        int getChunkCol(Chunk* chunk);
+
+        
 
         std::optional<Chunk*> getChunkByPos(glm::vec3 pointPositionInWorld);
         std::optional<Block*> getBlockByPos(glm::vec3 pointPositionInWorld, bool noneBlock = false);

@@ -144,7 +144,7 @@ void Chunk::genChunkMesh()
 {
     opaqueMesh.clear();
     transparentMesh.clear();
-
+    
     for (int platform = 0; platform < blocks.size(); platform++)
     {
 

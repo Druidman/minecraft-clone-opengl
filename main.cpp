@@ -4,7 +4,7 @@
 #else
     #include <GL/glew.h>
 #endif
-
+#include <bits/stdc++.h>
 #include <GLFW/glfw3.h>
 #include <optional>
 
@@ -32,6 +32,7 @@ typedef unsigned int uint;
 
 int WINDOW_WIDTH = 800;
 int WINDOW_HEIGHT = 600;
+int RENDER_DISTANCE = 16;
 
 
 
@@ -44,6 +45,96 @@ GameState *state;
 Renderer renderer;
 double lastDeltaTime = 0;
 std::vector<double> renderFpsS;
+
+bool canRender = true;
+bool exitApp = false;
+void chunkHandler(World* world, Player *player){
+    glm::vec3 lastPlayerPos = player->position;  
+    Chunk* lastPlayerChunk = world->getChunkByPos(lastPlayerPos).value(); // no need to check that
+    while (!exitApp)    
+    {
+        if (lastPlayerPos == player->position){
+            continue;
+        }
+
+        lastPlayerPos = player->position;
+
+        std::optional<Chunk *> chunkRes = world->getChunkByPos(player->position);
+        if (!chunkRes.has_value()){
+            // idk player is outside map
+            continue;
+        }
+        
+        Chunk* chunk = chunkRes.value();
+
+        if (chunk == lastPlayerChunk){
+            continue;
+        }
+        lastPlayerChunk = chunk;
+        // it is different chunk so we got to update
+        int row = world->getChunkRow(chunk);
+        int col = world->getChunkCol(chunk);
+
+        int rows = world->chunks.size();
+        int columns = world->chunks[row].size();
+
+        // if (row > rows / 2){
+        //     //we need to delete chunks on top and add chunk to the bottom
+        //     std::cout << "Add to bottom\n";
+            
+        //     world->chunks.erase(world->chunks.begin()); // delete top
+        //     world->genChunkRefs();
+        //     std::cout << "deleted\n";
+        //     // now we need to add bottom chunks but these are not generated yet
+
+        //     // filling buffer with new chunk data
+        //     canRender = false;
+        //     world->fillBuffers();
+        //     canRender = true;
+        // }
+        // else if (row < rows / 2){
+        //     //we need to delete chunks on bottom and add chunk to the top
+        //     std::cout << "Add to top\n";
+        //     world->chunks.pop_back(); // delete bottom
+        //     world->genChunkRefs();
+        //     std::cout << "deleted\n";
+        //     // now we need to add top chunks but these are not generated yet
+        //     // filling buffer with new chunk data
+        //     canRender = false;
+        //     world->fillBuffers();
+        //     canRender = true;
+        // }
+
+        // if (col > columns / 2){
+        //     //we need to delete chunks from left side and add chunk to the right side
+        //     std::cout << "Add to right\n";
+        //     for (int i =0; i < world->chunks.size(); i++){
+        //         world->chunks[i].erase(world->chunks[i].begin()); // delete left
+        //     }
+        //     world->genChunkRefs();
+        //     std::cout << "deleted\n";
+        //     // now we need to add right chunks but these are not generated yet
+        //     // filling buffer with new chunk data
+        //     canRender = false;
+        //     world->fillBuffers();
+        //     canRender = true;
+        // }
+        // else if (col < columns / 2){
+        //     //we need to delete chunks from right side and add chunk to the left side
+        //     std::cout << "Add to left\n";
+        //     for (int i =0; i<world->chunks.size(); i++){
+        //         world->chunks[i].pop_back(); // delete right
+        //     }
+        //     world->genChunkRefs();
+        //     std::cout << "deleted\n";
+        //     // now we need to add left chunks but these are not generated yet
+        //     // filling buffer with new chunk data
+        //     canRender = false;
+        //     world->fillBuffers();
+        //     canRender = true;
+        // }
+    }
+}
 
 void resize_callback(GLFWwindow *window, int width, int height){
     glViewport(0,0,width,height);
@@ -88,17 +179,21 @@ void loop(){
             renderFpsS.pop_back();
         }
         avgFPS /= divide;
-        std::cout << "FPS: " << avgFPS << "\n";
+        // std::cout << "FPS: " << avgFPS << "\n";
     }
     else{
         renderFpsS.push_back(fps);
     }
 
     state->player->update(delta);
-    state->world->prepareChunks(state->player->position);
+    
     
     view = camera.getViewMatrix();
-    
+
+    //wait for buffers to get ready
+    while (!canRender){
+
+    }
     renderer.render(state);
     
 }
@@ -205,43 +300,20 @@ int main()
     GLCall( glBindVertexArray(0) );
 
     int worldWidth = 160;
-    World world = World(worldWidth);
-    unsigned long long sizeToAlloc = 0;
-    for (Chunk* chunk: world.chunkRefs){
-        sizeToAlloc += chunk->getMeshSize();
-    }
-    std::cout << sizeToAlloc << "\n";
+    
+    World world = World(worldWidth, &instanceBuffer, &indirectBuffer, &ssbo);
+    Player player = Player(glm::vec3(30000,60.0,30000),&world,&camera,window);
 
-    instanceBuffer.allocateBuffer(sizeToAlloc);
-    indirectBuffer.allocateBuffer(sizeof(DrawArraysIndirectCommand) * world.chunkRefs.size());
-    ssbo.allocateBuffer(sizeof(glm::vec4) * world.chunkRefs.size()); // vec4 due to std430 in shader
+    world.player = &player;
 
-    std::cout << "Filling buffers\n";
-    for (Chunk* chunk: world.chunkRefs){
-        DrawArraysIndirectCommand data = {
-            BLOCK_FACE_VERTICES_COUNT,
-            (uint)chunk->transparentMesh.size() + (uint)chunk->opaqueMesh.size(),
-            0,
-            (uint)(instanceBuffer.getFilledDataSize() / sizeof(CHUNK_MESH_DATATYPE))
-        };
-        indirectBuffer.addData<DrawArraysIndirectCommand>(data);
-        ssbo.addData<glm::vec4>(glm::vec4(chunk->position,0.0)); // vec4 due to std430 in shader
-        instanceBuffer.addData< CHUNK_MESH_DATATYPE >(chunk->getOpaqueMesh());
-        instanceBuffer.addData< CHUNK_MESH_DATATYPE >(chunk->getTransparentMesh());
-    }
-    
-    
-    
-    GLCall( glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ssbo.getId()) );
-    
-    
+    world.genWorldBase();
+    world.fillBuffers();
 
-    
-    Player player = Player(glm::vec3(0.0,60.0,0.0),&world,&camera,window);
+    std::thread chunkHandle(chunkHandler, &world, &player);
+
     double last = glfwGetTime();
     double avgFPS = 0;
     std::vector<double> fpsS;
-
     GameState cState = {
         &player,
         &world,
@@ -257,10 +329,14 @@ int main()
     state = &cState;
     #ifdef __EMSCRIPTEN__
         emscripten_set_main_loop(loop, 0, true);  // 0 = use requestAnimationFrame()
+        exitApp = true;
+        chunkHandle.join();
     #else
         while (!glfwWindowShouldClose(window)) {
             loop();
         }
+        exitApp = true;
+        chunkHandle.join();
         glfwTerminate();
     #endif
     

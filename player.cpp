@@ -278,8 +278,8 @@ void Player::place_block()
 void Player::update(double delta)
 {
     
-    updateAction();
-    updateState();
+    // updateAction();
+    // updateState();
 
     
     if (action == FALLING && !fly){
