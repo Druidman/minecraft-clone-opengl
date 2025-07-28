@@ -41,6 +41,7 @@ std::optional<Block *> Chunk::getBlock(int plat, int row, int col, bool noneBloc
 
 std::optional<Block *> Chunk::getBlock(glm::vec3 positionInWorld, bool noneBlock)
 {
+    
     int platform = floor(positionInWorld.y) - position.y;
     int col = floor(positionInWorld.x) - (position.x - (CHUNK_WIDTH / 2));
     int row = floor(positionInWorld.z) - (position.z - (CHUNK_WIDTH / 2));
@@ -114,7 +115,12 @@ bool Chunk::canAddBlockFace(Face face, Block *currentBlock)
         break;
     }
     // lets check if face is on border of world
-    if (checkBlockFacePos.y == 0 || checkBlockFacePos.x == 0 || checkBlockFacePos.z == 0 || checkBlockFacePos.x == world->WIDTH || checkBlockFacePos.z == world->WIDTH){
+    if (checkBlockFacePos.y == 0 || 
+        checkBlockFacePos.x == world->worldMiddle.x - (world->WIDTH / 2) || 
+        checkBlockFacePos.z == world->worldMiddle.z - (world->WIDTH / 2) || 
+        checkBlockFacePos.x == world->worldMiddle.x + (world->WIDTH / 2) || 
+        checkBlockFacePos.z == world->worldMiddle.z + (world->WIDTH / 2))
+    {
         return false; //face is on world border
     }
     

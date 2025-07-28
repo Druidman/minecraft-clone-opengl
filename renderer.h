@@ -43,7 +43,7 @@ public:
         gameState->shader->setVec3Float("LightPos",glm::vec3(256,100,256));
        
         gameState->vao->bind();
-        GLCall( glMultiDrawArraysIndirect(GL_TRIANGLES,0,gameState->world->chunkRefs.size(),sizeof(DrawArraysIndirectCommand)) );
+        GLCall( glMultiDrawArraysIndirect(GL_TRIANGLES,0,gameState->world->CHUNK_COLUMNS * gameState->world->CHUNK_ROWS ,sizeof(DrawArraysIndirectCommand)) );
     }
     void renderWebGame(GameState *gameState){
         return; //todo
