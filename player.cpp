@@ -292,11 +292,6 @@ void Player::update(double delta)
     }
 
     process_input(delta, playerMoved);
-
-    
-    world->fillChunkStorageBuffer();
-    
-
 }
 
 void Player::buttonPressed(int button)

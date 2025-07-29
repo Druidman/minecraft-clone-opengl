@@ -45,18 +45,8 @@ GameState *state;
 Renderer renderer;
 double lastDeltaTime = 0;
 std::vector<double> renderFpsS;
-
-bool canRender = true;
 bool exitApp = false;
-void chunkHandler(World* world, Player *player){
-    glm::vec3 lastPlayerPos = player->position;  
-    // Chunk* lastPlayerChunk = world->getChunkByPos(lastPlayerPos).value(); // no need to check that
-    
-    while (!exitApp)    
-    {
-        
-    }
-}
+
 
 void resize_callback(GLFWwindow *window, int width, int height){
     glViewport(0,0,width,height);
@@ -108,14 +98,11 @@ void loop(){
     }
 
     state->player->update(delta);
-    
+    state->world->updateChunks();
     
     view = camera.getViewMatrix();
 
-    //wait for buffers to get ready
-    while (!canRender){
 
-    }
     renderer.render(state);
     
 }
@@ -221,7 +208,7 @@ int main()
     GLCall( glBindBuffer(GL_ARRAY_BUFFER, 0) );
     GLCall( glBindVertexArray(0) );
 
-    int worldWidth = 160;
+    int worldWidth = 176;
     glm::vec3 worldMiddle = glm::vec3(30000,60.0,30000);
     std::cout << "initializing world\n";
     World world = World(worldWidth, worldMiddle, &instanceBuffer, &indirectBuffer, &ssbo);
@@ -235,8 +222,6 @@ int main()
     
     world.genWorldBase();
     world.fillBuffers();
-
-    // std::thread chunkHandle(chunkHandler, &world, &player);
 
     double last = glfwGetTime();
     double avgFPS = 0;
@@ -257,14 +242,13 @@ int main()
     #ifdef __EMSCRIPTEN__
         emscripten_set_main_loop(loop, 0, true);  // 0 = use requestAnimationFrame()
         exitApp = true;
-        chunkHandle.join();
+
     #else
         while (!glfwWindowShouldClose(window)) {
             loop();
         }
         exitApp = true;
         std::cout << "\nexiting\n";
-        // chunkHandle.join();
         glfwTerminate();
     #endif
     

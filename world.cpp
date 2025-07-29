@@ -37,17 +37,20 @@ void World::initChunks()
         
     }
     std::cout << "generating Chunk Refs\n";
-    genChunkRefs();
+    genRenderChunkRefs();
 }
 
-void World::genChunkRefs()
-{
-    
-    this->chunkRefs.clear();
+
+void World::genRenderChunkRefs(){
+    this->chunkRenderRefs.clear();
     for (int row = 0; row < CHUNK_ROWS; row++){
-        this->chunkRefs.push_back(std::vector<Chunk* >(CHUNK_COLUMNS, nullptr));
         for (int col=0; col < CHUNK_COLUMNS; col++){
-            this->chunkRefs[row][col] = &this->chunks[row][col];
+            Chunk* chunk = &this->chunks[row][col];
+            float dist = glm::distance(glm::vec2(chunk->position.x , chunk->position.z), glm::vec2(player->position.x , player->position.z));
+            if (dist / (float)CHUNK_WIDTH < RENDER_DISTANCE){
+                this->chunkRenderRefs.push_back(chunk);
+            }
+            
         }
     }
 }
@@ -62,25 +65,173 @@ void World::genWorldBase()
 {
     std::cout << "Generating world...\n";
 
-    for (std::vector<Chunk* > &chunkRow : this->chunkRefs){
-        for (Chunk* chunk : chunkRow){
-            if (chunk == nullptr){
-                ExitError("WORLD","NULLPTR IN CHUNKS");
-                continue;
-            }
-            genChunk(chunk);
+    for (std::vector<Chunk> &chunkRow : this->chunks){
+        for (Chunk &chunk : chunkRow){
+            
+            genChunk(&chunk);
+            
         }
     }
-    for (std::vector<Chunk* > &chunkRow : this->chunkRefs){
-        for (Chunk* chunk : chunkRow){
-            if (chunk == nullptr){
-                ExitError("WORLD","NULLPTR IN CHUNKS");
+    for (std::vector<Chunk> &chunkRow : this->chunks){
+        for (Chunk &chunk : chunkRow){
+            if (!chunk.chunkReady){
                 continue;
             }
-            chunk->genChunkMesh();
+            chunk.genChunkMesh();
         }
     }
     
+}
+
+void World::updateChunks()
+{
+    if (this->lastPlayerPos == player->position){
+        return ;
+    }
+    lastPlayerPos = player->position;
+    
+    std::optional<Chunk* > chunkRes = getChunkByPos(player->position);
+    if (!chunkRes.has_value()){
+        return ; // idk what to do
+
+    }
+    Chunk* chunk = chunkRes.value();
+    if (lastPlayerChunk == chunk){
+        fillChunkStorageBuffer();
+        return ; // the same chunk 
+    }
+    std::cout << "lastChunkPos: " << lastPlayerChunk->position.x << " " << lastPlayerChunk->position.z << "\n";
+    std::cout << "ChunkPos: " << chunk->position.x << " " << chunk->position.z << "\n";
+    glm::vec3 positionChange = lastPlayerChunk->position - chunk->position;
+    std::cout << "POSC: " << positionChange.x << "\n";
+    lastPlayerChunk = chunk;
+    int lastPlayerChunkRow = getChunkRow(lastPlayerChunk);
+    int lastPlayerChunkCol = getChunkCol(lastPlayerChunk);
+    if (positionChange.x > 0){ // that means we moved: -x
+        // we need to remove right chunks
+        // we need to add left chunks
+        std::cout << "add left\n";
+        
+ 
+        for (std::vector<Chunk> &chunkRow : this->chunks){
+   
+            chunkRow.pop_back();
+   
+            
+        }
+        std::vector<Chunk> column;
+        for (int row=0; row<CHUNK_ROWS; row++){
+            
+            glm::vec3 chunkPos = this->chunks[row].front().position - glm::vec3(CHUNK_WIDTH,0.0,0.0);
+            column.emplace_back(chunkPos,this);
+        }
+        int ind = 0;
+        std::cout << "insert sizes: \n";
+        for (std::vector<Chunk> &chunkRow : this->chunks){
+            std::cout << chunkRow.size() << " ";
+            chunkRow.insert(chunkRow.begin(), column[ind]);
+            std::cout << chunkRow.size() << "\n";
+            ind++;
+        }
+        // after insertion we need to change lastPlayerChunk pointer due to shifting all elements
+        lastPlayerChunk = &this->chunks[lastPlayerChunkRow][lastPlayerChunkCol + 1];
+        worldMiddle.x -= CHUNK_WIDTH;
+        std::cout << "worldMiddle: " << worldMiddle.x << " " << worldMiddle.z << "\n";
+        std::cout << "lastChunkPos: " << lastPlayerChunk->position.x << " " << lastPlayerChunk->position.z << "\n";
+        std::cout << "playerPos" << player->position.x << " " << player->position.z << "\n";
+        for (std::vector<Chunk> &chunkRow : this->chunks){
+            genChunk(&chunkRow.front());
+            chunkRow.front().genChunkMesh();
+        }
+    }
+    if (positionChange.x < 0){ // that means we moved: +x
+        // we need to add right chunks
+        // we need to remove left chunks
+        std::cout << "add right\n";
+        
+
+        for (std::vector<Chunk> &chunkRow : this->chunks){
+            chunkRow.erase(chunkRow.begin());
+        }
+        std::vector<Chunk> column;
+        for (int row=0; row<CHUNK_ROWS; row++){
+            glm::vec3 chunkPos = this->chunks[row].back().position + glm::vec3(CHUNK_WIDTH,0.0,0.0);
+            column.emplace_back(chunkPos,this);
+        }
+        int ind = 0;
+        for (std::vector<Chunk> &chunkRow : this->chunks){
+            chunkRow.push_back(column[ind]);
+            ind++;
+        }
+
+        worldMiddle.x += CHUNK_WIDTH;
+        lastPlayerChunk = &this->chunks[lastPlayerChunkRow][lastPlayerChunkCol - 1];
+        std::cout << "worldMiddle: " << worldMiddle.x << " " << worldMiddle.z << "\n";
+        std::cout << "lastChunkPos: " << lastPlayerChunk->position.x << " " << lastPlayerChunk->position.z << "\n";
+        std::cout << "playerPos" << player->position.x << " " << player->position.z << "\n";
+        
+        for (std::vector<Chunk> &chunkRow : this->chunks){
+            genChunk(&chunkRow.back());
+            chunkRow.back().genChunkMesh();
+        }
+        
+    }
+    if (positionChange.z > 0){ // that means we moved: -z
+        // we need to remove bottom chunks
+        // we need to add top chunks
+        std::cout << "add top\n";
+        
+        this->chunks.pop_back();
+        std::vector<Chunk> row;
+        for (int col=0; col<CHUNK_COLUMNS; col++){
+            glm::vec3 chunkPos = this->chunks.front()[col].position - glm::vec3(0.0,0.0,CHUNK_WIDTH);
+            row.emplace_back(chunkPos,this);
+        }
+        this->chunks.insert(this->chunks.begin(),row);
+        worldMiddle.z -= CHUNK_WIDTH;
+        
+        for (int col=0; col<CHUNK_COLUMNS; col++){
+            genChunk(&this->chunks.front()[col]);
+            this->chunks.front()[col].genChunkMesh();
+        }
+
+
+        
+    }
+    if (positionChange.z < 0){ // that means we moved: +z
+        // we need to remove top chunks
+        // we need to add bottom chunks
+        std::cout << "add bottom\n";
+    
+        this->chunks.erase(this->chunks.begin());
+        std::vector<Chunk> row;
+        for (int col=0; col<CHUNK_COLUMNS; col++){
+            glm::vec3 chunkPos = this->chunks.back()[col].position + glm::vec3(0.0,0.0,CHUNK_WIDTH);
+            row.emplace_back(chunkPos,this);
+        }
+        this->chunks.push_back(std::move(row));
+        worldMiddle.z += CHUNK_WIDTH;
+        
+        for (int col=0; col<CHUNK_COLUMNS; col++){
+            genChunk(&this->chunks.back()[col]);
+            this->chunks.back()[col].genChunkMesh();
+        }
+
+
+        
+    }
+   
+
+
+
+
+    genRenderChunkRefs();
+    fillBuffers();
+    
+    
+
+
+
 }
 
 void World::genChunk(Chunk *chunk)
@@ -133,13 +284,21 @@ void World::genChunk(Chunk *chunk)
             chunk->addTree(block->position + glm::vec3(0.0,1.0,0.0));
         }
     }
+    chunk->chunkReady = true;
 }
 
 void World::init(Player *player, Camera *camera)
 {
     this->player = player;
     this->camera = camera;
+    lastPlayerPos = player->position;
     initChunks();
+    std::optional< Chunk* > chunkRes = getChunkByPos(lastPlayerPos);
+    if (!chunkRes.has_value()){
+        ExitError("WORLD","assigning last chunk in init went wrong");
+        return ;
+    }
+    lastPlayerChunk = chunkRes.value();
 }
 
 void World::addChunk(Chunk *chunk)
@@ -178,7 +337,7 @@ void World::addChunkToBuffers(Chunk *chunk)
     // this approach passes regular chunk coord to buffer but if we place cam always at 0,0,0 then it won't work
     // this->chunkStorageBuffer->addData<glm::vec4>(glm::vec4(chunk->position,0.0)); 
     // SO we shift chunks pos by camera position
-    this->chunkStorageBuffer->addData<glm::vec4>(glm::vec4(chunk->position - worldMiddle,0.0)); 
+    this->chunkStorageBuffer->addData<glm::vec4>(glm::vec4(chunk->position - player->position,0.0)); 
 
     this->meshBuffer->addData< CHUNK_MESH_DATATYPE >(chunk->getOpaqueMesh());
     this->meshBuffer->addData< CHUNK_MESH_DATATYPE >(chunk->getTransparentMesh());
@@ -189,16 +348,11 @@ void World::fillBuffers()
     unsigned long long sizeToAlloc = getWorldMeshSize();
 
     this->meshBuffer->allocateBuffer(sizeToAlloc);
-    this->chunkDrawBuffer->allocateBuffer(sizeof(DrawArraysIndirectCommand) * CHUNK_ROWS * CHUNK_COLUMNS);
-    this->chunkStorageBuffer->allocateBuffer(sizeof(glm::vec4) * CHUNK_ROWS * CHUNK_COLUMNS); // vec4 due to std430 in shader
-
-    std::cout << "Filling buffers\n";
-    for (std::vector< Chunk* > &chunkRow : chunkRefs){
-        for (Chunk* chunk : chunkRow){
-            addChunkToBuffers(chunk);
-            std::cout << "CHUNK: " << chunk->position.x << " " << chunk->position.y << " " << chunk->position.z << " " << '\n';
-        }
+    this->chunkDrawBuffer->allocateBuffer(sizeof(DrawArraysIndirectCommand) * chunkRenderRefs.size());
+    this->chunkStorageBuffer->allocateBuffer(sizeof(glm::vec4) * chunkRenderRefs.size()); // vec4 due to std430 in shader
+    for (Chunk* chunk : chunkRenderRefs){
         
+        addChunkToBuffers(chunk);
     }
     GLCall( glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, this->chunkStorageBuffer->getId()) );
 }
@@ -206,10 +360,10 @@ void World::fillBuffers()
 void World::fillChunkStorageBuffer()
 {   
     std::vector<glm::vec4> chunkPositions;
-    for (std::vector< Chunk* > &chunkRow : chunkRefs){
-        for (Chunk* chunk : chunkRow){
-            chunkPositions.push_back(glm::vec4(chunk->position - camera->position,0.0));
-        }
+    for (Chunk* chunk : chunkRenderRefs){
+        
+        chunkPositions.push_back(glm::vec4(chunk->position - player->position,0.0));
+        
     }       
     
     this->chunkStorageBuffer->updateData<glm::vec4>(&chunkPositions, 0);
@@ -218,11 +372,9 @@ void World::fillChunkStorageBuffer()
 unsigned long long World::getWorldMeshSize()
 {
     unsigned long long sizeToAlloc = 0;
-    for (std::vector< Chunk* > &chunkRow : chunkRefs){
-        for (Chunk* chunk : chunkRow){
-            sizeToAlloc += chunk->getMeshSize();
-        }
-        
+    for (Chunk* chunk : chunkRenderRefs){
+        sizeToAlloc += chunk->getMeshSize();
+    
     }
     return sizeToAlloc;
 }
@@ -260,7 +412,7 @@ std::optional<Chunk *> World::getChunkByPos(glm::vec3 pointPositionInWorld)
         return std::nullopt;
     }
 
-    return chunkRefs[chunkRow][chunkCol];
+    return &this->chunks[chunkRow][chunkCol];
 }
 
 std::optional<Block *> World::getBlockByPos(glm::vec3 pointPositionInWorld, bool noneBlock)

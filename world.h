@@ -48,12 +48,13 @@ class World{
         int WIDTH;
         int CHUNK_ROWS; // expressed by amount of chunks
         int CHUNK_COLUMNS; // expressed by amount of chunks
+        int RENDER_DISTANCE;
         
 
         std::vector< std::vector <Chunk> > chunks;
         
         std::vector< std::vector < Chunk*  > > chunkRefs;
-        std::vector< std::vector < Chunk*  > > renderChunkRefs;
+        std::vector < Chunk*  > chunkRenderRefs;
 
         Buffer* meshBuffer;
         Buffer* chunkDrawBuffer;
@@ -63,24 +64,31 @@ class World{
         Camera* camera;
 
         glm::vec3 worldMiddle;
+
+        glm::vec3 lastPlayerPos;
+        Chunk* lastPlayerChunk;
     public:
         World(int width, glm::vec3 worldMiddle, Buffer* meshBuffer, Buffer* chunkDrawBuffer, Buffer* chunkStorageBuffer){ 
             this->WIDTH = width;
             this->CHUNK_ROWS = this->WIDTH / CHUNK_WIDTH;
             this->CHUNK_COLUMNS = this->WIDTH / CHUNK_WIDTH;
+            this->RENDER_DISTANCE = CHUNK_ROWS * 2;
             this->meshBuffer = meshBuffer;
             this->chunkDrawBuffer = chunkDrawBuffer;
             this->chunkStorageBuffer = chunkStorageBuffer;
             this->worldMiddle = worldMiddle;
         }
+        
         void init(Player *player, Camera* camera);
         void addChunk(Chunk* chunk);
-        void genChunkRefs();
+        void genRenderChunkRefs();
         void genWorldBase();
-        void prepareChunks(glm::vec3 playerPos){};
+        void updateChunks();
         void genChunk(Chunk* chunk);
 
         void addChunkToBuffers(Chunk* chunk);
+
+
         void fillBuffers();
         void fillChunkStorageBuffer();
 

@@ -50,6 +50,8 @@ public:
     std::vector<CHUNK_MESH_DATATYPE> opaqueMesh;
     std::vector<CHUNK_MESH_DATATYPE> transparentMesh;
 
+    bool chunkReady = false;
+
 public:
     Chunk(glm::vec3 chunkPosition, World* world);
     
