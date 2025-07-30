@@ -86,7 +86,7 @@ class World{
             this->WIDTH = width;
             this->CHUNK_ROWS = this->WIDTH / CHUNK_WIDTH;
             this->CHUNK_COLUMNS = this->WIDTH / CHUNK_WIDTH;
-            this->RENDER_DISTANCE = CHUNK_ROWS / 2;
+            this->RENDER_DISTANCE = CHUNK_ROWS * 2;
             this->meshBuffer = meshBuffer;
             this->chunkDrawBuffer = chunkDrawBuffer;
             this->chunkStorageBuffer = chunkStorageBuffer;

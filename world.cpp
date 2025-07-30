@@ -87,6 +87,50 @@ void World::genWorldBase()
 
 void World::updateChunks()
 {
+    std::list<ThreadWorkingData>::iterator dataIterator = threadsWorkingData.begin();
+    std::list<std::thread>::iterator threadIterator = threads.begin();
+    bool anything = false;
+    while (dataIterator != threadsWorkingData.end() && threadIterator != threads.end()){
+        bool isReady = dataIterator->ready;
+        for (int chunkInd =0; chunkInd < CHUNK_COLUMNS; chunkInd++){
+            if (!dataIterator->chunksDone[chunkInd]){
+                continue;
+            }
+            int row = dataIterator->chunkPositions[chunkInd].row;
+            int col = dataIterator->chunkPositions[chunkInd].col;
+            if (row < 0 || col < 0){
+                continue;
+            }
+            if (row >= CHUNK_ROWS || col >= CHUNK_COLUMNS){
+                continue;
+            }
+            anything = true;
+            this->chunks[row][col] = dataIterator->chunksToPrepare[chunkInd];
+       
+            dataIterator->chunksDone[chunkInd] = false;
+            
+        }
+
+        if (isReady){
+            dataIterator = threadsWorkingData.erase(dataIterator);
+            threadIterator->join();
+            threadIterator = threads.erase(threadIterator);
+        }
+        else {
+            dataIterator++;
+            threadIterator++;
+        }
+        
+   
+        
+        
+    }
+    genRenderChunkRefs();
+    
+    fillBuffers();
+    
+    
+
     if (this->lastPlayerPos == player->position){
         return ;
     }
@@ -271,51 +315,7 @@ void World::updateChunks()
         // ___
     }
 
-    std::list<ThreadWorkingData>::iterator dataIterator = threadsWorkingData.begin();
-    std::list<std::thread>::iterator threadIterator = threads.begin();
-
-    while (dataIterator != threadsWorkingData.end() && threadIterator != threads.end()){
-        bool isReady = dataIterator->ready;
-        for (int chunkInd =0; chunkInd < CHUNK_COLUMNS; chunkInd++){
-            if (!dataIterator->chunksDone[chunkInd]){
-                continue;
-            }
-            int row = dataIterator->chunkPositions[chunkInd].row;
-            int col = dataIterator->chunkPositions[chunkInd].col;
-            if (row < 0 || col < 0){
-                continue;
-            }
-            if (row >= CHUNK_ROWS || col >= CHUNK_COLUMNS){
-                continue;
-            }
-     
-            this->chunks[row][col] = dataIterator->chunksToPrepare[chunkInd];
-       
-            dataIterator->chunksDone[chunkInd] = false;
-            
-        }
-
-        if (isReady){
-            dataIterator = threadsWorkingData.erase(dataIterator);
-            threadIterator->join();
-            threadIterator = threads.erase(threadIterator);
-        }
-        else {
-            dataIterator++;
-            threadIterator++;
-        }
-        
-   
-        
-        
-    }
     
-    
-    
-  
-
-    genRenderChunkRefs();
-    fillBuffers();
 
 }
 
