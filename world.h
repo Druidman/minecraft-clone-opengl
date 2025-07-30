@@ -41,8 +41,8 @@ class World{
         fnl_state genTreeNoiseFunc(){
             fnl_state noise = fnlCreateState();
             noise.fractal_type = FNL_FRACTAL_NONE;
-            noise.frequency = 0.011;
-            noise.octaves = 3;
+            noise.frequency = 0.005;
+            noise.octaves = 4;
             noise.seed = 1337;
 
             noise.noise_type = FNL_NOISE_VALUE;

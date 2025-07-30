@@ -225,29 +225,29 @@ void Chunk::genChunk()
     
     fillWater();
 
-    // for (int i =3; i< CHUNK_WIDTH - 3; i+= 6){
-    //     for (int j =3; j< CHUNK_WIDTH - 3; j+=6){
-    //         float x = j + 0.5 + (position.x - (CHUNK_WIDTH / 2)); // j = column
-    //         float z = i + 0.5 + (position.z - (CHUNK_WIDTH / 2)); // i = row
-    //         float treeChance = world->genTreeChance(glm::vec2(x,z));
-    //         if (treeChance < 0.5){
-    //             continue ;
-    //         }
-    //         float yCoord = world->genBlockHeight(glm::vec2(x,z)) + 0.5;
+    for (int i =3; i< CHUNK_WIDTH - 3; i+= 6){
+        for (int j =3; j< CHUNK_WIDTH - 3; j+=6){
+            float x = j + 0.5 + (position.x - (CHUNK_WIDTH / 2)); // j = column
+            float z = i + 0.5 + (position.z - (CHUNK_WIDTH / 2)); // i = row
+            float treeChance = world->genTreeChance(glm::vec2(x,z));
+            if (treeChance < 0.5){
+                continue ;
+            }
+            float yCoord = world->genBlockHeight(glm::vec2(x,z)) + 0.5;
             
-    //         glm::vec3 treePos = glm::vec3(i + 0.5 + (rand() % 6), yCoord ,j + 0.5 + (rand() % 6));
-    //         auto blockRes = getBlock(treePos);
-    //         if (!blockRes.has_value()){ // cause that means smth went really wrong 
-    //             continue ;
-    //         }
+            glm::vec3 treePos = glm::vec3(i + 0.5 + (rand() % 2), yCoord ,j + 0.5 + (rand() % 2));
+            auto blockRes = getBlock(treePos);
+            if (!blockRes.has_value()){ // cause that means smth went really wrong 
+                continue ;
+            }
             
-    //         Block *block = blockRes.value();
-    //         if (block->type != GRASS_DIRT){
-    //             continue ;
-    //         }
-    //         addTree(block->position + glm::vec3(0.0,1.0,0.0));
-    //     }
-    // }
+            Block *block = blockRes.value();
+            if (block->type != GRASS_DIRT){
+                continue ;
+            }
+            addTree(block->position + glm::vec3(0.0,1.0,0.0));
+        }
+    }
 
     // important
     this->chunkReady = true;
