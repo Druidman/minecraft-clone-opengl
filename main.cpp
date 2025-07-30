@@ -47,7 +47,6 @@ double lastDeltaTime = 0;
 std::vector<double> renderFpsS;
 bool exitApp = false;
 
-
 void resize_callback(GLFWwindow *window, int width, int height){
     glViewport(0,0,width,height);
     projection = glm::perspective(glm::radians(45.0),(double)width/height,0.1,1000.0);
@@ -102,8 +101,8 @@ void loop(){
     
     view = camera.getViewMatrix();
 
-
     renderer.render(state);
+   
     
 }
 
@@ -208,7 +207,7 @@ int main()
     GLCall( glBindBuffer(GL_ARRAY_BUFFER, 0) );
     GLCall( glBindVertexArray(0) );
 
-    int worldWidth = 176;
+    int worldWidth = 512;
     glm::vec3 worldMiddle = glm::vec3(30000,60.0,30000);
     std::cout << "initializing world\n";
     World world = World(worldWidth, worldMiddle, &instanceBuffer, &indirectBuffer, &ssbo);

@@ -51,6 +51,7 @@ public:
     std::vector<CHUNK_MESH_DATATYPE> transparentMesh;
 
     bool chunkReady = false;
+    bool renderReady = false;
 
 public:
     Chunk(glm::vec3 chunkPosition, World* world);
@@ -64,7 +65,10 @@ public:
     bool canAddBlockFace(Face face, Block *currentBlock);
     bool isInChunkBorder(Block &block);
     
+
+    void genChunk();
     void genChunkMesh();
+    void meshBlock(int platform, int row, int col);
     unsigned long long getMeshSize();
     std::vector<CHUNK_MESH_DATATYPE>* getOpaqueMesh(){return &opaqueMesh;};
     std::vector<CHUNK_MESH_DATATYPE>* getTransparentMesh(){return &transparentMesh;};

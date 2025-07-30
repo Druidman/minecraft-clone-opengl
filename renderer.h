@@ -34,13 +34,14 @@ class Renderer
 public:
     void renderRegularGame(GameState *gameState){
         gameState->shader->use();
-        
+
         gameState->shader->setInt("playerState",gameState->player->state);
         gameState->shader->setMatrixFloat("projection",GL_FALSE,*(gameState->projection));
         gameState->shader->setMatrixFloat("view",GL_FALSE,*(gameState->view));
         gameState->shader->setMatrixFloat("model",GL_FALSE,*(gameState->model));
        
         gameState->shader->setVec3Float("LightPos",glm::vec3(256,100,256));
+    
        
         gameState->vao->bind();
         GLCall( glMultiDrawArraysIndirect(GL_TRIANGLES,0,gameState->world->chunkRenderRefs.size() ,sizeof(DrawArraysIndirectCommand)) );

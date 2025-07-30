@@ -89,31 +89,32 @@ bool Chunk::canAddBlockFace(Face face, Block *currentBlock)
     glm::vec3 checkBlockFacePos = checkBlockPos;
     switch (face)
     {
-    case TOP_FACE:
-        checkBlockPos.y += 1;
-        checkBlockFacePos += TOP_FACE_POS;
-        break;
-    case BOTTOM_FACE:
-        checkBlockPos.y -= 1;
-        checkBlockFacePos += BOTTOM_FACE_POS;
-        break;
-    case FRONT_FACE:
-        checkBlockPos.z += 1;
-        checkBlockFacePos += FRONT_FACE_POS;
-        break;
-    case BACK_FACE:
-        checkBlockPos.z -= 1;
-        checkBlockFacePos += BACK_FACE_POS;
-        break;
-    case LEFT_FACE:
-        checkBlockPos.x -= 1;
-        checkBlockFacePos += LEFT_FACE_POS;
-        break;
-    case RIGHT_FACE:
-        checkBlockPos.x += 1;
-        checkBlockFacePos += RIGHT_FACE_POS;
-        break;
+        case TOP_FACE:
+            checkBlockPos.y += 1;
+            checkBlockFacePos += TOP_FACE_POS;
+            break;
+        case BOTTOM_FACE:
+            checkBlockPos.y -= 1;
+            checkBlockFacePos += BOTTOM_FACE_POS;
+            break;
+        case FRONT_FACE:
+            checkBlockPos.z += 1;
+            checkBlockFacePos += FRONT_FACE_POS;
+            break;
+        case BACK_FACE:
+            checkBlockPos.z -= 1;
+            checkBlockFacePos += BACK_FACE_POS;
+            break;
+        case LEFT_FACE:
+            checkBlockPos.x -= 1;
+            checkBlockFacePos += LEFT_FACE_POS;
+            break;
+        case RIGHT_FACE:
+            checkBlockPos.x += 1;
+            checkBlockFacePos += RIGHT_FACE_POS;
+            break;
     }
+    std::optional<Block *> res;
     // lets check if face is on border of world
     if (checkBlockFacePos.y == 0 || 
         checkBlockFacePos.x == world->worldMiddle.x - (world->WIDTH / 2) || 
@@ -121,10 +122,13 @@ bool Chunk::canAddBlockFace(Face face, Block *currentBlock)
         checkBlockFacePos.x == world->worldMiddle.x + (world->WIDTH / 2) || 
         checkBlockFacePos.z == world->worldMiddle.z + (world->WIDTH / 2))
     {
-        return false; //face is on world border
+        return true;
+    }
+    else {
+        res = getBlock(checkBlockPos);
     }
     
-    std::optional<Block *> res = this->world->getBlockByPos(checkBlockPos);
+    
     if (!res.has_value())
     {
         return true;
@@ -146,69 +150,128 @@ bool Chunk::canAddBlockFace(Face face, Block *currentBlock)
     
 }
 
+void Chunk::meshBlock(int platform, int row, int col){
+    Block *block = &this->blocks[platform][row][col];
+    if (block->type == NONE_BLOCK){
+        return;
+    }
+
+    std::vector<CHUNK_MESH_DATATYPE> *buffer;
+    if (block->type == WATER || block->type == LEAF)
+    {
+        buffer = &transparentMesh;
+    }
+    else
+    {
+        buffer = &opaqueMesh;
+    }
+
+    // top
+    if (canAddBlockFace(TOP_FACE, block))
+    {
+        addBlockFace(TOP_FACE, block, buffer);
+    }
+    // bottom
+    if (canAddBlockFace(BOTTOM_FACE, block))
+    {
+        addBlockFace(BOTTOM_FACE, block, buffer);
+    }
+    // front
+    if (canAddBlockFace(FRONT_FACE, block))
+    {
+        addBlockFace(FRONT_FACE, block, buffer);
+    }
+    // back
+    if (canAddBlockFace(BACK_FACE, block))
+    {
+        addBlockFace(BACK_FACE, block, buffer);
+    }
+    // left
+    if (canAddBlockFace(LEFT_FACE, block))
+    {
+        addBlockFace(LEFT_FACE, block, buffer);
+    }
+    // right
+    if (canAddBlockFace(RIGHT_FACE, block))
+    {
+        addBlockFace(RIGHT_FACE, block, buffer);
+    }
+}
+
+void Chunk::genChunk()
+{
+    for (int i =0; i< CHUNK_WIDTH ; i++){
+        for (int j =0; j< CHUNK_WIDTH; j++){
+            float x = j + 0.5 + (position.x - (CHUNK_WIDTH / 2)); // j = column
+            float z = i + 0.5 + (position.z - (CHUNK_WIDTH / 2)); // i = row
+            float yCoord = world->genBlockHeight(glm::vec2(x,z)) + 0.5;
+            BlockType blockType = GRASS_DIRT;
+            if (yCoord < 20){
+                blockType = SAND;
+            }
+            
+            else if (yCoord > 60){
+                blockType = STONE;
+            }
+            
+            Block block(blockType,glm::vec3(x, yCoord ,z));
+            
+            addBlock(block);
+            
+            fillUnderBlock(block);
+            
+        }
+    }
+    
+    fillWater();
+
+    // for (int i =3; i< CHUNK_WIDTH - 3; i+= 6){
+    //     for (int j =3; j< CHUNK_WIDTH - 3; j+=6){
+    //         float x = j + 0.5 + (position.x - (CHUNK_WIDTH / 2)); // j = column
+    //         float z = i + 0.5 + (position.z - (CHUNK_WIDTH / 2)); // i = row
+    //         float treeChance = world->genTreeChance(glm::vec2(x,z));
+    //         if (treeChance < 0.5){
+    //             continue ;
+    //         }
+    //         float yCoord = world->genBlockHeight(glm::vec2(x,z)) + 0.5;
+            
+    //         glm::vec3 treePos = glm::vec3(i + 0.5 + (rand() % 6), yCoord ,j + 0.5 + (rand() % 6));
+    //         auto blockRes = getBlock(treePos);
+    //         if (!blockRes.has_value()){ // cause that means smth went really wrong 
+    //             continue ;
+    //         }
+            
+    //         Block *block = blockRes.value();
+    //         if (block->type != GRASS_DIRT){
+    //             continue ;
+    //         }
+    //         addTree(block->position + glm::vec3(0.0,1.0,0.0));
+    //     }
+    // }
+
+    // important
+    this->chunkReady = true;
+}
+
 void Chunk::genChunkMesh()
 {
+    std::cout<< "CHUNK: Meshing\n";
     opaqueMesh.clear();
     transparentMesh.clear();
     
     for (int platform = 0; platform < blocks.size(); platform++)
     {
-
         for (int row = 0; row < blocks[platform].size(); row++)
         {
 
             for (int col = 0; col < blocks[platform][row].size(); col++)
             {
-                std::optional<Block *> res = getBlock(platform, row, col);
-                if (!res.has_value())
-                {
-                    continue;
-                }
-                Block *block = res.value();
-
-                std::vector<CHUNK_MESH_DATATYPE> *buffer;
-                if (block->type == WATER || block->type == LEAF)
-                {
-                    buffer = &transparentMesh;
-                }
-                else
-                {
-                    buffer = &opaqueMesh;
-                }
-
-                // top
-                if (canAddBlockFace(TOP_FACE, block))
-                {
-                    addBlockFace(TOP_FACE, block, buffer);
-                }
-                // bottom
-                if (canAddBlockFace(BOTTOM_FACE, block))
-                {
-                    addBlockFace(BOTTOM_FACE, block, buffer);
-                }
-                // front
-                if (canAddBlockFace(FRONT_FACE, block))
-                {
-                    addBlockFace(FRONT_FACE, block, buffer);
-                }
-                // back
-                if (canAddBlockFace(BACK_FACE, block))
-                {
-                    addBlockFace(BACK_FACE, block, buffer);
-                }
-                // left
-                if (canAddBlockFace(LEFT_FACE, block))
-                {
-                    addBlockFace(LEFT_FACE, block, buffer);
-                }
-                // right
-                if (canAddBlockFace(RIGHT_FACE, block))
-                {
-                    addBlockFace(RIGHT_FACE, block, buffer);
-                }
+                
+                meshBlock(platform,row,col);
             }
         }
     }
+    this->renderReady = true;
 }
 
 
