@@ -119,24 +119,23 @@ class World{
 
     public:
         void prepareChunks(ThreadWorkingData &data){
-            std::cout << "THREAD START\n";
+        
             for (Chunk &chunk : data.chunksToPrepare){
-                std::cout << "GEN\n";
+          
                 chunk.genChunk();
-                std::cout << "DONE\n";
-                
+               
             }
             int ind=0;
             for (Chunk &chunk : data.chunksToPrepare){
-                std::cout << "GEN\n";
+         
                 chunk.genChunkMesh();
-                std::cout << "DONE\n";
+      
                 data.chunksDone[ind] = true;
                 ind++;
                 
             }
             data.ready = true;
-            std::cout << "THREAD END\n";
+  
         };
 
         void spawnChunkPrepareThread(std::vector< Chunk > chunksToPrepare, std::vector< bool > chunksDone, std::vector<ChunkVecPos> chunkPositions){
@@ -150,7 +149,7 @@ class World{
                 this,
                 std::ref(threadsWorkingData.back())
             );
-            std::cout << "thread spawned\n";
+          
             
         };
 };

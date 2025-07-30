@@ -255,7 +255,7 @@ void Chunk::genChunk()
 
 void Chunk::genChunkMesh()
 {
-    std::cout<< "CHUNK: Meshing\n";
+
     opaqueMesh.clear();
     transparentMesh.clear();
     

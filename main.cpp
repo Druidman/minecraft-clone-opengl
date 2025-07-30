@@ -90,7 +90,7 @@ void loop(){
             renderFpsS.pop_back();
         }
         avgFPS /= divide;
-        // std::cout << "FPS: " << avgFPS << "\n";
+        std::cout << "FPS: " << avgFPS << "\n";
     }
     else{
         renderFpsS.push_back(fps);
@@ -220,6 +220,7 @@ int main()
 
     
     world.genWorldBase();
+    world.genRenderChunkRefs();
     world.fillBuffers();
 
     double last = glfwGetTime();

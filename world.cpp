@@ -111,9 +111,7 @@ void World::updateChunks()
     if (positionChange.x > 0){ // that means we moved: -x
         // we need to remove right chunks
         // we need to add left chunks
-        std::cout << "add left\n";
-        
-        std::cout << "deleting last element of row\n";
+
         for (std::vector<Chunk> &chunkRow : this->chunks){
             chunkRow.pop_back();
         }
@@ -125,13 +123,13 @@ void World::updateChunks()
             column.emplace_back(chunkPos,this);
         }
         int ind = 0;
-        std::cout << "inserting to begining of row\n";
+
         for (std::vector<Chunk> &chunkRow : this->chunks){
             chunkRow.insert(chunkRow.begin(), column[ind]);
             ind++;
         }
         // after insertion we need to shift chunk positions for threads and lastPlayerChunk pointer
-        std::cout << "applying shifts\n";
+   
         lastPlayerChunk = &this->chunks[lastPlayerChunkRow][lastPlayerChunkCol + 1];
         for (ThreadWorkingData &data : threadsWorkingData){
             for (ChunkVecPos &pos : data.chunkPositions){
@@ -151,7 +149,7 @@ void World::updateChunks()
             });
         };
         std::vector< bool > chunksDone(column.size(),false);
-        std::cout << "spawning thread\n";
+
         spawnChunkPrepareThread(column, chunksDone, chunkPositions);
         
         // ___
@@ -159,7 +157,7 @@ void World::updateChunks()
     else if (positionChange.x < 0){ // that means we moved: +x
         // we need to add right chunks
         // we need to remove left chunks
-        std::cout << "add right\n";
+
         
 
         for (std::vector<Chunk> &chunkRow : this->chunks){
@@ -196,7 +194,7 @@ void World::updateChunks()
             });
         };
         std::vector< bool > chunksDone(column.size(),false);
-        std::cout << "spawning thread\n";
+ 
         spawnChunkPrepareThread(column, chunksDone, chunkPositions);
         // ___
         
@@ -204,7 +202,7 @@ void World::updateChunks()
     else if (positionChange.z > 0){ // that means we moved: -z
         // we need to remove bottom chunks
         // we need to add top chunks
-        std::cout << "add top\n";
+
         
         this->chunks.pop_back();
         std::vector<Chunk> row;
@@ -231,8 +229,8 @@ void World::updateChunks()
             });
         };
         std::vector< bool > chunksDone(CHUNK_COLUMNS,false);
-        std::cout << "Sizes: " << chunksDone.size() << " " << row.size() << " " << chunkPositions.size() << "\n";
-        std::cout << "spawning thread\n";
+        
+      
         spawnChunkPrepareThread(row, chunksDone, chunkPositions);
         // ___
 
@@ -242,7 +240,7 @@ void World::updateChunks()
     else if (positionChange.z < 0){ // that means we moved: +z
         // we need to remove top chunks
         // we need to add bottom chunks
-        std::cout << "add bottom\n";
+
     
         this->chunks.erase(this->chunks.begin());
         std::vector<Chunk> row;
@@ -268,7 +266,7 @@ void World::updateChunks()
             });
         };
         std::vector< bool > chunksDone(row.size(),false);
-        std::cout << "spawning thread\n";
+ 
         spawnChunkPrepareThread(row, chunksDone, chunkPositions);
         // ___
     }
@@ -277,14 +275,11 @@ void World::updateChunks()
     std::list<std::thread>::iterator threadIterator = threads.begin();
 
     while (dataIterator != threadsWorkingData.end() && threadIterator != threads.end()){
-        if (!dataIterator->ready){
-            ++dataIterator;
-            ++threadIterator;
-            continue;
-        }
+        bool isReady = dataIterator->ready;
         for (int chunkInd =0; chunkInd < CHUNK_COLUMNS; chunkInd++){
-            
-            
+            if (!dataIterator->chunksDone[chunkInd]){
+                continue;
+            }
             int row = dataIterator->chunkPositions[chunkInd].row;
             int col = dataIterator->chunkPositions[chunkInd].col;
             if (row < 0 || col < 0){
@@ -293,16 +288,25 @@ void World::updateChunks()
             if (row >= CHUNK_ROWS || col >= CHUNK_COLUMNS){
                 continue;
             }
-            std::cout << "assigning\n";
+     
             this->chunks[row][col] = dataIterator->chunksToPrepare[chunkInd];
-            std::cout << "assigned\n";
+       
+            dataIterator->chunksDone[chunkInd] = false;
             
+        }
+
+        if (isReady){
+            dataIterator = threadsWorkingData.erase(dataIterator);
+            threadIterator->join();
+            threadIterator = threads.erase(threadIterator);
+        }
+        else {
+            dataIterator++;
+            threadIterator++;
         }
         
    
-        dataIterator = threadsWorkingData.erase(dataIterator);
-        threadIterator->join();
-        threadIterator = threads.erase(threadIterator);
+        
         
     }
     
