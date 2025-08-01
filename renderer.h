@@ -1,11 +1,17 @@
 #ifndef RENDERER_H
 #define RENDERER_H
-#include "player.h"
-#include "world.h"
+#include "betterGL.h"
+#include <GLFW/glfw3.h>
+
 #include "shader.h"
 #include "vertexArray.h"
 #include "buffer.h"
+#include "texture.h"
 
+
+
+class World;
+class Chunk;
 struct DrawArraysIndirectCommand{
     unsigned int  count;
     unsigned int  instanceCount;
@@ -14,41 +20,54 @@ struct DrawArraysIndirectCommand{
 };
 
 struct GameState {
-    Player *player;
-    World *world;
-    Shader *shader;
-    VertexArray *vao;
-    GLFWwindow *window;
 
-    Shader *crosshairShader;
-    VertexArray *crosshairVAO;
+    GLFWwindow *window;
 
     glm::mat4 *model;
     glm::mat4 *view;
     glm::mat4 *projection;
+    World* world;
 };
+
 
 class Renderer
 {
-    
-public:
-    void renderRegularGame(GameState *gameState){
-        gameState->shader->use();
+private:
+    std::string cvsPath = "shaders/vertexShaderCrosshair.vs";
+    std::string cfsPath = "shaders/fragmentShaderCrosshair.fs";
+    std::string texturePath = "textures/texture.png";
+ 
+    Texture texture = Texture(texturePath, "png");
+protected:
+    Shader crosshairShader = Shader(cvsPath,cfsPath);
+    std::vector<float> crosshairVertices = {
+        -0.01f, -0.01f, 0.0f,
+        0.01f, -0.01f, 0.0f,
+        0.0f,  0.0f, 0.0f
+    };
 
-        gameState->shader->setInt("playerState",gameState->player->state);
-        gameState->shader->setMatrixFloat("projection",GL_FALSE,*(gameState->projection));
-        gameState->shader->setMatrixFloat("view",GL_FALSE,*(gameState->view));
-        gameState->shader->setMatrixFloat("model",GL_FALSE,*(gameState->model));
-       
-        gameState->shader->setVec3Float("LightPos",glm::vec3(256,100,256));
+    VertexArray crosshairVAO = VertexArray();
+    Buffer crosshairVBO = Buffer(GL_ARRAY_BUFFER);
     
-       
-        gameState->vao->bind();
-        GLCall( glMultiDrawArraysIndirect(GL_TRIANGLES,0,gameState->world->chunkRenderRefs.size() ,sizeof(DrawArraysIndirectCommand)) );
+    Buffer chunkStorageBuffer;
+    
+    World* world;
+
+protected:
+    Renderer(Buffer csb) : chunkStorageBuffer(csb){
+
     }
-    void renderWebGame(GameState *gameState){
-        return; //todo
-    }
+    virtual void initBuffers() = 0;
+
+public:
+    void init(World* world){
+        this->world = world;
+        std::cout << "renderer buffers init\n";
+        initBuffers();
+    };
+
+    virtual void renderGame(GameState *gameState) = 0;
+    
     void render(GameState *gameState){
        
         GLCall( glClearColor(0.68f, 0.84f, 0.9f, 1.0f) );
@@ -56,7 +75,7 @@ public:
         GLCall( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
 
         renderGame(gameState);
-        renderUi(gameState);
+        renderUi();
 
         /* Swap front and back buffers */
         glfwSwapBuffers(gameState->window);
@@ -64,19 +83,26 @@ public:
         /* Poll for and process events */
         glfwPollEvents();
     }
-    void renderGame(GameState *gameState){
-        #ifdef __EMSCRIPTEN__
-            renderWebGame(gameState);
-        #else
-            renderRegularGame(gameState);
-        #endif
-        
-    };
-    void renderUi(GameState *gameState){
-        gameState->crosshairShader->use();
-        gameState->crosshairVAO->bind();
+
+    void renderUi(){
+        this->crosshairShader.use();
+        this->crosshairVAO.bind();
         GLCall( glDrawArrays(GL_TRIANGLES,0,3) );
     };
 
+    virtual void fillBuffers() = 0;
+    
+    void fillChunkStorageBuffer()
+    {   
+        std::vector<glm::vec4> chunkPositions;
+        for (Chunk* chunk : this->world->chunkRenderRefs){
+            
+            chunkPositions.push_back(glm::vec4(chunk->position - this->world->player->position,0.0));
+            
+        }       
+        
+        this->chunkStorageBuffer.fillData<glm::vec4>(&chunkPositions);
+    }
 };
+
 #endif

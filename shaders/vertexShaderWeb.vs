@@ -3,7 +3,11 @@ precision mediump float;
 
 layout (location = 0) in vec3 aBasePosition;
 layout (location = 1) in float vertexType;
-layout (location = 2) in float vertexData;  
+layout (location = 2) in float vertexData;
+layout (location = 3) in uint chunkIndex;
+layout(std430, binding = 3) buffer ubo{
+    vec3 chunkPositions[4];
+};
 
 
 out vec2 TexCoords;

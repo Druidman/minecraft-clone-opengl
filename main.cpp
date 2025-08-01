@@ -1,9 +1,24 @@
-#ifdef __EMSCRIPTEN__
-    #include <emscripten/emscripten.h>
-    #include <GLES3/gl3.h>
-#else
-    #include <GL/glew.h>
+// testing phase is defined as:
+//  running game with web or desktop rendering technique ON DESKTOP
+
+// during testing define TEST and define which instance you are testing:
+// WEB_GL_INSTANCE
+// OPENGL_INSTANCE
+#define TEST
+#define WEB_GL_INSTANCE
+
+#ifndef TEST 
+    #ifdef __EMSCRIPTEN__
+        #define WEB_GL_INSTANCE
+        #include <emscripten/emscripten.h>
+    #else
+        #define OPENGL_INSTANCE
+    #endif
 #endif
+
+#include "vendor/glad/glad.h"
+
+
 #include <bits/stdc++.h>
 #include <GLFW/glfw3.h>
 #include <optional>
@@ -15,17 +30,14 @@
 #include "vendor/glm/gtc/matrix_transform.hpp"
 #include "vendor/stb_image/stb_image.h"
 
-#include "shader.h"
-#include "texture.h"
-#include "vertexArray.h"
-#include "buffer.h"
 #include "block.h"
-#include "chunk.h"
 #include "camera.h"
 #include "player.h"
 #include "world.h"
 
 #include "renderer.h"
+#include "desktopRenderer.h"
+#include "webRenderer.h"
 
 
 typedef unsigned int uint;
@@ -42,7 +54,7 @@ glm::mat4 view;
 Camera camera = Camera();
 
 GameState *state;
-Renderer renderer;
+Renderer* renderer;
 double lastDeltaTime = 0;
 std::vector<double> renderFpsS;
 bool exitApp = false;
@@ -96,25 +108,19 @@ void loop(){
         renderFpsS.push_back(fps);
     }
 
-    state->player->update(delta);
+    state->world->player->update(delta);
     state->world->updateChunks();
     
     view = camera.getViewMatrix();
 
-    renderer.render(state);
+    renderer->render(state);
    
     
 }
 
-int main()
-{
-    
-    GLFWwindow* window;
-    /* Initialize the library */
-    if (!glfwInit())
-        return -1;
-    /* Create a windowed mode window and its OpenGL context */
-    #ifdef __EMSCRIPTEN__
+
+void setWindowHints(){
+    #ifdef WEB_GL_INSTANCE // no matter if testing or no
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0); // WebGL 2.0 maps to ES 3.0
         glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
@@ -123,9 +129,17 @@ int main()
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     #endif
-    
+}
 
+int main()
+{
+
+    if (!glfwInit())
+        return -1;
     
+    setWindowHints();
+
+    GLFWwindow* window;
     window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Hello World", NULL, NULL);
     if (!window)
     {
@@ -135,17 +149,24 @@ int main()
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
-
-
-
     glfwSetWindowSizeCallback(window,resize_callback);
     glfwSetKeyCallback(window,input_callback);
     glfwSetCursorPosCallback(window,cursor_pos_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
 
-
-    #ifndef  __EMSCRIPTEN__
-        glewInit();
+    
+    #ifdef WEB_GL_INSTANCE
+        
+        if (!gladLoadGLES2(glfwGetProcAddress)) {
+            std::cerr << "Failed to initialize GLAD for OpenGL ES 3.0" << std::endl;
+            return -1;
+        }
+    #else
+        
+        if (!gladLoadGL(glfwGetProcAddress)) {
+            std::cerr << "Failed to initialize GLAD for OpenGL 4.6 Core" << std::endl;
+            return -1;
+        }
     #endif
 
     glfwSwapInterval( 0 );
@@ -157,91 +178,49 @@ int main()
     GLCall( glEnable(GL_BLEND) ) ;
     GLCall( glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) ) ;
 
-    #ifdef __EMSCRIPTEN__
-        std::string vsPath = "shaders/vertexShaderWeb.vs";
-        std::string fsPath = "shaders/fragmentShaderWeb.fs";
-    #else
-        std::string vsPath = "shaders/vertexShader.vs";
-        std::string fsPath = "shaders/fragmentShader.fs";
-    #endif
-    std::string cvsPath = "shaders/vertexShaderCrosshair.vs";
-    std::string cfsPath = "shaders/fragmentShaderCrosshair.fs";
-    
-    Shader shader = Shader(vsPath, fsPath);
-    Shader crosshairShader = Shader(cvsPath,cfsPath);
-
-    std::string texturePath = "textures/texture.png";
-
-    Texture texture = Texture(texturePath, "png");
-
-    std::vector<float> crosshairVertices = {
-        -0.01f, -0.01f, 0.0f,
-        0.01f, -0.01f, 0.0f,
-        0.0f,  0.0f, 0.0f
-    };
-
-    VertexArray crosshairVAO = VertexArray();
-    Buffer crosshairVBO = Buffer(GL_ARRAY_BUFFER);
-    crosshairVBO.fillData<float>(&crosshairVertices);
-    crosshairVAO.setAttr(0,3,GL_FLOAT, 3 * sizeof(float), 0);
-
-    VertexArray vao;
-    Buffer baseVbo = Buffer(GL_ARRAY_BUFFER);
-    Buffer instanceBuffer = Buffer(GL_ARRAY_BUFFER);
-    Buffer indirectBuffer = Buffer(GL_DRAW_INDIRECT_BUFFER);
-    Buffer ssbo = Buffer(GL_SHADER_STORAGE_BUFFER);
-
    
-
-    
-    baseVbo.fillData<float>(&BLOCK_FACE_VERTICES);
-
-    baseVbo.bind();
-    vao.setAttr(0,3,GL_FLOAT,4 * sizeof(float),0);
-    vao.setAttr(1,1,GL_FLOAT,4 * sizeof(float),3 * sizeof(float));
-
-    instanceBuffer.bind();
-    vao.setAttr(2,1,GL_FLOAT,sizeof(CHUNK_MESH_DATATYPE),0);
-    GLCall( glVertexAttribDivisor(2,1) );
-
-    GLCall( glBindBuffer(GL_ARRAY_BUFFER, 0) );
-    GLCall( glBindVertexArray(0) );
+    #if defined(WEB_GL_INSTANCE)
+        renderer = new WebRenderer();
+    #elif defined(OPENGL_INSTANCE)
+        renderer = new DesktopRenderer();
+    #else
+        #error Is this webGlInstance or desktopInstance? Why is it not defined??
+    #endif
 
     int worldWidth = 512;
     glm::vec3 worldMiddle = glm::vec3(30000,60.0,30000);
+
     std::cout << "initializing world\n";
-    World world = World(worldWidth, worldMiddle, &instanceBuffer, &indirectBuffer, &ssbo);
+    World world = World(worldWidth, worldMiddle, renderer);
 
     std::cout << "initializing player\n";
     Player player = Player(worldMiddle,&world,&camera,window);
 
-    world.init(&player, &camera);
-  
+    std::cout << "Renderer init\n";
+    renderer->init(&world);
 
-    
+    std::cout << "World init\n";
+    world.init(&player);
+
+
     world.genWorldBase();
-    world.genRenderChunkRefs();
-    world.fillBuffers();
+
 
     double last = glfwGetTime();
     double avgFPS = 0;
     std::vector<double> fpsS;
     GameState cState = {
-        &player,
-        &world,
-        &shader,
-        &vao,
         window,
-        &crosshairShader,
-        &crosshairVAO,
         &model,
         &view,
-        &projection
+        &projection,
+        &world
     };
     state = &cState;
-    #ifdef __EMSCRIPTEN__
+    #if defined(WEB_GL_INSTANCE) && !defined(TEST)
         emscripten_set_main_loop(loop, 0, true);  // 0 = use requestAnimationFrame()
         exitApp = true;
+        delete renderer;
 
     #else
         while (!glfwWindowShouldClose(window)) {
@@ -249,6 +228,7 @@ int main()
         }
         exitApp = true;
         std::cout << "\nexiting\n";
+        delete renderer;
         glfwTerminate();
     #endif
     

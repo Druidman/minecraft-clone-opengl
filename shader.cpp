@@ -1,6 +1,11 @@
 #include "shader.h"
-#include "vendor/glm/gtc/type_ptr.hpp"
+#include "vendor/glad/glad.h"
+#include <string>
+#include <iostream>
 #include <fstream>
+
+#include "vendor/glm/gtc/type_ptr.hpp"
+#include "vendor/glm/glm.hpp"
 
 #include "betterGL.h"
 

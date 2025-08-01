@@ -1,7 +1,6 @@
 #include "chunk.h"
 #include "world.h"
-#include <cstring>
-#include <optional>
+
 
 Chunk::Chunk(glm::vec3 chunkPosition, World *world)
 {

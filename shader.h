@@ -1,14 +1,13 @@
-#ifndef SHADER_C
-#define SHADER_C
-#ifdef __EMSCRIPTEN__
-    #include <GLES3/gl3.h>
-#else
-    #include <GL/glew.h>
-#endif
+#ifndef SHADER_H
+#define SHADER_H
 
-#include "vendor/glm/glm.hpp"
+
 #include <string>
-#include <iostream>
+
+
+#include "vendor/glm/gtc/type_ptr.hpp"
+#include "vendor/glm/glm.hpp"
+#include "betterGL.h"
 // load shader from file name
 // program operations
 // uniforms

@@ -1,7 +1,5 @@
-#include "betterGL.h"
-
 #include "buffer.h"
-
+#include "vendor/glad/glad.h"
 
 Buffer::Buffer(GLenum bufferType)
 {

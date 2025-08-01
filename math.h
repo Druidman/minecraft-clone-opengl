@@ -6,9 +6,11 @@
 
 #include "vendor/glm/glm.hpp"
 
+#include "block.h"
 #include "chunk.h"
 #include "world.h"
-#include "block.h"
+
+
 
 struct BlockIntersection{
     Block *block;
