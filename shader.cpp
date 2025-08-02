@@ -87,23 +87,32 @@ void Shader::use()
     GLCall( glUseProgram(m_programID) );
 }
 
+GLint Shader::getUniformLocation(const std::string &uniformName){
+    
+    if (!this->uniforms.contains(uniformName)){
+        this->uniforms[uniformName] = glGetUniformLocation(m_programID, uniformName.c_str());
+    }
+    return this->uniforms[uniformName];
+ 
+}
 // fix performance in looking for locations
-void Shader::setInt(const char *uniformName, int val)
+void Shader::setInt(const std::string &uniformName, int val)
 {
-    GLCall( glUniform1i(glGetUniformLocation(m_programID, uniformName),val) );
+    
+    GLCall( glUniform1i(getUniformLocation(uniformName),val) );
 }
 
-void Shader::setFloat(const char *uniformName, float val)
+void Shader::setFloat(const std::string &uniformName, float val)
 {
-    GLCall( glUniform1f(glGetUniformLocation(m_programID, uniformName),val) );
+    GLCall( glUniform1f(getUniformLocation(uniformName),val) );
 }
 
-void Shader::setMatrixFloat(const char *uniformName, bool transpose, glm::mat4 &matrix)
+void Shader::setMatrixFloat(const std::string &uniformName, bool transpose, glm::mat4 &matrix)
 {
-    GLCall( glUniformMatrix4fv(glGetUniformLocation(m_programID, uniformName),1,transpose,glm::value_ptr(matrix)) );
+    GLCall( glUniformMatrix4fv(getUniformLocation(uniformName),1,transpose,glm::value_ptr(matrix)) );
 }
 
-void Shader::setVec3Float(const char *uniformName, glm::vec3 vector3)
+void Shader::setVec3Float(const std::string &uniformName, glm::vec3 vector3)
 {
-    GLCall( glUniform3fv(glGetUniformLocation(m_programID, uniformName),1,glm::value_ptr(vector3)) );
+    GLCall( glUniform3fv(getUniformLocation(uniformName),1,glm::value_ptr(vector3)) );
 }

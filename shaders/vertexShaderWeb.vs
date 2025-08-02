@@ -1,23 +1,24 @@
 #version 300 es
-precision mediump float;
+precision highp float;
+
 
 layout (location = 0) in vec3 aBasePosition;
 layout (location = 1) in float vertexType;
-layout (location = 2) in float vertexData;
-layout (location = 3) in uint chunkIndex;
-layout(std430, binding = 3) buffer ubo{
-    vec3 chunkPositions[4];
+layout (location = 2) in float vertexData; 
+layout (location = 3) in int chunkIndex;
+
+layout(std140) uniform ubo{
+    vec4 chunkPositions[1024];
 };
 
 
 out vec2 TexCoords;
-out vec3 playerStateColorChange;
+out vec3 Normal;
+out vec3 Pos;
 
 uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
-uniform vec3 chunkPos;
-uniform int playerState;
     
 vec3 rotateVertexPosition(vec3 pos, int face) {
     if (face == 0) { // top (Y+)
@@ -66,6 +67,7 @@ vec3 rotateVertexPosition(vec3 pos, int face) {
 
     return pos; // fallback
 }
+
 vec2 getUV(int vertexType, int face) {
     // vertex type is int 0,1,2,3
 
@@ -144,7 +146,20 @@ vec2 getUV(int vertexType, int face) {
         uvCoord = vec2(0.25, 0.9);
     }
     return uvCoord;
+
 }
+
+
+
+vec3 NORMALS[6] = vec3[](
+    vec3(0.0,1.0,0.0),
+    vec3(0.0,-1.0,0.0),
+    vec3(0.0,0.0,1.0),
+    vec3(0.0,0.0,-1.0),
+    vec3(-1.0,0.0,0.0),
+    vec3(1.0,0.0,0.0)
+    
+);
 
 void main()
 {
@@ -156,14 +171,16 @@ void main()
 
     int face = (intBits >> 16) & 0x7;
     int textureId = (intBits >> 19) & 0x7F;
-
     vec3 rotatedBasePos = rotateVertexPosition(aBasePosition,face);
     
 
     vec3 blockOffset = vec3(xPos, yPos, zPos);
+    vec3 chunkPos = vec3(chunkPositions[chunkIndex]);
     vec3 worldPosition = rotatedBasePos + chunkPos + blockOffset - vec3(8.0,0.0,8.0);
 
     gl_Position = projection * view * model * vec4(worldPosition, 1.0);
+    Pos = vec3(model * vec4(worldPosition, 1.0));
+    Normal = NORMALS[face];
 
 
     float yChange = - ( float( textureId / 4 ) * 0.1 );
@@ -171,10 +188,4 @@ void main()
     
     vec2 vertexUvs = getUV(int(vertexType),face);
     TexCoords = vertexUvs + vec2(xChange,yChange); 
-    if (playerState == 1){
-        playerStateColorChange = vec3(0.0,0.069,0.247);
-    }
-    else {
-        playerStateColorChange = vec3(0.0,0.0,0.0);
-    }
 }

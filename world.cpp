@@ -144,6 +144,7 @@ void World::updateChunks()
         }
 
         if (isReady){
+            anything = true;
             dataIterator = threadsWorkingData.erase(dataIterator);
             threadIterator->join();
             threadIterator = threads.erase(threadIterator);
@@ -152,14 +153,12 @@ void World::updateChunks()
             dataIterator++;
             threadIterator++;
         }
-        
-   
-        
-        
     }
     genRenderChunkRefs();
+    if (anything){
+        renderer->fillBuffers();
+    }
     
-    renderer->fillBuffers();
     
     
 

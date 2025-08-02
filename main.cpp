@@ -4,8 +4,8 @@
 // during testing define TEST and define which instance you are testing:
 // WEB_GL_INSTANCE
 // OPENGL_INSTANCE
-#define TEST
-#define WEB_GL_INSTANCE
+// #define TEST
+// #define WEB_GL_INSTANCE
 
 #ifndef TEST 
     #ifdef __EMSCRIPTEN__
@@ -15,11 +15,9 @@
         #define OPENGL_INSTANCE
     #endif
 #endif
-
+typedef unsigned int uint;
 #include "vendor/glad/glad.h"
 
-
-#include <bits/stdc++.h>
 #include <GLFW/glfw3.h>
 #include <optional>
 
@@ -40,7 +38,7 @@
 #include "webRenderer.h"
 
 
-typedef unsigned int uint;
+
 
 int WINDOW_WIDTH = 800;
 int WINDOW_HEIGHT = 600;
@@ -102,18 +100,32 @@ void loop(){
             renderFpsS.pop_back();
         }
         avgFPS /= divide;
-        std::cout << "FPS: " << avgFPS << "\n";
     }
     else{
         renderFpsS.push_back(fps);
     }
-
-    state->world->player->update(delta);
-    state->world->updateChunks();
-    
     view = camera.getViewMatrix();
 
+    double startGameRunTime = glfwGetTime();
+
+    state->world->player->update(delta);
+
+    double startWorldUpdateTime = glfwGetTime();
+    state->world->updateChunks();
+    double endWorldUpdateTime = glfwGetTime();
+    
+    
+    double startRenderTime = glfwGetTime();
     renderer->render(state);
+    double endRenderTime = glfwGetTime();
+
+    double endGameRunTime = glfwGetTime();
+    std::cout << "FULL: " <<   (endGameRunTime - startGameRunTime) * 1000<< "\n" <<\
+                 "WORLD: " <<  (endWorldUpdateTime - startWorldUpdateTime) * 1000<< "\n" <<\
+                 "RENDER: " << (endRenderTime - startRenderTime) * 1000 << "\n";
+    
+
+
    
     
 }
@@ -168,7 +180,7 @@ int main()
             return -1;
         }
     #endif
-
+    
     glfwSwapInterval( 0 );
 
     stbi_set_flip_vertically_on_load(true);
@@ -201,10 +213,12 @@ int main()
 
     std::cout << "World init\n";
     world.init(&player);
-
+    
 
     world.genWorldBase();
-
+    world.genRenderChunkRefs();
+    renderer->fillBuffers();
+    std::cout << "world generated\n";
 
     double last = glfwGetTime();
     double avgFPS = 0;

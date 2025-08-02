@@ -28,24 +28,26 @@ class WebRenderer : public Renderer
         Buffer meshBuffer = Buffer(GL_ARRAY_BUFFER);
         Buffer chunkIDBuffer = Buffer(GL_ARRAY_BUFFER);
     private:
-        void addChunkToBuffers(Chunk *chunk, uint16_t id){
+        void addChunkToBuffers(Chunk *chunk, int id){
             
 
             int idCount = chunk->transparentMesh.size() + chunk->opaqueMesh.size();
             
-            std::vector<uint16_t> data(idCount, id);
+            std::vector<int> data(idCount, id);
             
             
-        
-            this->chunkIDBuffer.addData< uint16_t >(&data);
+            std::cout << "chunkIdBuffer add\n";
+            this->chunkIDBuffer.addData< int >(&data);
 
             // vec4 due to std430 in shader
             // this approach passes regular chunk coord to buffer but if we place cam always at 0,0,0 then it won't work
             // this->chunkStorageBuffer->addData<glm::vec4>(glm::vec4(chunk->position,0.0)); 
             // SO we shift chunks pos by camera position
+            std::cout << "chunkStorageBuffer add\n";
             this->chunkStorageBuffer.addData<glm::vec4>(glm::vec4(chunk->position - this->world->player->position,0.0)); 
-
+            std::cout << "meshBuffer add opaque\n";
             this->meshBuffer.addData< CHUNK_MESH_DATATYPE >(chunk->getOpaqueMesh());
+            std::cout << "meshBuffer add transparent\n";
             this->meshBuffer.addData< CHUNK_MESH_DATATYPE >(chunk->getTransparentMesh());
         }
 
@@ -68,7 +70,7 @@ class WebRenderer : public Renderer
             GLCall( glVertexAttribDivisor(2,1) );
 
             chunkIDBuffer.bind();
-            vao.setAttrI(3,1,GL_UNSIGNED_SHORT,sizeof(uint16_t),0);
+            vao.setAttrI(3,1,GL_INT,sizeof(int),0);
             GLCall( glVertexAttribDivisor(3,1) );
 
             crosshairVAO.bind();
@@ -82,6 +84,7 @@ class WebRenderer : public Renderer
         
     public:
         void renderGame(GameState *gameState) override {
+            
             this->shader.use();
 
             this->shader.setInt("playerState",world->player->state);
@@ -90,26 +93,34 @@ class WebRenderer : public Renderer
             this->shader.setMatrixFloat("model",GL_FALSE,*(gameState->model));
         
             this->shader.setVec3Float("LightPos",glm::vec3(256,100,256));
-        
+
+            
+            
         
             this->vao.bind();
+            std::cout << "MESH: " << this->meshBuffer.getFilledDataCount() << "\n";
             GLCall( glDrawArraysInstanced(GL_TRIANGLES,0,BLOCK_FACE_VERTICES_COUNT,this->meshBuffer.getFilledDataCount()) );
+            
+  
         }
 
         void fillBuffers() override {
             unsigned long long sizeToAlloc = this->world->getWorldMeshSize();
-
-            this->meshBuffer.allocateBuffer(sizeToAlloc);
             
-            this->chunkIDBuffer.allocateBuffer(sizeof(uint16_t) * (sizeToAlloc / sizeof(CHUNK_MESH_DATATYPE)));
-            this->chunkStorageBuffer.allocateBuffer(sizeof(glm::vec4) * this->world->chunkRenderRefs.size()); // vec4 due to std430 in shader
-            uint16_t i=0; 
+            std::cout << "Allocating buffers...\n";
+            this->meshBuffer.allocateBuffer(sizeToAlloc);
+            this->chunkIDBuffer.allocateBuffer(sizeof(int) * (sizeToAlloc / sizeof(CHUNK_MESH_DATATYPE)));
+            this->chunkStorageBuffer.allocateBuffer(sizeof(glm::vec4) * 1024); // vec4 due to std430 in shader
+            std::cout << "Allocated buffers\n";
+            int i=0; 
             for (Chunk* chunk : this->world->chunkRenderRefs){
                 
                 addChunkToBuffers(chunk, i);
                 i++;
             }
-            GLCall( glBindBufferBase(GL_UNIFORM_BUFFER, 3, this->chunkStorageBuffer.getId()) );
+            GLuint blockIndex = glGetUniformBlockIndex(shader.getProgram(), "ubo");
+            glUniformBlockBinding(shader.getProgram(), blockIndex, 0);
+            GLCall( glBindBufferBase(GL_UNIFORM_BUFFER, 0, this->chunkStorageBuffer.getId()) );
         }
      
 };

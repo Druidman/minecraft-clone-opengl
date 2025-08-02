@@ -276,7 +276,7 @@ void Chunk::genChunkMesh()
 
 unsigned long long Chunk::getMeshSize()
 {
-    unsigned long long size = sizeof(CHUNK_MESH_DATATYPE) * (transparentMesh.size() + opaqueMesh.size());
+    unsigned long long size = (unsigned long long)sizeof(CHUNK_MESH_DATATYPE) * (transparentMesh.size() + opaqueMesh.size());
     return size;
 }
 

@@ -71,7 +71,6 @@ public:
     void render(GameState *gameState){
        
         GLCall( glClearColor(0.68f, 0.84f, 0.9f, 1.0f) );
-        GLCall( glClear(GL_COLOR_BUFFER_BIT) );
         GLCall( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
 
         renderGame(gameState);
@@ -101,7 +100,7 @@ public:
             
         }       
         
-        this->chunkStorageBuffer.fillData<glm::vec4>(&chunkPositions);
+        this->chunkStorageBuffer.fillData<glm::vec4>(&chunkPositions, sizeof(glm::vec4) * 1024);
     }
 };
 
