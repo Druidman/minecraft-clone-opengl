@@ -77,7 +77,9 @@ class World{ //world class
         void addChunk(Chunk* chunk);
         void genRenderChunkRefs();
         void genWorldBase();
-        void updateChunks();
+        bool updateChunks();
+        void updateWorld();
+        bool checkThreads();
 
         unsigned long long getWorldMeshSize();
 

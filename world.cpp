@@ -116,66 +116,22 @@ void World::genWorldBase()
     }
     
 }
-
-void World::updateChunks()
-{
-    std::list<ThreadWorkingData>::iterator dataIterator = threadsWorkingData.begin();
-    std::list<std::thread>::iterator threadIterator = threads.begin();
-    bool anything = false;
-    while (dataIterator != threadsWorkingData.end() && threadIterator != threads.end()){
-        bool isReady = dataIterator->ready;
-        for (int chunkInd =0; chunkInd < CHUNK_COLUMNS; chunkInd++){
-            if (!dataIterator->chunksDone[chunkInd]){
-                continue;
-            }
-            int row = dataIterator->chunkPositions[chunkInd].row;
-            int col = dataIterator->chunkPositions[chunkInd].col;
-            if (row < 0 || col < 0){
-                continue;
-            }
-            if (row >= CHUNK_ROWS || col >= CHUNK_COLUMNS){
-                continue;
-            }
-            anything = true;
-            this->chunks[row][col] = dataIterator->chunksToPrepare[chunkInd];
-       
-            dataIterator->chunksDone[chunkInd] = false;
-            
-        }
-
-        if (isReady){
-            anything = true;
-            dataIterator = threadsWorkingData.erase(dataIterator);
-            threadIterator->join();
-            threadIterator = threads.erase(threadIterator);
-        }
-        else {
-            dataIterator++;
-            threadIterator++;
-        }
-    }
-    genRenderChunkRefs();
-    if (anything){
-        renderer->fillBuffers();
-    }
-    
-    
-    
-
+bool World::updateChunks(){ 
+    // returns true when this->chunks has been changed
     if (this->lastPlayerPos == player->position){
-        return ;
+        return false;
     }
     lastPlayerPos = player->position;
     
     std::optional<Chunk* > chunkRes = getChunkByPos(player->position);
     if (!chunkRes.has_value()){
-        return ; // idk what to do
+        return true; // player is outside of the map so we need to update constantly 
 
     }
     Chunk* chunk = chunkRes.value();
     if (lastPlayerChunk == chunk){
-        renderer->fillChunkStorageBuffer();
-        return ; // the same chunk 
+        
+        return true; // the same chunk so only storage buffer requires update but TODO
     }
 
     glm::vec3 positionChange = lastPlayerChunk->position - chunk->position;
@@ -345,7 +301,64 @@ void World::updateChunks()
         spawnChunkPrepareThread(row, chunksDone, chunkPositions);
         // ___
     }
+    
+    
+    return true;
 
+}
+
+bool World::checkThreads(){
+    std::list<ThreadWorkingData>::iterator dataIterator = threadsWorkingData.begin();
+    std::list<std::thread>::iterator threadIterator = threads.begin();
+    bool anything = false;
+    while (dataIterator != threadsWorkingData.end() && threadIterator != threads.end()){
+        
+        bool isReady = dataIterator->ready;
+        for (int chunkInd =0; chunkInd < CHUNK_COLUMNS; chunkInd++){
+            if (!dataIterator->chunksDone[chunkInd]){
+                continue;
+            }
+            int row = dataIterator->chunkPositions[chunkInd].row;
+            int col = dataIterator->chunkPositions[chunkInd].col;
+            if (row < 0 || col < 0){
+                continue;
+            }
+            if (row >= CHUNK_ROWS || col >= CHUNK_COLUMNS){
+                continue;
+            }
+            anything = true;
+            this->chunks[row][col] = dataIterator->chunksToPrepare[chunkInd];
+       
+            dataIterator->chunksDone[chunkInd] = false;
+            
+        }
+
+        if (isReady){
+            
+            dataIterator = threadsWorkingData.erase(dataIterator);
+            threadIterator->join();
+            threadIterator = threads.erase(threadIterator);
+        }
+        else {
+            dataIterator++;
+            threadIterator++;
+        }
+    }
+    return anything;
+}
+
+void World::updateWorld()
+{
+    bool needUpdate = false;
+    needUpdate |= updateChunks();
+    needUpdate |= checkThreads();
+
+    if (needUpdate){
+        genRenderChunkRefs();
+        renderer->fillBuffers();
+    }
+    
+    
     
 
 }

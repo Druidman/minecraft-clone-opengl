@@ -8,6 +8,7 @@
 #include "vendor/glm/glm.hpp"
 
 #include "betterGL.h"
+#include <map>
 
 std::string Shader::readFile(std::string path)
 {
