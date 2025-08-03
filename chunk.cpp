@@ -1,7 +1,6 @@
 #include "chunk.h"
 #include "world.h"
-#include <cstring>
-#include <optional>
+
 
 Chunk::Chunk(glm::vec3 chunkPosition, World *world)
 {
@@ -122,11 +121,19 @@ bool Chunk::canAddBlockFace(Face face, Block *currentBlock)
         checkBlockFacePos.x == world->worldMiddle.x + (world->WIDTH / 2) || 
         checkBlockFacePos.z == world->worldMiddle.z + (world->WIDTH / 2))
     {
-        return true;
+        return false; // TO DO 
     }
-    else {
+    
+    if (isInChunkBorder(checkBlockPos)){
         res = getBlock(checkBlockPos);
     }
+    else {
+        if (currentBlock->type == WATER){
+            return false;
+        }
+    }
+        
+    
     
     
     if (!res.has_value())
@@ -277,7 +284,7 @@ void Chunk::genChunkMesh()
 
 unsigned long long Chunk::getMeshSize()
 {
-    unsigned long long size = sizeof(CHUNK_MESH_DATATYPE) * (transparentMesh.size() + opaqueMesh.size());
+    unsigned long long size = (unsigned long long)sizeof(CHUNK_MESH_DATATYPE) * (transparentMesh.size() + opaqueMesh.size());
     return size;
 }
 
@@ -292,11 +299,23 @@ glm::vec3 Chunk::getPositionInWorld(int platform, int row, int column){
 }
 
 bool Chunk::isInChunkBorder(Block &block){
-    if (block.position.x > this->position.x + CHUNK_WIDTH ||
-        block.position.x < this->position.x - CHUNK_WIDTH ||
-        block.position.z > this->position.z + CHUNK_WIDTH ||
-        block.position.z < this->position.z - CHUNK_WIDTH ||
+    if (block.position.x > this->position.x + (CHUNK_WIDTH / 2) ||
+        block.position.x < this->position.x - (CHUNK_WIDTH / 2) ||
+        block.position.z > this->position.z + (CHUNK_WIDTH / 2) ||
+        block.position.z < this->position.z - (CHUNK_WIDTH / 2) ||
         block.position.y < this->position.y)
+    {
+        return false;// adding to chunk outside its border
+    }
+    return true;
+}
+bool Chunk::isInChunkBorder(glm::vec3 pos)
+{
+    if (pos.x > this->position.x + (CHUNK_WIDTH / 2) ||
+        pos.x < this->position.x - (CHUNK_WIDTH / 2) ||
+        pos.z > this->position.z + (CHUNK_WIDTH / 2) ||
+        pos.z < this->position.z - (CHUNK_WIDTH / 2) ||
+        pos.y < this->position.y)
     {
         return false;// adding to chunk outside its border
     }

@@ -1,16 +1,21 @@
 #ifndef CHUNK_H
 #define CHUNK_H
 
-#include "betterGL.h"
-#include "vendor/glm/glm.hpp"
+
 #include <vector>
 #include <algorithm>
 #include <cmath>
+#include <cstring>
+#include <optional>
+
+
+#include "betterGL.h"
+#include "vendor/glm/glm.hpp"
 
 #include "block.h"
 #include "models.h"
 
-#include <optional>
+
 
 
 class World;
@@ -64,6 +69,7 @@ public:
     void addBlockFace(Face face, Block *block, std::vector<CHUNK_MESH_DATATYPE> *buffer);
     bool canAddBlockFace(Face face, Block *currentBlock);
     bool isInChunkBorder(Block &block);
+    bool isInChunkBorder(glm::vec3 pos);
     
 
     void genChunk();

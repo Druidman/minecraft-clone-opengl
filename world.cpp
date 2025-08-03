@@ -1,14 +1,46 @@
 #include "world.h"
-#include "renderer.h"
-#include <optional>
 
+#include <vector>
+#include <optional>
+#include <list>
+#include <thread>
 #define FNL_IMPL
 #include "vendor/fastNoise/FastNoiseLite.h"
+
+#include "chunk.h"
+#include "player.h"
+#include "renderer.h"
+
+
 
 float World::genTreeChance(glm::vec2 positionXZ){
     float gen = fnlGetNoise2D(&this->treeNoise, positionXZ.y, positionXZ.x);
     gen = (gen + 1) / 2;
     return gen;
+}
+
+fnl_state World::genBlockNoiseFunc()
+{
+    fnl_state noise = fnlCreateState();
+    noise.fractal_type = FNL_FRACTAL_FBM;
+    noise.frequency = 0.005;
+    noise.octaves = 4;
+    noise.seed = 1652;
+
+    noise.noise_type = FNL_NOISE_PERLIN;
+    return noise;
+}
+
+fnl_state World::genTreeNoiseFunc()
+{
+    fnl_state noise = fnlCreateState();
+    noise.fractal_type = FNL_FRACTAL_NONE;
+    noise.frequency = 0.005;
+    noise.octaves = 4;
+    noise.seed = 1337;
+
+    noise.noise_type = FNL_NOISE_VALUE;
+    return noise;
 }
 
 void World::initChunks()
@@ -84,67 +116,22 @@ void World::genWorldBase()
     }
     
 }
-
-void World::updateChunks()
-{
-    std::list<ThreadWorkingData>::iterator dataIterator = threadsWorkingData.begin();
-    std::list<std::thread>::iterator threadIterator = threads.begin();
-    bool anything = false;
-    while (dataIterator != threadsWorkingData.end() && threadIterator != threads.end()){
-        bool isReady = dataIterator->ready;
-        for (int chunkInd =0; chunkInd < CHUNK_COLUMNS; chunkInd++){
-            if (!dataIterator->chunksDone[chunkInd]){
-                continue;
-            }
-            int row = dataIterator->chunkPositions[chunkInd].row;
-            int col = dataIterator->chunkPositions[chunkInd].col;
-            if (row < 0 || col < 0){
-                continue;
-            }
-            if (row >= CHUNK_ROWS || col >= CHUNK_COLUMNS){
-                continue;
-            }
-            anything = true;
-            this->chunks[row][col] = dataIterator->chunksToPrepare[chunkInd];
-       
-            dataIterator->chunksDone[chunkInd] = false;
-            
-        }
-
-        if (isReady){
-            dataIterator = threadsWorkingData.erase(dataIterator);
-            threadIterator->join();
-            threadIterator = threads.erase(threadIterator);
-        }
-        else {
-            dataIterator++;
-            threadIterator++;
-        }
-        
-   
-        
-        
-    }
-    genRenderChunkRefs();
-    
-    fillBuffers();
-    
-    
-
+bool World::updateChunks(){ 
+    // returns true when this->chunks has been changed
     if (this->lastPlayerPos == player->position){
-        return ;
+        return false;
     }
     lastPlayerPos = player->position;
     
     std::optional<Chunk* > chunkRes = getChunkByPos(player->position);
     if (!chunkRes.has_value()){
-        return ; // idk what to do
+        return true; // player is outside of the map so we need to update constantly 
 
     }
     Chunk* chunk = chunkRes.value();
     if (lastPlayerChunk == chunk){
-        fillChunkStorageBuffer();
-        return ; // the same chunk 
+        
+        return true; // the same chunk so only storage buffer requires update but TODO
     }
 
     glm::vec3 positionChange = lastPlayerChunk->position - chunk->position;
@@ -314,15 +301,82 @@ void World::updateChunks()
         spawnChunkPrepareThread(row, chunksDone, chunkPositions);
         // ___
     }
+    
+    
+    return true;
 
+}
+
+bool World::checkThreads(){
+    std::list<ThreadWorkingData>::iterator dataIterator = threadsWorkingData.begin();
+    std::list<std::thread>::iterator threadIterator = threads.begin();
+    bool anything = false;
+    while (dataIterator != threadsWorkingData.end() && threadIterator != threads.end()){
+        
+        bool isReady = dataIterator->ready;
+        for (int chunkInd =0; chunkInd < CHUNK_COLUMNS; chunkInd++){
+            if (!dataIterator->chunksDone[chunkInd]){
+                continue;
+            }
+            int row = dataIterator->chunkPositions[chunkInd].row;
+            int col = dataIterator->chunkPositions[chunkInd].col;
+            if (row < 0 || col < 0){
+                continue;
+            }
+            if (row >= CHUNK_ROWS || col >= CHUNK_COLUMNS){
+                continue;
+            }
+            anything = true;
+            this->chunks[row][col] = dataIterator->chunksToPrepare[chunkInd];
+       
+            dataIterator->chunksDone[chunkInd] = false;
+            
+        }
+
+        if (isReady){
+            
+            dataIterator = threadsWorkingData.erase(dataIterator);
+            threadIterator->join();
+            threadIterator = threads.erase(threadIterator);
+        }
+        else {
+            dataIterator++;
+            threadIterator++;
+        }
+    }
+    return anything;
+}
+
+void World::updateWorld()
+{
+    bool needUpdate = false;
+    needUpdate |= updateChunks();
+    needUpdate |= checkThreads();
+
+    if (needUpdate){
+        genRenderChunkRefs();
+        renderer->fillBuffers();
+    }
+    
+    
     
 
 }
 
-void World::init(Player *player, Camera *camera)
+World::World(int width, glm::vec3 worldMiddle, Renderer *renderer)
+{ 
+    this->WIDTH = width;
+    this->CHUNK_ROWS = this->WIDTH / CHUNK_WIDTH;
+    this->CHUNK_COLUMNS = this->WIDTH / CHUNK_WIDTH;
+    this->RENDER_DISTANCE = CHUNK_ROWS * 2;
+    this->renderer = renderer;
+    this->worldMiddle = worldMiddle;
+}
+
+void World::init(Player *player)
 {
     this->player = player;
-    this->camera = camera;
+  
     lastPlayerPos = player->position;
     initChunks();
     std::optional< Chunk* > chunkRes = getChunkByPos(lastPlayerPos);
@@ -353,52 +407,6 @@ void World::addChunk(Chunk *chunk)
     }
 
     this->chunks[row][col] = *chunk;
-}
-
-void World::addChunkToBuffers(Chunk *chunk)
-{
-    DrawArraysIndirectCommand data = {
-        BLOCK_FACE_VERTICES_COUNT,
-        (uint)chunk->transparentMesh.size() + (uint)chunk->opaqueMesh.size(),
-        0,
-        (uint)(this->meshBuffer->getFilledDataSize() / sizeof(CHUNK_MESH_DATATYPE))
-    };
-    this->chunkDrawBuffer->addData<DrawArraysIndirectCommand>(data);
-
-    // vec4 due to std430 in shader
-    // this approach passes regular chunk coord to buffer but if we place cam always at 0,0,0 then it won't work
-    // this->chunkStorageBuffer->addData<glm::vec4>(glm::vec4(chunk->position,0.0)); 
-    // SO we shift chunks pos by camera position
-    this->chunkStorageBuffer->addData<glm::vec4>(glm::vec4(chunk->position - player->position,0.0)); 
-
-    this->meshBuffer->addData< CHUNK_MESH_DATATYPE >(chunk->getOpaqueMesh());
-    this->meshBuffer->addData< CHUNK_MESH_DATATYPE >(chunk->getTransparentMesh());
-}
-
-void World::fillBuffers()
-{
-    unsigned long long sizeToAlloc = getWorldMeshSize();
-
-    this->meshBuffer->allocateBuffer(sizeToAlloc);
-    this->chunkDrawBuffer->allocateBuffer(sizeof(DrawArraysIndirectCommand) * chunkRenderRefs.size());
-    this->chunkStorageBuffer->allocateBuffer(sizeof(glm::vec4) * chunkRenderRefs.size()); // vec4 due to std430 in shader
-    for (Chunk* chunk : chunkRenderRefs){
-        
-        addChunkToBuffers(chunk);
-    }
-    GLCall( glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, this->chunkStorageBuffer->getId()) );
-}
-
-void World::fillChunkStorageBuffer()
-{   
-    std::vector<glm::vec4> chunkPositions;
-    for (Chunk* chunk : chunkRenderRefs){
-        
-        chunkPositions.push_back(glm::vec4(chunk->position - player->position,0.0));
-        
-    }       
-    
-    this->chunkStorageBuffer->updateData<glm::vec4>(&chunkPositions, 0);
 }
 
 unsigned long long World::getWorldMeshSize()
@@ -461,3 +469,38 @@ std::optional<Block *> World::getBlockByPos(glm::vec3 pointPositionInWorld, bool
     }
     return blockRes.value();
 }
+
+void World::prepareChunks(ThreadWorkingData &data)
+{
+        
+    for (Chunk &chunk : data.chunksToPrepare){
+  
+        chunk.genChunk();
+       
+    }
+    int ind=0;
+    for (Chunk &chunk : data.chunksToPrepare){
+ 
+        chunk.genChunkMesh();
+
+        data.chunksDone[ind] = true;
+        ind++;
+        
+    }
+    data.ready = true;
+
+}
+void World::spawnChunkPrepareThread(std::vector<Chunk> chunksToPrepare, std::vector<bool> chunksDone, std::vector<ChunkVecPos> chunkPositions) {
+    threadsWorkingData.push_back({
+        chunksToPrepare,
+        chunksDone,
+        chunkPositions
+    });
+    threads.emplace_back(
+        &World::prepareChunks, 
+        this,
+        std::ref(threadsWorkingData.back())
+    );
+  
+    
+};

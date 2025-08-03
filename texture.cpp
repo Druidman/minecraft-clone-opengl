@@ -1,7 +1,8 @@
-#include <iostream>
-#include "betterGL.h"
-
 #include "texture.h"
+
+#include <iostream>
+
+#include "betterGL.h"
 #include "vendor/stb_image/stb_image.h"
 
 

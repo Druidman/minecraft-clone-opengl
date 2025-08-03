@@ -1,6 +1,6 @@
 #ifndef VERTEX_ARRAY_H
 #define VERTEX_ARRAY_H
-
+#include "betterGL.h"
 
 class VertexArray{
     private:
@@ -9,6 +9,6 @@ class VertexArray{
         VertexArray();
         void bind();
         void setAttr(GLuint index, int count, GLenum type, GLsizei stride, size_t offset);
-        void setAttrI(GLuint index, int count, GLsizei stride, size_t offset);
+        void setAttrI(GLuint index, int count, GLenum type, GLsizei stride, size_t offset);
 };
 #endif

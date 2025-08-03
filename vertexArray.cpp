@@ -1,6 +1,6 @@
-#include "betterGL.h"
-
 #include "vertexArray.h"
+#include "vendor/glad/glad.h"
+#include "betterGL.h"
 
 
 VertexArray::VertexArray()
@@ -22,10 +22,10 @@ void VertexArray::setAttr(GLuint index, int count, GLenum type, GLsizei stride, 
     GLCall( glVertexAttribPointer(index, count, type, GL_FALSE, stride, (void*)offset) );
     
 }
-void VertexArray::setAttrI(GLuint index, int count, GLsizei stride, size_t offset)
+void VertexArray::setAttrI(GLuint index, int count, GLenum type ,GLsizei stride, size_t offset)
 {
     bind();
     GLCall( glEnableVertexAttribArray(index) );
-    GLCall( glVertexAttribIPointer(index, count, GL_INT, stride, (void*)offset) );
+    GLCall( glVertexAttribIPointer(index, count, type, stride, (void*)offset) );
     
 }
