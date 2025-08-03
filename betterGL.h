@@ -1,11 +1,9 @@
 #ifndef BETTER_GL_H
 #define BETTER_GL_H
 
-#ifdef __EMSCRIPTEN__
-    #include <GLES3/gl3.h>
-#else
-    #include <GL/glew.h>
-#endif
+
+#include "vendor/glad/glad.h"
+
 
 #include <iostream>
 #include <string>

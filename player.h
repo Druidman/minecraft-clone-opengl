@@ -7,12 +7,14 @@
 #include "vendor/glm/glm.hpp"
 #include "chunk.h"
 #include "camera.h"
-#include "world.h"
+
 #include "math.h"
 
 #include <optional>
 
 #include <GLFW/glfw3.h>
+
+class World;
 
 const int PLAYER_RANGE = 100;
 const int PLAYER_SPEED = 10;

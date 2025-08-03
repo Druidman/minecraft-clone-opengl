@@ -5,7 +5,7 @@ layout (location = 1) in float vertexType;
 layout (location = 2) in float vertexData; 
 
 layout(std430, binding = 3) buffer ssbo{
-    vec3 chunkPositions[4];
+    vec3 chunkPositions[];
 };
 
 
