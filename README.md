@@ -1,6 +1,6 @@
 # Minecraft opengl clone written in c++
 Reason? `Why not...`
-![alt text](https://github.com/Druidman/minecraft-clone-opengl/tree/main/gameplay/forGithub.png?raw=true)
+![screenshot](gameplay/forGithub.png)
  
 # How to run
 1. Download latest release and run it
