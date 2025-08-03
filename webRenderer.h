@@ -109,6 +109,7 @@ class WebRenderer : public Renderer
             
             std::cout << "Allocating buffers...\n";
             this->meshBuffer.allocateBuffer(sizeToAlloc);
+            std::cout << "SIZE: " << sizeToAlloc << "\n";
             this->chunkIDBuffer.allocateBuffer(sizeof(int) * (sizeToAlloc / sizeof(CHUNK_MESH_DATATYPE)));
             this->chunkStorageBuffer.allocateBuffer(sizeof(glm::vec4) * 1024); // vec4 due to std430 in shader
             std::cout << "Allocated buffers\n";

@@ -69,6 +69,7 @@ public:
     void addBlockFace(Face face, Block *block, std::vector<CHUNK_MESH_DATATYPE> *buffer);
     bool canAddBlockFace(Face face, Block *currentBlock);
     bool isInChunkBorder(Block &block);
+    bool isInChunkBorder(glm::vec3 pos);
     
 
     void genChunk();
