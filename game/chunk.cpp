@@ -82,7 +82,7 @@ void Chunk::addBlockFace(Face face, Block *block, std::vector<CHUNK_MESH_DATATYP
     buffer->push_back(packedFloat);
 }
 
-bool Chunk::canAddBlockFace(Face face, Block *currentBlock)
+inline bool Chunk::canAddBlockFace(Face face, Block *currentBlock)
 {
     glm::vec3 checkBlockPos = currentBlock->position;
     glm::vec3 checkBlockFacePos = checkBlockPos;
@@ -115,14 +115,7 @@ bool Chunk::canAddBlockFace(Face face, Block *currentBlock)
     }
     std::optional<Block *> res;
     // lets check if face is on border of world
-    if (checkBlockFacePos.y == 0 || 
-        checkBlockFacePos.x == world->worldMiddle.x - (world->WIDTH / 2) || 
-        checkBlockFacePos.z == world->worldMiddle.z - (world->WIDTH / 2) || 
-        checkBlockFacePos.x == world->worldMiddle.x + (world->WIDTH / 2) || 
-        checkBlockFacePos.z == world->worldMiddle.z + (world->WIDTH / 2))
-    {
-        return false; // TO DO 
-    }
+    
     
     if (isInChunkBorder(checkBlockPos)){
         res = getBlock(checkBlockPos);

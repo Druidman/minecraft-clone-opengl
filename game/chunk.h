@@ -74,7 +74,7 @@ public:
 
     void genChunk();
     void genChunkMesh();
-    void meshBlock(int platform, int row, int col);
+    inline void meshBlock(int platform, int row, int col);
     unsigned long long getMeshSize();
     std::vector<CHUNK_MESH_DATATYPE>* getOpaqueMesh(){return &opaqueMesh;};
     std::vector<CHUNK_MESH_DATATYPE>* getTransparentMesh(){return &transparentMesh;};

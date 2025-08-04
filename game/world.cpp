@@ -13,6 +13,8 @@
 
 
 
+
+
 float World::genTreeChance(glm::vec2 positionXZ){
     float gen = fnlGetNoise2D(&this->treeNoise, positionXZ.y, positionXZ.x);
     gen = (gen + 1) / 2;
@@ -116,22 +118,22 @@ void World::genWorldBase()
     }
     
 }
-bool World::updateChunks(){ 
+
+BufferType World::updateChunks(){ 
     // returns true when this->chunks has been changed
     if (this->lastPlayerPos == player->position){
-        return false;
+        return NONE;
     }
     lastPlayerPos = player->position;
     
     std::optional<Chunk* > chunkRes = getChunkByPos(player->position);
     if (!chunkRes.has_value()){
-        return true; // player is outside of the map so we need to update constantly 
-
+        return MESH_BUFFER; // player is outside of the map so we need to update constantly 
     }
     Chunk* chunk = chunkRes.value();
     if (lastPlayerChunk == chunk){
         
-        return true; // the same chunk so only storage buffer requires update but TODO
+        return STORAGE_BUFFER; // the same chunk so only storage buffer requires update but TODO
     }
 
     glm::vec3 positionChange = lastPlayerChunk->position - chunk->position;
@@ -303,14 +305,14 @@ bool World::updateChunks(){
     }
     
     
-    return true;
+    return MESH_BUFFER;
 
 }
 
-bool World::checkThreads(){
+BufferType World::checkThreads(){
     std::list<ThreadWorkingData>::iterator dataIterator = threadsWorkingData.begin();
     std::list<std::thread>::iterator threadIterator = threads.begin();
-    bool anything = false;
+    BufferType anything = NONE;
     while (dataIterator != threadsWorkingData.end() && threadIterator != threads.end()){
         
         bool isReady = dataIterator->ready;
@@ -326,7 +328,7 @@ bool World::checkThreads(){
             if (row >= CHUNK_ROWS || col >= CHUNK_COLUMNS){
                 continue;
             }
-            anything = true;
+            anything = MESH_BUFFER;
             this->chunks[row][col] = dataIterator->chunksToPrepare[chunkInd];
        
             dataIterator->chunksDone[chunkInd] = false;
@@ -349,18 +351,23 @@ bool World::checkThreads(){
 
 void World::updateWorld()
 {
-    bool needUpdate = false;
-    needUpdate |= updateChunks();
-    needUpdate |= checkThreads();
-
-    if (needUpdate){
+    BufferType needUpdate2 = updateChunks();
+    BufferType needUpdate3 = checkThreads();
+    if (needUpdate2 == MESH_BUFFER){
         genRenderChunkRefs();
         renderer->fillBuffers();
+        
+    }
+    else if (needUpdate2 == STORAGE_BUFFER && needUpdate3 != MESH_BUFFER){
+        genRenderChunkRefs();
+        renderer->fillChunkStorageBuffer();
+    }
+    else if (needUpdate3 == MESH_BUFFER){
+        genRenderChunkRefs();
+        renderer->fillBuffers();
+        
     }
     
-    
-    
-
 }
 
 World::World(int width, glm::vec3 worldMiddle, Renderer *renderer)

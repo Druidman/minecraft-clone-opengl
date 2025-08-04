@@ -18,6 +18,9 @@ class Player;
 class Renderer;
 class Chunk;
 
+enum BufferType {
+    STORAGE_BUFFER, MESH_BUFFER, ALL, NONE
+};
 struct ChunkVecPos{
     int row,col;
 };
@@ -77,9 +80,9 @@ class World{ //world class
         void addChunk(Chunk* chunk);
         void genRenderChunkRefs();
         void genWorldBase();
-        bool updateChunks();
+        BufferType updateChunks();
         void updateWorld();
-        bool checkThreads();
+        BufferType checkThreads();
 
         unsigned long long getWorldMeshSize();
 
