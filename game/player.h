@@ -67,7 +67,7 @@ class Player{
             this->world = world;
             this->window = window;
         };
-        void process_input(double delta, bool &playerMoved);
+        void process_input(double delta);
         void destroy_block();
         void place_block();
 

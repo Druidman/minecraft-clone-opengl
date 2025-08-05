@@ -199,7 +199,7 @@ int main()
     #endif
 
     int worldWidth = 512;
-    glm::vec3 worldMiddle = glm::vec3(30000,60.0,30000);
+    glm::vec3 worldMiddle = glm::vec3(3000,60.0,3000);
 
     std::cout << "initializing world\n";
     World world = World(worldWidth, worldMiddle, renderer);

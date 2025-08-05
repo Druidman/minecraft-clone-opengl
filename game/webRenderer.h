@@ -44,7 +44,7 @@ class WebRenderer : public Renderer
             // this->chunkStorageBuffer->addData<glm::vec4>(glm::vec4(chunk->position,0.0)); 
             // SO we shift chunks pos by camera position
 
-            this->chunkStorageBuffer.addData<glm::vec4>(glm::vec4(chunk->position - this->world->player->position,0.0)); 
+            this->chunkStorageBuffer.addData<glm::vec4>(glm::vec4(chunk->position - this->world->player->camera->position,0.0)); 
    
             this->meshBuffer.addData< CHUNK_MESH_DATATYPE >(chunk->getOpaqueMesh());
    

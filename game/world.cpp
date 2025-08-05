@@ -89,6 +89,12 @@ void World::genRenderChunkRefs(){
             
         }
     }
+    
+    std::sort(chunkRenderRefs.begin(), chunkRenderRefs.end(), [this](Chunk* a, Chunk* b){
+        float distA = glm::distance(worldMiddle, a->position);
+        float distB = glm::distance(worldMiddle, b->position);
+        return distA > distB;
+    });
 }
 
 int World::genBlockHeight(glm::vec2 positionXZ){
@@ -128,7 +134,7 @@ BufferType World::updateChunks(){
     
     std::optional<Chunk* > chunkRes = getChunkByPos(player->position);
     if (!chunkRes.has_value()){
-        return MESH_BUFFER; // player is outside of the map so we need to update constantly 
+        return NONE; // player is outside of the map so we do nothing
     }
     Chunk* chunk = chunkRes.value();
     if (lastPlayerChunk == chunk){
@@ -354,12 +360,13 @@ void World::updateWorld()
     BufferType needUpdate2 = updateChunks();
     BufferType needUpdate3 = checkThreads();
     if (needUpdate2 == MESH_BUFFER){
+        
         genRenderChunkRefs();
         renderer->fillBuffers();
         
     }
     else if (needUpdate2 == STORAGE_BUFFER && needUpdate3 != MESH_BUFFER){
-        genRenderChunkRefs();
+
         renderer->fillChunkStorageBuffer();
     }
     else if (needUpdate3 == MESH_BUFFER){

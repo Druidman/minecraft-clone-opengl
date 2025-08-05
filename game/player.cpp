@@ -1,11 +1,12 @@
 #include "player.h"
 #include "world.h"
+#include "renderer.h"
 
 void Player::updateState()
 {
     std::optional<Chunk*> res = this->world->getChunkByPos(position);
     if (!res.has_value()){
-        this->state = IN_AIR;
+        this->state = IN_AIR; // player is outside of the map
         return ;
     }
 
@@ -13,7 +14,7 @@ void Player::updateState()
 
     std::optional< Block* > blockRes = chunk->getBlock(position + CAMERA_OFFSET);
     
-    if (!blockRes.has_value()){ //NONE BLOCK so player is not standing on anything
+    if (!blockRes.has_value()){ // player is falling
         this->state = IN_AIR;
         return ;
     } 
@@ -32,46 +33,35 @@ void Player::updateState()
 }
 
 void Player::updateAction()
-{
+{   
     std::optional<Chunk*> res = this->world->getChunkByPos(position);
     if (!res.has_value()){
-        this->action = FALLING;
+        this->action = FALLING; //player is outside of the map
+        std::cout << "falling1\n";
         return ;
     }
 
     Chunk* chunk = res.value();
 
-    std::optional< Block* > blockRes = chunk->getBlock(position - glm::vec3(0.0,0.5,0.0), true); // underBlock
+    std::optional< Block* > blockRes = chunk->getBlock(position - glm::vec3(0.0,0.5,0.0)); // underBlock
     
     if (!blockRes.has_value()){
-        this->action = FALLING;
+        this->action = FALLING; // no block under player
+        std::cout << "falling2\n";
         return ;
     } 
 
     Block *block = blockRes.value();
-    if (block->type != NONE_BLOCK && block->type != WATER){
-        this->action = WALKING;
+    if (block->type != WATER){
+        this->action = WALKING; //player is on solid block
         move_to(glm::vec3(this->position.x, block->position.y + 0.5, this->position.z));
+        
         return;
     }
     else{
-        this->action = FALLING; // Who cares?
+        this->action = FALLING; // player is in water
+        std::cout << "falling3\n";
     }
-
-    // NAH man we don't need that SKIP IT dont event read it 
-
-
-    // // player is standing on water or none block so we check if he stands fully on it
-    
-    // glm::vec3 playerBottomLeft = position - glm::vec3(0.5,0.0,0.5);
-    // glm::vec3 playerBottomRight = position - glm::vec3(-0.5,0.0,0.5);
-    // glm::vec3 playerTopLeft = position + glm::vec3(-0.5,0.0,0.5);
-    // glm::vec3 playerTopRight = position + glm::vec3(0.5,0.0,0.5);
-
-    // // now that we have all corners lets check if any of them is within any of surrounding cubes
-    
-
-    
 }
 
 void Player::move_by(glm::vec3 dir)
@@ -83,47 +73,23 @@ void Player::move_by(glm::vec3 dir)
     }
     glm::vec3 changePos = position + dir;
 
-    std::optional<Block *> blockRes = world->getBlockByPos(changePos, true);
+    std::optional<Block *> blockRes = world->getBlockByPos(changePos);
+
     if (!blockRes.has_value()){
-        return ;
-    }
-    if (
-        blockRes.value()->type == NONE_BLOCK ||
-        blockRes.value()->type == WATER
-    ){
         position += dir;
         adjustCamera();
         return;
     }
-    // now we have block where we want to move so we will move player on top of it
-    // BUT only when there is no block above
-
-    std::optional<Block *> blockRes2 = world->getBlockByPos(changePos + glm::vec3(0.0,1.0,0.0)); // + 1.0 on y axis
-    if (blockRes2.has_value()){
-        if (blockRes2.value()->type != WATER){
-            return; // there is block on our height so we can't move
-        }   
-        
+    if (blockRes.value()->type == WATER){
+        position += dir;
+        adjustCamera();
+        return;
     }
-    // there was no block so we move player up 
-    // BUT only if the block we want to get in isn't noneblock, water ...
+    
     position += dir;
-    if (
-        blockRes.value()->type != NONE_BLOCK &&
-        blockRes.value()->type != WATER
-    ){
-        position.y = blockRes.value()->position.y;
-    }
-    
-    
+    position.y = blockRes.value()->position.y + 0.5;
     adjustCamera();
 
-
-
-
-    
-    
-    // check if move allowed and if so then do some stuff
 
     
 }
@@ -139,7 +105,7 @@ void Player::adjustCamera()
     camera->position = position + CAMERA_OFFSET;
 }
 
-void Player::process_input(double delta, bool &playerMoved)
+void Player::process_input(double delta)
 {
     float speed = PLAYER_SPEED * delta;
     glm::vec3 camRight = this->camera->getRightVec();
@@ -162,19 +128,19 @@ void Player::process_input(double delta, bool &playerMoved)
 
     if (glfwGetKey(window,GLFW_KEY_W)){
         move_by(stepForward);
-        playerMoved = true;
+
     }
     if (glfwGetKey(window,GLFW_KEY_S)){
         move_by(-stepForward);
-        playerMoved = true;
+     
     }
     if (glfwGetKey(window,GLFW_KEY_D)){
         move_by(stepRight);
-        playerMoved = true;
+
     }
     if (glfwGetKey(window,GLFW_KEY_A)){
         move_by(-stepRight);
-        playerMoved = true;
+    
     }
 
     int leftState = glfwGetMouseButton(window,leftMouseButton);
@@ -210,6 +176,7 @@ void Player::destroy_block()
 
     chunk->removeBlock(hitPos);
     chunk->genChunkMesh();
+    world->renderer->fillBuffers();
     
 }
 
@@ -277,21 +244,26 @@ void Player::place_block()
     Block blockToAdd = Block(STONE,placePos);
     placeChunk->addBlock(blockToAdd);
     placeChunk->genChunkMesh();
+
+
+    world->renderer->fillBuffers();
 }
 
 void Player::update(double delta)
 {
     
-    // updateAction();
-    // updateState();
-    bool playerMoved = false;
+    updateAction();
+    updateState();
+
     
     if (action == FALLING && !fly){
+        std::cout << "fallll\n";
         move_by(glm::vec3(0.0,-5.0,0.0) * (float)delta);
-        playerMoved = true;
+        
     }
 
-    process_input(delta, playerMoved);
+    process_input(delta);
+    world->renderer->fillChunkStorageBuffer();
 }
 
 void Player::buttonPressed(int button)

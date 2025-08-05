@@ -10,6 +10,7 @@
 
 #include "vendor/fastNoise/FastNoiseLite.h"
 #include "vendor/glm/glm.hpp"
+
 #include "block.h"
 #include <thread>
 

@@ -36,7 +36,7 @@ class DesktopRenderer : public Renderer
             // this approach passes regular chunk coord to buffer but if we place cam always at 0,0,0 then it won't work
             // this->chunkStorageBuffer->addData<glm::vec4>(glm::vec4(chunk->position,0.0)); 
             // SO we shift chunks pos by camera position
-            this->chunkStorageBuffer.addData<glm::vec4>(glm::vec4(chunk->position - this->world->player->position,0.0)); 
+            this->chunkStorageBuffer.addData<glm::vec4>(glm::vec4(chunk->position - this->world->player->camera->position,0.0)); 
 
             this->meshBuffer.addData< CHUNK_MESH_DATATYPE >(chunk->getOpaqueMesh());
             this->meshBuffer.addData< CHUNK_MESH_DATATYPE >(chunk->getTransparentMesh());

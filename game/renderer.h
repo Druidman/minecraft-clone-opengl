@@ -96,7 +96,7 @@ public:
         std::vector<glm::vec4> chunkPositions;
         for (Chunk* chunk : this->world->chunkRenderRefs){
             
-            chunkPositions.push_back(glm::vec4(chunk->position - this->world->player->position,0.0));
+            chunkPositions.push_back(glm::vec4(chunk->position - this->world->player->camera->position,0.0));
             
         }       
         

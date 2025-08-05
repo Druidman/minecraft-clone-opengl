@@ -36,14 +36,7 @@ inline std::optional<BlockIntersection> shootRay(
     
         target += direction * stepSize;
 
-        std::optional<Chunk*> result = world->getChunkByPos(target);
-        if (!result.has_value()){
-            continue ;
-        }
-
-        Chunk *currentChunk = result.value();
-
-        std::optional<Block*> blockRes = currentChunk->getBlock(target);
+        std::optional<Block*> blockRes = world->getBlockByPos(target);
         if (!blockRes.has_value()){
             continue ;
         }
@@ -59,10 +52,15 @@ inline std::optional<BlockIntersection> shootRay(
         if (!foundBlock){
             continue;
         }
+        std::optional<Chunk*> chunkRes = world->getChunkByPos(target);
+        if (!chunkRes.has_value()){
+            ExitError("MATH","ARE YOU MESSING WITH MEMORY????");
+        }
+        
 
         BlockIntersection intersection;
         intersection.block = block;
-        intersection.chunk = currentChunk;
+        intersection.chunk = chunkRes.value();
         intersection.hitPos = target;
         
         return intersection;
