@@ -218,7 +218,7 @@ void Chunk::genChunk()
             
             addBlock(block);
             
-            fillUnderBlock(block);
+            // fillUnderBlock(block);
             
         }
     }

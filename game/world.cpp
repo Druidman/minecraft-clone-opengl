@@ -106,22 +106,18 @@ int World::genBlockHeight(glm::vec2 positionXZ){
 void World::genWorldBase()
 {
     std::cout << "Generating world...\n";
-
     for (std::vector<Chunk> &chunkRow : this->chunks){
         for (Chunk &chunk : chunkRow){
-            
             chunk.genChunk();
-            
         }
     }
     for (std::vector<Chunk> &chunkRow : this->chunks){
         for (Chunk &chunk : chunkRow){
-            if (!chunk.chunkReady){
-                continue;
-            }
             chunk.genChunkMesh();
         }
     }
+
+    
     
 }
 
@@ -367,7 +363,8 @@ void World::updateWorld()
     }
     else if (needUpdate2 == STORAGE_BUFFER && needUpdate3 != MESH_BUFFER){
 
-        renderer->fillChunkStorageBuffer();
+        genRenderChunkRefs();
+        renderer->fillBuffers();
     }
     else if (needUpdate3 == MESH_BUFFER){
         genRenderChunkRefs();
@@ -382,7 +379,7 @@ World::World(int width, glm::vec3 worldMiddle, Renderer *renderer)
     this->WIDTH = width;
     this->CHUNK_ROWS = this->WIDTH / CHUNK_WIDTH;
     this->CHUNK_COLUMNS = this->WIDTH / CHUNK_WIDTH;
-    this->RENDER_DISTANCE = CHUNK_ROWS * 2;
+    this->RENDER_DISTANCE = CHUNK_ROWS / 2;
     this->renderer = renderer;
     this->worldMiddle = worldMiddle;
 }
@@ -486,16 +483,18 @@ std::optional<Block *> World::getBlockByPos(glm::vec3 pointPositionInWorld, bool
 
 void World::prepareChunks(ThreadWorkingData &data)
 {
-        
+    
     for (Chunk &chunk : data.chunksToPrepare){
   
         chunk.genChunk();
+        std::cout << "threadWorking\n";
        
     }
     int ind=0;
     for (Chunk &chunk : data.chunksToPrepare){
  
         chunk.genChunkMesh();
+        std::cout << "threadWorking\n";
 
         data.chunksDone[ind] = true;
         ind++;
