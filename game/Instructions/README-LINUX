@@ -4,6 +4,7 @@ To run app
     - in file explorer or
     - in game directory run: chmod +x minecraftClone-linux
 - in game directory run: ./minecraftClone-linux 
+- wait for world to generate
 
 How to play:
 - classic wasd movement

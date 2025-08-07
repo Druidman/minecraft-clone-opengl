@@ -242,6 +242,7 @@ int main()
         exitApp = true;
         std::cout << "\nexiting\n";
         delete renderer;
+        world.~World();
         glfwTerminate();
     #endif
     

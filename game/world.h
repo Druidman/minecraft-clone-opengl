@@ -71,6 +71,7 @@ class World{ //world class
         std::list< ThreadWorkingData > threadsWorkingData;
     public:
         World(int width, glm::vec3 worldMiddle, Renderer* renderer);
+        ~World();
         
         void init(Player *player);
     public:

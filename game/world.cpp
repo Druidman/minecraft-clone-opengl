@@ -382,11 +382,23 @@ World::World(int width, glm::vec3 worldMiddle, Renderer *renderer)
     this->RENDER_DISTANCE = CHUNK_ROWS / 2;
     this->renderer = renderer;
     this->worldMiddle = worldMiddle;
+
 }
+
+World::~World()
+{
+    for (std::thread &thread : threads) {
+        if (thread.joinable()) {
+            thread.join();
+        }
+    }
+}
+
 
 void World::init(Player *player)
 {
     this->player = player;
+
   
     lastPlayerPos = player->position;
     initChunks();

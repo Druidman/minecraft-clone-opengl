@@ -1,6 +1,8 @@
 To run app
 - unzip downloaded file
-- run minecraftClone-win.exe file
+- run main.exe file
+- watch out for antivirus, it may block the app due to unknown publisher so you need to allow it
+- wait for world to generate
 
 How to play:
 - classic wasd movement
