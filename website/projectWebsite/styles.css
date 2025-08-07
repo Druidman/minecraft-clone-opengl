@@ -27,28 +27,26 @@ body {
     justify-content: center;
     align-items: flex-start;
     flex-direction: column;
+    background-color: #2d2d2d;
 }
 
 main{
     width: 100%;
     height: 95%;
-    background-color: #2d2d2d;
+    background-color: inherit;
     display: flex;
     justify-content: center;
     align-items: center;
 }
-
+    
 footer {
     width: 100%;
     height: 5%;
-}
-
-.mainBox {
-    padding: 10px;
-    background-color: #1e1e1e;
-    border-radius: 5%;
     display: flex;
     
+    justify-content: center;
+    align-items: center;
+    background-color: inherit;
 }
 
 #welcomeScreen {
@@ -158,4 +156,23 @@ footer {
 
 
 }
-
+footer div {
+    width: 40px;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: inherit;
+    border: 1px solid #2596be;
+    transition: 500ms;
+}
+footer div:hover {
+    width: 100%;
+    
+}
+#githubLogo {
+    width: 30px;
+    height: 30px;
+    
+    
+}

@@ -34,3 +34,9 @@ document.getElementById("webPlayButton").addEventListener("click",(event)=>{
 document.getElementById("macPlayButton").addEventListener("click",(event)=>{
     // N/ A
 })
+
+
+document.getElementById("githubLink").addEventListener("click",(event)=>{
+    window.open("https://github.com/Druidman/minecraft-clone-opengl", "_blank");
+    console.log("GitHub logo clicked");
+})
