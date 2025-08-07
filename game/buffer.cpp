@@ -6,7 +6,6 @@ Buffer::Buffer(GLenum bufferType)
     GLCall( glGenBuffers(1,&m_bo) );
     this->bufferType = bufferType;
     bind();
-
 }
 
 void Buffer::bind()
