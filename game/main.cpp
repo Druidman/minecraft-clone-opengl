@@ -110,7 +110,7 @@ void loop(){
     state->world->player->update(delta);
 
     double startWorldUpdateTime = glfwGetTime();
-    state->world->updateWorld();
+    state->world->updateWorld(delta);
     double endWorldUpdateTime = glfwGetTime();
     
     

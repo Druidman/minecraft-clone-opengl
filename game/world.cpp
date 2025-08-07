@@ -351,8 +351,18 @@ BufferType World::checkThreads(){
     return anything;
 }
 
-void World::updateWorld()
+void World::updateSun(double delta){
+    sunPosition = glm::vec3(0.0,WIDTH,0.0);
+    glm::mat4 rotate = glm::rotate(glm::mat4(1.0f),glm::radians(sunAngle),glm::vec3(1.0,0.0,1.0));
+    sunPosition = glm::vec4(sunPosition,0.0) * rotate;
+    sunPosition += worldMiddle;
+
+    sunAngle += 6 * delta;
+}
+
+void World::updateWorld(double delta)
 {
+    updateSun(delta);
     BufferType needUpdate2 = updateChunks();
     BufferType needUpdate3 = checkThreads();
     if (needUpdate2 == MESH_BUFFER){

@@ -63,12 +63,15 @@ class World{ //world class
     
         Renderer *renderer;
         glm::vec3 worldMiddle;
+        glm::vec3 sunPosition;
 
         glm::vec3 lastPlayerPos;
         Chunk* lastPlayerChunk;
 
         std::list< std::thread > threads;
         std::list< ThreadWorkingData > threadsWorkingData;
+
+        float sunAngle = 0.0;
     public:
         World(int width, glm::vec3 worldMiddle, Renderer* renderer);
         ~World();
@@ -78,12 +81,13 @@ class World{ //world class
         int genBlockHeight(glm::vec2 positionXZ);
         float genTreeChance(glm::vec2 positionXZ);
 
+        void updateSun(double delta);
         
         void addChunk(Chunk* chunk);
         void genRenderChunkRefs();
         void genWorldBase();
         BufferType updateChunks();
-        void updateWorld();
+        void updateWorld(double delta);
         BufferType checkThreads();
 
         unsigned long long getWorldMeshSize();
