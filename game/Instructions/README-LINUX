@@ -1,9 +1,9 @@
 To run app
 - unzip downloaded file
-- make minecraftClone-linux file executable:
+- make main file executable:
     - in file explorer or
-    - in game directory run: chmod +x minecraftClone-linux
-- in game directory run: ./minecraftClone-linux 
+    - in game directory run: chmod +x main
+- in game directory run: ./main
 - wait for world to generate
 
 How to play:
