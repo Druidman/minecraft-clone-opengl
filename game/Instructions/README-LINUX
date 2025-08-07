@@ -1,0 +1,19 @@
+To run app
+- unzip downloaded file
+- make minecraftClone-linux file executable:
+    - in file explorer or
+    - in game directory run: chmod +x minecraftClone-linux
+- in game directory run: ./minecraftClone-linux 
+
+How to play:
+- classic wasd movement
+- mouse control
+- left click: destroy block
+- right click: place block
+- space: free mouse from window
+- enter: trap mouse in window
+- f: toggle fly mode
+- esc: exit game
+
+! THANKS FOR DOWNLOAD !
+enjoy

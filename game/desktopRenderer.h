@@ -74,7 +74,7 @@ class DesktopRenderer : public Renderer
             this->shader.setMatrixFloat("view",GL_FALSE,*(gameState->view));
             this->shader.setMatrixFloat("model",GL_FALSE,*(gameState->model));
 
-            this->shader.setVec3Float("LightPos",glm::vec3(256,100,256));
+            this->shader.setVec3Float("LightPos",world->worldMiddle + glm::vec3(0.0,100,0.0) - world->player->camera->position);
 
 
             this->vao.bind();
