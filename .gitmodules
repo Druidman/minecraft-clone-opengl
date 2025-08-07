@@ -1,0 +1,3 @@
+[submodule "website/projectWebsite"]
+	path = website/projectWebsite
+	url = https://github.com/Druidman/Druidman.github.io.git
