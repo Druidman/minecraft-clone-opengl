@@ -241,7 +241,7 @@ void Player::place_block()
     }
 
     Chunk *placeChunk = res.value();
-    Block blockToAdd = Block(STONE,placePos);
+    Block blockToAdd = Block(LEAF,placePos);
     placeChunk->addBlock(blockToAdd);
     placeChunk->genChunkMesh();
 

@@ -1,6 +1,6 @@
 #include "chunk.h"
 #include "world.h"
-
+#include "player.h"
 
 Chunk::Chunk(glm::vec3 chunkPosition, World *world)
 {
@@ -198,6 +198,20 @@ void Chunk::meshBlock(int platform, int row, int col){
     }
 }
 
+void Chunk::sortTransparentFaces()
+{
+
+    std::sort(transparentMesh.begin(),transparentMesh.end(),[this](CHUNK_MESH_DATATYPE face1, CHUNK_MESH_DATATYPE face2){
+        glm::vec3 pos1 = getPositionInWorld((((int)face1 >> 12) & 255),(((int)face1 >> 4) & 255),((int)face1 & 15));
+        glm::vec3 pos2 = getPositionInWorld((((int)face2 >> 12) & 255),(((int)face2 >> 4) & 255),((int)face2 & 15));
+        
+        float dist1 = glm::distance(this->world->player->camera->position, pos1);
+        float dist2 = glm::distance(this->world->player->camera->position, pos2);   
+        return dist1 > dist2;
+    });
+    
+}
+
 void Chunk::genChunk()
 {
     for (int i =0; i< CHUNK_WIDTH ; i++){
@@ -271,6 +285,8 @@ void Chunk::genChunkMesh()
             }
         }
     }
+    sortTransparentFaces();
+    // important
     this->renderReady = true;
 }
 

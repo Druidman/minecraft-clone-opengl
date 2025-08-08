@@ -71,7 +71,7 @@ public:
     bool isInChunkBorder(Block &block);
     bool isInChunkBorder(glm::vec3 pos);
     
-
+    void sortTransparentFaces();
     void genChunk();
     void genChunkMesh();
     inline void meshBlock(int platform, int row, int col);
