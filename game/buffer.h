@@ -9,7 +9,7 @@
 
 typedef unsigned long long int BufferInt;
 class Buffer{
-    private:
+    protected:
         GLenum bufferType;
         unsigned int m_bo;
         BufferInt bufferSize = 0;
