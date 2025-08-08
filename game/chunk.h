@@ -14,6 +14,7 @@
 
 #include "block.h"
 #include "models.h"
+#include "buffer.h"
 
 
 
@@ -58,6 +59,12 @@ public:
     bool chunkReady = false;
     bool renderReady = false;
 
+    bool hasBufferSpace = false;
+    // both in bytes
+    BufferInt buffer_zone_start = 0;
+    BufferInt buffer_zone_end = 0;
+    //
+
 public:
     Chunk(glm::vec3 chunkPosition, World* world);
     
@@ -100,3 +107,4 @@ public:
 
 
 #endif
+
