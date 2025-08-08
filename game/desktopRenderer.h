@@ -22,6 +22,7 @@ class DesktopRenderer : public Renderer
         Buffer baseVbo = Buffer(GL_ARRAY_BUFFER);
         Buffer meshBuffer = Buffer(GL_ARRAY_BUFFER);
         Buffer chunkDrawBuffer = Buffer(GL_DRAW_INDIRECT_BUFFER);
+        
     private:
         void addChunkToBuffers(Chunk *chunk){
             DrawArraysIndirectCommand data = {

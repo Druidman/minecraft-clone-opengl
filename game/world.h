@@ -14,11 +14,6 @@
 #include "block.h"
 #include <thread>
 
-
-
-
-
-
 class Player;
 class Renderer;
 class Chunk;

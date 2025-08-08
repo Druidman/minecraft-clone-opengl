@@ -23,6 +23,4 @@ void Buffer::allocateBuffer(unsigned long long int size)
     bind();
     GLCall( glBufferData(this->bufferType, (size_t)size, nullptr, GL_STATIC_DRAW) );
     this->bufferSize = size;
-    this->dataFilled = 0;
-    this->dataCount = 0;
 }
