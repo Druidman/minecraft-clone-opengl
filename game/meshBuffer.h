@@ -33,11 +33,15 @@ be called at chunk destructor
 // we inherit as private to district acces to the Buffer methods on MeshBuffer object
 class MeshBuffer : private Buffer {
     private:
-        BufferInt BUFFER_PADDING = 10; // expressed in %
-        
+        BufferInt BUFFER_PADDING = 20; // expressed in %
+        BufferInt CHUNK_PADDING = 10;
+
         // keeps free zones in bytes as pairs: (B_start, B_end)
-        // if empty then entire buffer free
+        // if empty then entire buffer taken
         std::vector< std::pair<BufferInt, BufferInt> > bufferFreeZones;
+    private:
+        void mergeFreeZones();
+        std::optional<int> getChunkBufferSpaceIndex(BufferInt meshSize);
     public:
         MeshBuffer() : Buffer(GL_ARRAY_BUFFER){};
         bool allocateMeshBuffer(BufferInt meshSize);

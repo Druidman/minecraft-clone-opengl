@@ -24,38 +24,40 @@ class Buffer{
         void allocateBuffer(BufferInt size);
 
         template <typename T>
-        bool updateData(const std::vector< T > *data, BufferInt dataByteOffset);
+        bool updateData(const std::vector< T > *data, BufferInt dataByteStart, BufferInt dataByteEnd);
         template <typename T>
-        bool updateData(const T data, BufferInt dataByteOffset);
+        bool updateData(const T data,BufferInt dataByteStart, BufferInt dataByteEnd);
 };
 
 template <typename T>
-bool Buffer::updateData(const std::vector< T > *data, BufferInt dataByteOffset){
+bool Buffer::updateData(const std::vector< T > *data, BufferInt dataByteStart, BufferInt dataByteEnd){
     BufferInt dataSize = data->size() * sizeof(T);
     if (
-        dataByteOffset < 0 ||
         dataSize == 0 ||
-        dataByteOffset + dataSize > this->bufferSize
+        dataByteStart == dataByteEnd ||
+        dataByteEnd > this->bufferSize || 
+        dataByteStart + dataSize > dataByteEnd ||
     ){
         return false;
     }
     bind();
-    GLCall( glBufferSubData(bufferType, dataByteOffset, dataByteSize, data->data()) );
+    GLCall( glBufferSubData(bufferType, dataByteStart, dataByteSize, data->data()) );
     return true;
 }
 
 template <typename T>
-bool Buffer::updateData(const T data, BufferInt dataByteOffset){
+bool Buffer::updateData(const T data, BufferInt dataByteStart, BufferInt dataByteEnd){
     BufferInt dataSize = sizeof(T);
     if (
-        dataByteOffset < 0 ||
         dataSize == 0 ||
-        dataByteOffset + dataSize > this->bufferSize
+        dataByteStart == dataByteEnd ||
+        dataByteEnd > this->bufferSize || 
+        dataByteStart + dataSize > dataByteEnd ||
     ){
         return false;
     }
     bind();
-    GLCall( glBufferSubData(bufferType, dataByteOffset, dataByteSize, &data) );
+    GLCall( glBufferSubData(bufferType, dataByteStart, dataByteSize, &data) );
     return true;
 }
 
