@@ -7,7 +7,7 @@ new variables:
    
 we would allocate on `MESHBUFFER`  as much space as base generated world mesh takes + something (safe zone)  
 
-# Functions
+# Functions MESHBUFFER
 `insertChunkToBuffer(Chunk* chunk)`   
    
 1. give chunk start/end position in buffer (end would have extra safe zone)  
@@ -24,3 +24,18 @@ be called at chunk destructor
 `updateChunkBuffer(Chunk* chunk)`:  
   
 1. glSubData at chunk->start - chunk->end (replaces whole mesh)  
+
+
+# Functions RENDERER
+`addChunkToBuffers(Chunk* chunk)`
+
+1. MESHBUFFER -> insertChunkToBuffer()
+2. INDIRECTBUFFER( Buffer ):
+     DrawArraysIndirectCommand data = {
+          BLOCK_FACE_VERTICES_COUNT,
+          (uint)chunk->transparentMesh.size() + (uint)chunk->opaqueMesh.size(),
+          0,
+          (uint)(this->chunk.buffer_begin / sizeof(CHUNK_MESH_DATATYPE))
+     };
+3. CHUNKSTORAGEBUFFER( Buffer ):
+     this->chunkStorageBuffer.addData<glm::vec4>(glm::vec4(chunk->position - this->world->player->camera->position,0.0)); 

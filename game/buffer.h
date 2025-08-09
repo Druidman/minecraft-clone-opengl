@@ -11,17 +11,22 @@ typedef unsigned long long int BufferInt;
 class Buffer{
     protected:
         GLenum bufferType;
+        GLenum lastBoundTarget;
         unsigned int m_bo;
         BufferInt bufferSize = 0;
     public:
         
         Buffer(GLenum bufferType);
+        ~Buffer();
         void bind();
         void unBind();
+        void bindAsRead();
+        void bindAsWrite();
         unsigned int getId(){return m_bo;};
         BufferInt getBufferSize(){ return bufferSize; };
 
         void allocateBuffer(BufferInt size);
+        void expandBuffer(BufferInt by);
 
         template <typename T>
         bool updateData(const std::vector< T > *data, BufferInt dataByteStart, BufferInt dataByteEnd);

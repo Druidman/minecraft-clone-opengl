@@ -41,7 +41,10 @@ class MeshBuffer : private Buffer {
         std::vector< std::pair<BufferInt, BufferInt> > bufferFreeZones;
     private:
         void mergeFreeZones();
-        std::optional<int> getChunkBufferSpaceIndex(BufferInt meshSize);
+        void addBufferFreeZone(BufferInt start, BufferInt end);
+        void expandBufferByChunk(Chunk* chunk);
+        int assignChunkBufferZone(Chunk* chunk);
+        int getChunkBufferSpaceIndex(Chunk* chunk);
     public:
         MeshBuffer() : Buffer(GL_ARRAY_BUFFER){};
         bool allocateMeshBuffer(BufferInt meshSize);

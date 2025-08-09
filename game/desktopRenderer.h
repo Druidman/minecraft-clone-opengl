@@ -9,6 +9,7 @@
 #include "world.h"
 #include "player.h"
 #include "betterGL.h"
+#include "meshBuffer.h"
 
 class DesktopRenderer : public Renderer
 {
@@ -20,18 +21,20 @@ class DesktopRenderer : public Renderer
         
         VertexArray vao;
         Buffer baseVbo = Buffer(GL_ARRAY_BUFFER);
-        Buffer meshBuffer = Buffer(GL_ARRAY_BUFFER);
+        MeshBuffer meshBuffer = MeshBuffer();
         Buffer chunkDrawBuffer = Buffer(GL_DRAW_INDIRECT_BUFFER);
         
     private:
         void addChunkToBuffers(Chunk *chunk){
+            meshBuffer.insertChunkToBuffer(chunk);
+
             DrawArraysIndirectCommand data = {
                 BLOCK_FACE_VERTICES_COUNT,
                 (uint)chunk->transparentMesh.size() + (uint)chunk->opaqueMesh.size(),
                 0,
-                (uint)(this->meshBuffer.getFilledDataSize() / sizeof(CHUNK_MESH_DATATYPE))
+                (uint)(chunk->buffer_zone_start / sizeof(CHUNK_MESH_DATATYPE))
             };
-            this->chunkDrawBuffer.addData<DrawArraysIndirectCommand>(data);
+            this->chunkDrawBuffer.update<DrawArraysIndirectCommand>(data);
 
             // vec4 due to std430 in shader
             // this approach passes regular chunk coord to buffer but if we place cam always at 0,0,0 then it won't work
