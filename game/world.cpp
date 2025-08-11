@@ -389,7 +389,7 @@ World::World(int width, glm::vec3 worldMiddle, Renderer *renderer)
     this->WIDTH = width;
     this->CHUNK_ROWS = this->WIDTH / CHUNK_WIDTH;
     this->CHUNK_COLUMNS = this->WIDTH / CHUNK_WIDTH;
-    this->RENDER_DISTANCE = CHUNK_ROWS / 2;
+    this->RENDER_DISTANCE = 512;
     this->renderer = renderer;
     this->worldMiddle = worldMiddle;
 
