@@ -12,19 +12,20 @@ Buffer::~Buffer()
 {
     if (m_bo != 0) {
         GLCall( glDeleteBuffers(1,&m_bo) ); 
+        std::cout << "delete Buffer \n";
     }
     
 }
 
 void Buffer::bind()
 {
-    GLCall( glBindBuffer(this->bufferType,m_bo) );
+    GLCall( glBindBuffer(bufferType,m_bo) );
     lastBoundTarget = this->bufferType;
 }
 
 void Buffer::unBind()
 {
-    GLCall( glBindBuffer(lastBoundTarget,0) );
+    GLCall( glBindBuffer(bufferType,0) );
 }
 
 void Buffer::bindAsRead(){
@@ -38,8 +39,9 @@ void Buffer::bindAsWrite(){
 
 void Buffer::allocateBuffer(unsigned long long int size)
 {
+    std::cout << "allocating: " << size << " in buffer: "<< m_bo << "\n";
     bind();
-    GLCall( glBufferData(this->bufferType, (size_t)size, nullptr, GL_STATIC_DRAW) );
+    GLCall( glBufferData(bufferType, size, nullptr, GL_STATIC_DRAW) );
     this->bufferSize = size;
 }
 

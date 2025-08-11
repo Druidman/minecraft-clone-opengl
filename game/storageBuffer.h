@@ -1,5 +1,5 @@
-#ifndef MESHBUFFER_H
-#define MESHBUFFER_H
+#ifndef STORAGEBUFFER_H
+#define STORAGEBUFFER_H
 
 #include <vector>
 #include <utility>
@@ -11,12 +11,19 @@
 #include "betterGL.h"
 #include "chunk.h"
 #include "buffer.h"
+#include "world.h"
 
-class MeshBuffer : public DynamicBuffer {
+
+class StorageBuffer : public DynamicBuffer {
+    private:
+        World *world;
+
     protected:
         virtual BufferInt getChunkDataSize(Chunk* chunk) override;
     public:
-        MeshBuffer() : DynamicBuffer(GL_ARRAY_BUFFER){};
+        StorageBuffer() : DynamicBuffer(GL_SHADER_STORAGE_BUFFER){};
+        void init(World *world);
+        void setBindingPoint(int port);
     
         virtual bool updateChunkBuffer(Chunk* chunk) override;
         

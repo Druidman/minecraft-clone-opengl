@@ -12,12 +12,7 @@
 
 class World;
 class Chunk;
-struct DrawArraysIndirectCommand{
-    unsigned int  count;
-    unsigned int  instanceCount;
-    unsigned int  first;
-    unsigned int  baseInstance;
-};
+
 
 struct GameState {
 
@@ -49,12 +44,10 @@ protected:
     VertexArray crosshairVAO = VertexArray();
     Buffer crosshairVBO = Buffer(GL_ARRAY_BUFFER);
     
-    Buffer chunkStorageBuffer;
-    
     World* world;
 
 protected:
-    Renderer(Buffer csb) : chunkStorageBuffer(csb){
+    Renderer(){
 
     }
     virtual void initBuffers() = 0;
@@ -76,6 +69,10 @@ public:
         renderGame(gameState);
         renderUi();
 
+        GLenum err;
+        while ((err = glGetError()) != GL_NO_ERROR) {
+            printf("OpenGL Error: %x\n", err);
+        }
         /* Swap front and back buffers */
         glfwSwapBuffers(gameState->window);
 
@@ -90,18 +87,8 @@ public:
     };
 
     virtual void fillBuffers() = 0;
+ 
     
-    void fillChunkStorageBuffer()
-    {   
-        std::vector<glm::vec4> chunkPositions;
-        for (Chunk* chunk : this->world->chunkRenderRefs){
-            
-            chunkPositions.push_back(glm::vec4(chunk->position - this->world->player->camera->position,0.0));
-            
-        }       
-        
-        this->chunkStorageBuffer.fillData<glm::vec4>(&chunkPositions, sizeof(glm::vec4) * 1024);
-    }
 };
 
 #endif

@@ -1,5 +1,5 @@
-#ifndef MESHBUFFER_H
-#define MESHBUFFER_H
+#ifndef INDIRECTBUFFER_H
+#define INDIRECTBUFFER_H
 
 #include <vector>
 #include <utility>
@@ -12,11 +12,11 @@
 #include "chunk.h"
 #include "buffer.h"
 
-class MeshBuffer : public DynamicBuffer {
+class IndirectBuffer : public DynamicBuffer {
     protected:
         virtual BufferInt getChunkDataSize(Chunk* chunk) override;
     public:
-        MeshBuffer() : DynamicBuffer(GL_ARRAY_BUFFER){};
+        IndirectBuffer() : DynamicBuffer(GL_DRAW_INDIRECT_BUFFER){};
     
         virtual bool updateChunkBuffer(Chunk* chunk) override;
         

@@ -365,22 +365,22 @@ void World::updateWorld(double delta)
     updateSun(delta);
     BufferType needUpdate2 = updateChunks();
     BufferType needUpdate3 = checkThreads();
-    if (needUpdate2 == MESH_BUFFER){
+    // if (needUpdate2 == MESH_BUFFER){
         
-        genRenderChunkRefs();
-        renderer->fillBuffers();
+    //     genRenderChunkRefs();
+    //     renderer->fillBuffers();
         
-    }
-    else if (needUpdate2 == STORAGE_BUFFER && needUpdate3 != MESH_BUFFER){
+    // }
+    // else if (needUpdate2 == STORAGE_BUFFER && needUpdate3 != MESH_BUFFER){
 
-        genRenderChunkRefs();
-        renderer->fillBuffers();
-    }
-    else if (needUpdate3 == MESH_BUFFER){
-        genRenderChunkRefs();
-        renderer->fillBuffers();
+    //     genRenderChunkRefs();
+    //     renderer->fillBuffers();
+    // }
+    // else if (needUpdate3 == MESH_BUFFER){
+    //     genRenderChunkRefs();
+    //     renderer->fillBuffers();
         
-    }
+    // }
     
 }
 

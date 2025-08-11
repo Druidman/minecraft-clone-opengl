@@ -198,7 +198,7 @@ int main()
         #error Is this webGlInstance or desktopInstance? Why is it not defined??
     #endif
 
-    int worldWidth = 512;
+    int worldWidth = 32;
     glm::vec3 worldMiddle = glm::vec3(3000,180.0,3000);
 
     std::cout << "initializing world\n";

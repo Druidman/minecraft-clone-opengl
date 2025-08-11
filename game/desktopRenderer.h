@@ -9,7 +9,10 @@
 #include "world.h"
 #include "player.h"
 #include "betterGL.h"
+
 #include "meshBuffer.h"
+#include "indirectBuffer.h"
+#include "storageBuffer.h"
 
 class DesktopRenderer : public Renderer
 {
@@ -21,33 +24,33 @@ class DesktopRenderer : public Renderer
         
         VertexArray vao;
         Buffer baseVbo = Buffer(GL_ARRAY_BUFFER);
+
         MeshBuffer meshBuffer = MeshBuffer();
-        Buffer chunkDrawBuffer = Buffer(GL_DRAW_INDIRECT_BUFFER);
+        IndirectBuffer chunkDrawBuffer = IndirectBuffer();
+        StorageBuffer chunkStorageBuffer = StorageBuffer();
         
     private:
         void addChunkToBuffers(Chunk *chunk){
-            meshBuffer.insertChunkToBuffer(chunk);
-
-            DrawArraysIndirectCommand data = {
-                BLOCK_FACE_VERTICES_COUNT,
-                (uint)chunk->transparentMesh.size() + (uint)chunk->opaqueMesh.size(),
-                0,
-                (uint)(chunk->buffer_zone_start / sizeof(CHUNK_MESH_DATATYPE))
+            if (!meshBuffer.insertChunkToBuffer(chunk)){
+                ExitError("DESKTOP_RENDERER","error inserting chunk to meshBuffer");
+                return ;
             };
-            this->chunkDrawBuffer.update<DrawArraysIndirectCommand>(data);
+            if (!chunkDrawBuffer.insertChunkToBuffer(chunk)){
+                ExitError("DESKTOP_RENDERER","error inserting chunk to indirectBuffer");
+                return ;
+            };
+            if (!chunkStorageBuffer.insertChunkToBuffer(chunk)){
+                ExitError("DESKTOP_RENDERER","error inserting chunk to storage Buffer");
+                return ;
+            };
 
-            // vec4 due to std430 in shader
-            // this approach passes regular chunk coord to buffer but if we place cam always at 0,0,0 then it won't work
-            // this->chunkStorageBuffer->addData<glm::vec4>(glm::vec4(chunk->position,0.0)); 
-            // SO we shift chunks pos by camera position
-            this->chunkStorageBuffer.addData<glm::vec4>(glm::vec4(chunk->position - this->world->player->camera->position,0.0)); 
-
-            this->meshBuffer.addData< CHUNK_MESH_DATATYPE >(chunk->getOpaqueMesh());
-            this->meshBuffer.addData< CHUNK_MESH_DATATYPE >(chunk->getTransparentMesh());
+            chunk->buffersSetUp = true;
         }
 
     protected:
         void initBuffers() override {
+            this->chunkStorageBuffer.init(this->world);
+
             vao.bind();
             baseVbo.fillData<float>(&BLOCK_FACE_VERTICES);
 
@@ -68,7 +71,7 @@ class DesktopRenderer : public Renderer
             
         };
     public:
-        DesktopRenderer() : Renderer(Buffer(GL_SHADER_STORAGE_BUFFER)){};
+        DesktopRenderer() : Renderer(){};
     public:
         void renderGame(GameState *gameState) override {
             this->shader.use();
@@ -89,15 +92,14 @@ class DesktopRenderer : public Renderer
         void fillBuffers() override {
             unsigned long long sizeToAlloc = this->world->getWorldMeshSize();
 
-            this->meshBuffer.allocateBuffer(sizeToAlloc);
-            this->chunkDrawBuffer.allocateBuffer(sizeof(DrawArraysIndirectCommand) * this->world->chunkRenderRefs.size());
-            this->chunkStorageBuffer.allocateBuffer(sizeof(glm::vec4) * this->world->chunkRenderRefs.size()); // vec4 due to std430 in shader
+            this->meshBuffer.allocateDynamicBuffer(sizeToAlloc);
+            this->chunkDrawBuffer.allocateDynamicBuffer(sizeof(DrawArraysIndirectCommand) * this->world->chunkRenderRefs.size());
+            this->chunkStorageBuffer.allocateDynamicBuffer(sizeof(StorageBufferType) * this->world->chunkRenderRefs.size());
             for (Chunk* chunk : this->world->chunkRenderRefs){
                 
                 addChunkToBuffers(chunk);
             }
-            GLCall( glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, this->chunkStorageBuffer.getId()) );
+            
         }
-   
 };
 #endif

@@ -8,6 +8,14 @@
 #include <utility>
 
 typedef unsigned long long int BufferInt;
+typedef glm::vec4 StorageBufferType;
+
+struct DrawArraysIndirectCommand{
+    unsigned int  count;
+    unsigned int  instanceCount;
+    unsigned int  first;
+    unsigned int  baseInstance;
+};
 class Buffer{
     protected:
         GLenum bufferType;
@@ -29,10 +37,31 @@ class Buffer{
         void expandBuffer(BufferInt by);
 
         template <typename T>
+        bool fillData(const std::vector< T > *data);
+
+        template <typename T>
+        bool fillData(const T data);
+
+        template <typename T>
         bool updateData(const std::vector< T > *data, BufferInt dataByteStart, BufferInt dataByteEnd);
         template <typename T>
         bool updateData(const T data,BufferInt dataByteStart, BufferInt dataByteEnd);
 };
+template <typename T>
+bool Buffer::fillData(const std::vector< T > *data){
+    bind();
+    GLCall( glBufferData(bufferType, sizeof(T) * data->size(), data->data(), GL_STATIC_DRAW) );
+    this->bufferSize = sizeof(T) * data->size();
+    return true;
+}
+
+template <typename T>
+bool Buffer::fillData(const T data){
+    bind();
+    GLCall( glBufferData(bufferType, sizeof(T), &data, GL_STATIC_DRAW) );
+    this->bufferSize = sizeof(T);
+    return true;
+}
 
 template <typename T>
 bool Buffer::updateData(const std::vector< T > *data, BufferInt dataByteStart, BufferInt dataByteEnd){
@@ -41,12 +70,12 @@ bool Buffer::updateData(const std::vector< T > *data, BufferInt dataByteStart, B
         dataSize == 0 ||
         dataByteStart == dataByteEnd ||
         dataByteEnd > this->bufferSize || 
-        dataByteStart + dataSize > dataByteEnd ||
+        dataByteStart + dataSize > dataByteEnd
     ){
         return false;
     }
     bind();
-    GLCall( glBufferSubData(bufferType, dataByteStart, dataByteSize, data->data()) );
+    GLCall( glBufferSubData(bufferType, dataByteStart, dataSize, data->data()) );
     return true;
 }
 
@@ -57,12 +86,12 @@ bool Buffer::updateData(const T data, BufferInt dataByteStart, BufferInt dataByt
         dataSize == 0 ||
         dataByteStart == dataByteEnd ||
         dataByteEnd > this->bufferSize || 
-        dataByteStart + dataSize > dataByteEnd ||
+        dataByteStart + dataSize > dataByteEnd
     ){
         return false;
     }
     bind();
-    GLCall( glBufferSubData(bufferType, dataByteStart, dataByteSize, &data) );
+    GLCall( glBufferSubData(bufferType, dataByteStart, dataSize, &data) );
     return true;
 }
 
