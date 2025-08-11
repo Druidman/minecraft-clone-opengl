@@ -4,7 +4,8 @@
 // during testing define TEST and define which instance you are testing:
 // WEB_GL_INSTANCE
 // OPENGL_INSTANCE
-
+// #define TEST
+// #define WEB_GL_INSTANCE
 
 #ifndef TEST 
     #ifdef __EMSCRIPTEN__

@@ -251,16 +251,19 @@ void Player::place_block()
 
 void Player::update(double delta)
 {
+    if (!fly){
+        updateAction();
+        updateState();
+        if (action == FALLING){
+            std::cout << "fallll\n";
+            move_by(glm::vec3(0.0,-5.0,0.0) * (float)delta);
+            
+        }
+    }
     
-    updateAction();
-    updateState();
 
     
-    if (action == FALLING && !fly){
-        std::cout << "fallll\n";
-        move_by(glm::vec3(0.0,-5.0,0.0) * (float)delta);
-        
-    }
+    
 
     process_input(delta);
     // world->renderer->fillChunkStorageBuffer();

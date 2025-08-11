@@ -127,6 +127,7 @@ BufferType World::updateChunks(){
         return NONE;
     }
     lastPlayerPos = player->position;
+
     
     std::optional<Chunk* > chunkRes = getChunkByPos(player->position);
     if (!chunkRes.has_value()){
@@ -134,9 +135,12 @@ BufferType World::updateChunks(){
     }
     Chunk* chunk = chunkRes.value();
     if (lastPlayerChunk == chunk){
+        // player changed pos but is in the same chunk
         
         return STORAGE_BUFFER; // the same chunk so only storage buffer requires update but TODO
     }
+    //player changed chunks
+
 
     glm::vec3 positionChange = lastPlayerChunk->position - chunk->position;
 
