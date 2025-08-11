@@ -35,6 +35,15 @@ bool IndirectBuffer::updateChunkBuffer(Chunk *chunk)
         0,
         (uint)(chunk->bufferZone[GL_ARRAY_BUFFER].first / sizeof(CHUNK_MESH_DATATYPE))
     };
+    std::cout << "Indirect Buffer insertion: \n";
+    std::cout << "Buffer Zone\n";
+    std::cout << "First: " << chunk->bufferZone[bufferType].first;
+    std::cout << "\nSecond: " << chunk->bufferZone[bufferType].second;
+    std::cout << "\nInstances: " << (uint)chunk->transparentMesh.size() + (uint)chunk->opaqueMesh.size();
+    std::cout << "\nBaseInstance: " << (uint)(chunk->bufferZone[GL_ARRAY_BUFFER].first / sizeof(CHUNK_MESH_DATATYPE));
+    std::cout << "\nBaseInstanceBytes: " << (uint)(chunk->bufferZone[GL_ARRAY_BUFFER].first);
+    std::cout << "\n";
+
     if (!updateData<DrawArraysIndirectCommand>(
         data,
         chunk->bufferZone[bufferType].first, 

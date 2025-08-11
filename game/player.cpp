@@ -262,7 +262,7 @@ void Player::update(double delta)
         
     }
 
-    process_input(delta);
+    // process_input(delta);
 
 }
 

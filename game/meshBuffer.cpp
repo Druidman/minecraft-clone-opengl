@@ -30,6 +30,11 @@ bool MeshBuffer::updateChunkBuffer(Chunk *chunk)
 
         insertChunkToBuffer(chunk);
     }
+    std::cout << "Mesh Buffer insertion: \n";
+    std::cout << "Buffer Zone\n";
+    std::cout << "First: " << chunk->bufferZone[bufferType].first;
+    std::cout << "\nSecond: " << chunk->bufferZone[bufferType].second;
+    std::cout << "\n";
     BufferInt transMeshOffset = chunk->getOpaqueMesh()->size() * sizeof(CHUNK_MESH_DATATYPE);
     if (chunk->getOpaqueMesh()->size() != 0){
         if (!updateData<CHUNK_MESH_DATATYPE>(

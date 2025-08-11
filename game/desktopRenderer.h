@@ -30,6 +30,7 @@ class DesktopRenderer : public Renderer
         StorageBuffer chunkStorageBuffer = StorageBuffer();
         
     private:
+        
         void addChunkToBuffers(Chunk *chunk){
             if (!meshBuffer.insertChunkToBuffer(chunk)){
                 ExitError("DESKTOP_RENDERER","error inserting chunk to meshBuffer");
@@ -95,6 +96,7 @@ class DesktopRenderer : public Renderer
             this->meshBuffer.allocateDynamicBuffer(sizeToAlloc);
             this->chunkDrawBuffer.allocateDynamicBuffer(sizeof(DrawArraysIndirectCommand) * this->world->chunkRenderRefs.size());
             this->chunkStorageBuffer.allocateDynamicBuffer(sizeof(StorageBufferType) * this->world->chunkRenderRefs.size());
+            
             for (Chunk* chunk : this->world->chunkRenderRefs){
                 
                 addChunkToBuffers(chunk);

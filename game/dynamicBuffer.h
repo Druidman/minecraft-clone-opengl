@@ -41,6 +41,8 @@ class DynamicBuffer : protected Buffer {
         // if empty then entire buffer taken
         std::vector< std::pair<BufferInt, BufferInt> > bufferFreeZones;
     protected:
+        BufferInt getBufferPadding(BufferInt size);
+        BufferInt getChunkPadding(BufferInt size);
         void mergeFreeZones();
         void expandBufferByChunk(Chunk* chunk);
         

@@ -41,7 +41,11 @@ bool StorageBuffer::updateChunkBuffer(Chunk *chunk)
 
         insertChunkToBuffer(chunk);
     }
-    
+    std::cout << "Storage Buffer insertion: \n";
+    std::cout << "Buffer Zone\n";
+    std::cout << "First: " << chunk->bufferZone[bufferType].first;
+    std::cout << "\nSecond: " << chunk->bufferZone[bufferType].second;
+    std::cout << "\n";
     if (!updateData<StorageBufferType>(
         glm::vec4(chunk->position - world->player->camera->position,0.0),
         chunk->bufferZone[bufferType].first, 

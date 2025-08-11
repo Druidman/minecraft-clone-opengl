@@ -1,5 +1,26 @@
 #include "dynamicBuffer.h"
 
+BufferInt DynamicBuffer::getBufferPadding(BufferInt size)
+{
+    BufferInt padding = static_cast<BufferInt>(size * (BUFFER_PADDING / 100.0));
+    BufferInt alignment = sizeof(CHUNK_MESH_DATATYPE);
+    BufferInt remainder = padding % alignment;
+    if (remainder != 0){
+        padding -= remainder;
+    }
+    return padding;
+}
+BufferInt DynamicBuffer::getChunkPadding(BufferInt size)
+{
+    BufferInt padding = static_cast<BufferInt>(size * (CHUNK_PADDING / 100.0));
+    BufferInt alignment = sizeof(CHUNK_MESH_DATATYPE);
+    BufferInt remainder = padding % alignment;
+    if (remainder != 0){
+        padding -= remainder;
+    }
+    return padding;
+}
+
 void DynamicBuffer::mergeFreeZones()
 {
     if (
@@ -76,9 +97,9 @@ GLenum DynamicBuffer::getBufferType()
 bool DynamicBuffer::allocateDynamicBuffer(BufferInt size)
 {
     std::cout << size << "\n";
-    std::cout << size + static_cast<BufferInt>(size * (BUFFER_PADDING / 100.0)) << '\n';
-    allocateBuffer(size + static_cast<BufferInt>(size * (BUFFER_PADDING / 100.0))); // allocate with padding
-    // allocateBuffer(size); // allocate
+    std::cout << size << "\n"; 
+    allocateBuffer(size + getBufferPadding(size));
+
 
     this->bufferFreeZones.clear();
     this->bufferFreeZones.push_back(std::pair<BufferInt, BufferInt>(0, this->bufferSize));
@@ -98,7 +119,7 @@ bool DynamicBuffer::insertChunkToBuffer(Chunk *chunk)
             return false;
         }
 
-        insertChunkToBuffer(chunk);
+        
         
     }
     return updateChunkBuffer(chunk);
@@ -162,7 +183,7 @@ int DynamicBuffer::assignChunkBufferZone(Chunk* chunk){
     // and loose a lot of usable space so we would do this
     // shrink our zone if it is too big and add newly created zone
 
-    BufferInt maxSpaceSize = dataSize + static_cast<BufferInt>(dataSize * (CHUNK_PADDING / 100.0));
+    BufferInt maxSpaceSize = dataSize + getChunkPadding(dataSize);
 
     BufferInt zoneSpace = this->bufferFreeZones[zoneIndex].second - this->bufferFreeZones[zoneIndex].first;
     if (zoneSpace - maxSpaceSize > 0){
@@ -197,7 +218,7 @@ void DynamicBuffer::expandBufferByChunk(Chunk* chunk){
     BufferInt dataSize = getChunkDataSize(chunk);
     BufferInt oldBufferSize = this->bufferSize;
 
-    expandBuffer(dataSize + static_cast<BufferInt>(dataSize * (BUFFER_PADDING / 100.0)));
+    expandBuffer(dataSize + getBufferPadding(dataSize));
 
     this->bufferFreeZones.push_back(std::pair<BufferInt, BufferInt>(oldBufferSize, this->bufferSize));
 }
