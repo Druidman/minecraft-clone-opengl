@@ -27,6 +27,7 @@ class WebRenderer : public Renderer
         Buffer baseVbo = Buffer(GL_ARRAY_BUFFER);
         Buffer meshBuffer = Buffer(GL_ARRAY_BUFFER);
         Buffer chunkIDBuffer = Buffer(GL_ARRAY_BUFFER);
+        bool firstCall = true;
     private:
         void addChunkToBuffers(Chunk *chunk, int id){
             
@@ -86,6 +87,8 @@ class WebRenderer : public Renderer
         void renderGame(GameState *gameState) override {
             
             this->shader.use();
+            // just for quick working
+            this->shader.setVec3Float("camPos",world->player->camera->position - cameraPosOnChunkUpdate);
 
             this->shader.setInt("playerState",world->player->state);
             this->shader.setMatrixFloat("projection",GL_FALSE,*(gameState->projection));
@@ -105,6 +108,9 @@ class WebRenderer : public Renderer
         }
 
         void fillBuffers() override {
+            if (!firstCall){
+                return;
+            }
             unsigned long long sizeToAlloc = this->world->getWorldMeshSize();
             
             std::cout << "Allocating buffers...\n";
@@ -121,6 +127,10 @@ class WebRenderer : public Renderer
             GLuint blockIndex = glGetUniformBlockIndex(shader.getProgram(), "ubo");
             glUniformBlockBinding(shader.getProgram(), blockIndex, 0);
             GLCall( glBindBufferBase(GL_UNIFORM_BUFFER, 0, this->chunkStorageBuffer.getId()) );
+
+
+            cameraPosOnChunkUpdate = this->world->player->camera->position;
+            firstCall = false;
         }
      
 };

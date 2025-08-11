@@ -37,7 +37,7 @@ class Player{
         int lastRightButtonState = GLFW_RELEASE;
         int lastLeftButtonState = GLFW_RELEASE;
 
-        bool fly = false;
+        bool fly = true;
         int lastFlyButtonState = GLFW_RELEASE;
     private:
         void updateState();

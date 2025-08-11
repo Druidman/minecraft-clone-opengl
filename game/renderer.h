@@ -53,6 +53,8 @@ protected:
     
     World* world;
 
+    glm::vec3 cameraPosOnChunkUpdate = glm::vec3(0.0f);
+
 protected:
     Renderer(Buffer csb) : chunkStorageBuffer(csb){
 
@@ -93,6 +95,7 @@ public:
     
     void fillChunkStorageBuffer()
     {   
+        std::cout << "CHUNK STORAGE BUFFER UPDATE\n";
         std::vector<glm::vec4> chunkPositions;
         for (Chunk* chunk : this->world->chunkRenderRefs){
             
@@ -101,6 +104,8 @@ public:
         }       
         
         this->chunkStorageBuffer.fillData<glm::vec4>(&chunkPositions, sizeof(glm::vec4) * 1024);
+        
+        cameraPosOnChunkUpdate = this->world->player->camera->position;
     }
 };
 

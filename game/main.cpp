@@ -10,6 +10,7 @@
     #ifdef __EMSCRIPTEN__
         #define WEB_GL_INSTANCE
         #include <emscripten/emscripten.h>
+        #include <emscripten/bind.h>
     #else
         #define OPENGL_INSTANCE
     #endif
@@ -38,6 +39,17 @@ typedef unsigned int uint;
 
 
 
+#ifdef __EMSCRIPTEN__
+    void shutdown_game() {
+   
+        emscripten_cancel_main_loop();
+        glfwTerminate();
+    }
+
+    EMSCRIPTEN_BINDINGS(my_module) {
+        emscripten::function("shutdown_game", &shutdown_game);
+    }
+#endif
 
 int WINDOW_WIDTH = 800;
 int WINDOW_HEIGHT = 600;
@@ -88,6 +100,9 @@ void cursor_pos_callback(GLFWwindow *window, double xpos, double ypos){
 }
 
 void loop(){
+    if (exitApp){
+        return ;
+    }
     double delta = glfwGetTime() - lastDeltaTime;
     lastDeltaTime = glfwGetTime();
     double fps = 1 / delta;
@@ -122,11 +137,6 @@ void loop(){
     std::cout << "FULL: " <<   (endGameRunTime - startGameRunTime) * 1000<< "\n" <<\
                  "WORLD: " <<  (endWorldUpdateTime - startWorldUpdateTime) * 1000<< "\n" <<\
                  "RENDER: " << (endRenderTime - startRenderTime) * 1000 << "\n";
-    
-
-
-   
-    
 }
 
 
