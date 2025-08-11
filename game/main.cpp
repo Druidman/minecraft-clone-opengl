@@ -4,8 +4,8 @@
 // during testing define TEST and define which instance you are testing:
 // WEB_GL_INSTANCE
 // OPENGL_INSTANCE
-// #define TEST
-// #define WEB_GL_INSTANCE
+#define TEST
+#define WEB_GL_INSTANCE
 
 #ifndef TEST 
     #ifdef __EMSCRIPTEN__
@@ -23,6 +23,8 @@ typedef unsigned int uint;
 #include <optional>
 
 #include "betterGL.h"
+#include <cstdlib>
+#include <ctime>
 
 
 #include "vendor/glm/glm.hpp"
@@ -155,7 +157,7 @@ void setWindowHints(){
 
 int main()
 {
-
+    std::srand(static_cast<unsigned int>(std::time(nullptr)));
     if (!glfwInit())
         return -1;
     

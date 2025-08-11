@@ -27,7 +27,7 @@ fnl_state World::genBlockNoiseFunc()
     noise.fractal_type = FNL_FRACTAL_FBM;
     noise.frequency = 0.005;
     noise.octaves = 4;
-    noise.seed = 1652;
+    noise.seed = std::rand() % 10000;
 
     noise.noise_type = FNL_NOISE_PERLIN;
     return noise;
@@ -39,7 +39,7 @@ fnl_state World::genTreeNoiseFunc()
     noise.fractal_type = FNL_FRACTAL_NONE;
     noise.frequency = 0.005;
     noise.octaves = 4;
-    noise.seed = 1337;
+    noise.seed = std::rand() % 10000;
 
     noise.noise_type = FNL_NOISE_VALUE;
     return noise;
