@@ -8,6 +8,8 @@ Reason? `Why not...`
  - Install `GLFW`(https://www.glfw.org/download.html)
  - enter: `<main project dir>/game/` dir in terminal
  - In cmd or terminal: `g++ -std=c++20 vendor/stb_image/stb_image.cpp vendor/glad/glad.c *.cpp -o main -lglfw -lGL`
+ - In cmd or terminal: `g++ -std=c++20 vendor/stb_image/stb_image.cpp vendor/glad/glad.c *.cpp -o main -lglfw3 -lopengl32 -lgdi32 -lwinmm -static -static-libgcc -lwinpthread -L/../../glfw// -D_WIN32_WINNT=0x0601`
+
  - run binary
 3. Build from source WASM:
  - Make sure to have emscripten CLI installed
