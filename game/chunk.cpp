@@ -220,13 +220,16 @@ void Chunk::genChunk()
             float z = i + 0.5 + (position.z - (CHUNK_WIDTH / 2)); // i = row
             float yCoord = world->genBlockHeight(glm::vec2(x,z)) + 0.5;
             BlockType blockType = GRASS_DIRT;
-            if (yCoord < 20){
+            if (yCoord < SAND_LEVEL){
                 blockType = SAND;
             }
-            
-            else if (yCoord > 60){
+            else if (yCoord > SNOW_LEVEL){
+                blockType = SNOW;
+            }
+            else if (yCoord > STONE_LEVEL){
                 blockType = STONE;
             }
+            
             
             Block block(blockType,glm::vec3(x, yCoord ,z));
             
@@ -463,9 +466,15 @@ void Chunk::fillUnderBlock(Block &block)
     while (underBlockPos.y >= 0.5){
         int platform = floor(underBlockPos.y) - position.y;
         
+        Block underBlock = Block(STONE, underBlockPos);;
+        if (platform < SAND_LEVEL){
+            underBlock.type = SAND;
+        }
+        else if (platform > SNOW_LEVEL){
+            underBlock.type = SNOW;
+        }
         
-
-        Block underBlock = Block(STONE, underBlockPos);
+        
         addBlock(underBlock);
         
         
@@ -481,7 +490,7 @@ void Chunk::addTree(glm::vec3 positionInWorld)
         addBlock(woodBlock);
     }
     for (glm::vec3 blockPos : TREE::leafPositions){
-        Block leafBlock = Block(LEAF,blockPos + positionInWorld);
+        Block leafBlock = Block(EMPTY_LEAF,blockPos + positionInWorld);
         addBlock(leafBlock);
     }
 }
