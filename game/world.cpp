@@ -10,6 +10,7 @@
 #include "chunk.h"
 #include "player.h"
 #include "renderer.h"
+#include "buffer.h"
 
 
 
@@ -362,9 +363,14 @@ void World::updateSun(double delta){
 
 void World::updateWorld(double delta)
 {
-    updateSun(delta);
-    BufferType needUpdate2 = updateChunks();
-    BufferType needUpdate3 = checkThreads();
+    // updateSun(delta);
+    // BufferType needUpdate2 = updateChunks();
+    // BufferType needUpdate3 = checkThreads();
+
+    for (Chunk* chunk : chunkRenderRefs ){
+        renderer->addChunk(chunk,STORAGE_BUFFER);
+    }
+    
     // if (needUpdate2 == MESH_BUFFER){
         
     //     genRenderChunkRefs();

@@ -109,6 +109,7 @@ bool DynamicBuffer::allocateDynamicBuffer(BufferInt size)
 bool DynamicBuffer::insertChunkToBuffer(Chunk *chunk)
 {   
     if (!chunk->hasBufferSpace[bufferType]){
+        std::cout << "assigning space\n";
         int assignRes = assignChunkBufferZone(chunk);
         if (assignRes == -2){
             // we need to expand buffer because we have no usable space left
@@ -163,6 +164,10 @@ bool DynamicBuffer::deleteChunkFromBuffer(Chunk *chunk)
         return false;
     }
     mergeFreeZones();
+
+    chunk->bufferZone[bufferType].first = 0;
+    chunk->bufferZone[bufferType].second = 0;
+    chunk->hasBufferSpace[bufferType] = false;
     
     return true;
 }
@@ -213,8 +218,6 @@ int DynamicBuffer::assignChunkBufferZone(Chunk* chunk){
 }
 
 void DynamicBuffer::expandBufferByChunk(Chunk* chunk){
-    ExitError("DYNBAMIC BUFFER","can;t expand buffer");
-    return ;
     BufferInt dataSize = getChunkDataSize(chunk);
     BufferInt oldBufferSize = this->bufferSize;
 

@@ -18,10 +18,15 @@ BufferInt StorageBuffer::getChunkDataSize(Chunk *chunk)
 
 bool StorageBuffer::updateChunkBuffer(Chunk *chunk)
 {
+    std::cout << "Storage Buffer insertion: \n";
+    std::cout << "Buffer Zone\n";
+    std::cout << "First: " << chunk->bufferZone[bufferType].first;
+    std::cout << "\nSecond: " << chunk->bufferZone[bufferType].second;
+    std::cout << "\n";
     BufferInt dataSize = getChunkDataSize(chunk);
     if (dataSize > chunk->bufferZone[bufferType].second - chunk->bufferZone[bufferType].first){
         // chunk is to big so we either find new free zone OR reallocate buffer
-        ExitError("BUffer","can't delete");
+        ExitError("BUFFER " + bufferType,"can't delete");
         return false;
 
         // ! in all of these scenarios we need to remove chunk from its current location !
@@ -40,15 +45,12 @@ bool StorageBuffer::updateChunkBuffer(Chunk *chunk)
         }
 
         insertChunkToBuffer(chunk);
-    }
-    std::cout << "Storage Buffer insertion: \n";
-    std::cout << "Buffer Zone\n";
-    std::cout << "First: " << chunk->bufferZone[bufferType].first;
-    std::cout << "\nSecond: " << chunk->bufferZone[bufferType].second;
-    std::cout << "\n";
+    }\
+    
+    std::cout << world->player->camera->position.x << " " << world->player->camera->position.y << "\n";
     if (!updateData<StorageBufferType>(
-        glm::vec4(chunk->position - world->player->camera->position,0.0),
-        chunk->bufferZone[bufferType].first, 
+        glm::vec4(chunk->position - world->player->camera->position,0.0), //  
+        chunk->bufferZone[bufferType].first,
         chunk->bufferZone[bufferType].second
     )){
         return false;
@@ -56,3 +58,4 @@ bool StorageBuffer::updateChunkBuffer(Chunk *chunk)
     
     return true;
 }
+

@@ -66,7 +66,7 @@ void Buffer::expandBuffer(BufferInt by){
     tempBuffer.bindAsRead();
     this->bindAsWrite();
 
-    GLCall( glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, this->bufferSize) ); 
+    GLCall( glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, tempBuffer.bufferSize) ); 
 
     tempBuffer.unBind();
     this->unBind();

@@ -10,8 +10,6 @@ bool MeshBuffer::updateChunkBuffer(Chunk *chunk)
     BufferInt meshSize = getChunkDataSize(chunk);
     if (meshSize > chunk->bufferZone[bufferType].second - chunk->bufferZone[bufferType].first){
         // chunk is to big so we either find new free zone OR reallocate buffer
-        ExitError("BUffer","can't delete");
-        return false;
 
         // ! in all of these scenarios we need to remove chunk from its current location !
         deleteChunkFromBuffer(chunk);
@@ -28,7 +26,9 @@ bool MeshBuffer::updateChunkBuffer(Chunk *chunk)
             return false;
         }
 
-        insertChunkToBuffer(chunk);
+        
+        return insertChunkToBuffer(chunk);
+
     }
     std::cout << "Mesh Buffer insertion: \n";
     std::cout << "Buffer Zone\n";

@@ -27,26 +27,7 @@ class DesktopRenderer : public Renderer
 
         MeshBuffer meshBuffer = MeshBuffer();
         IndirectBuffer chunkDrawBuffer = IndirectBuffer();
-        StorageBuffer chunkStorageBuffer = StorageBuffer();
-        
-    private:
-        
-        void addChunkToBuffers(Chunk *chunk){
-            if (!meshBuffer.insertChunkToBuffer(chunk)){
-                ExitError("DESKTOP_RENDERER","error inserting chunk to meshBuffer");
-                return ;
-            };
-            if (!chunkDrawBuffer.insertChunkToBuffer(chunk)){
-                ExitError("DESKTOP_RENDERER","error inserting chunk to indirectBuffer");
-                return ;
-            };
-            if (!chunkStorageBuffer.insertChunkToBuffer(chunk)){
-                ExitError("DESKTOP_RENDERER","error inserting chunk to storage Buffer");
-                return ;
-            };
-
-            chunk->buffersSetUp = true;
-        }
+        StorageBuffer chunkStorageBuffer = StorageBuffer();  
 
     protected:
         void initBuffers() override {
@@ -90,18 +71,188 @@ class DesktopRenderer : public Renderer
             GLCall( glMultiDrawArraysIndirect(GL_TRIANGLES,0,this->world->chunkRenderRefs.size() ,sizeof(DrawArraysIndirectCommand)) );
         }
 
-        void fillBuffers() override {
-            unsigned long long sizeToAlloc = this->world->getWorldMeshSize();
+        virtual void fillBuffers() override {
+            std::cout << "\nFilling buffers with chunks\n";
 
-            this->meshBuffer.allocateDynamicBuffer(sizeToAlloc);
-            this->chunkDrawBuffer.allocateDynamicBuffer(sizeof(DrawArraysIndirectCommand) * this->world->chunkRenderRefs.size());
-            this->chunkStorageBuffer.allocateDynamicBuffer(sizeof(StorageBufferType) * this->world->chunkRenderRefs.size());
+            BufferInt meshSize = world->getWorldMeshSize();
             
+            this->meshBuffer.allocateDynamicBuffer(
+                meshSize
+            );
+            this->chunkDrawBuffer.allocateDynamicBuffer(
+                sizeof(DrawArraysIndirectCommand) * this->world->chunkRenderRefs.size()
+            );
+            this->chunkStorageBuffer.allocateDynamicBuffer(
+                sizeof(StorageBufferType) * this->world->chunkRenderRefs.size()
+            );
+
+
             for (Chunk* chunk : this->world->chunkRenderRefs){
-                
-                addChunkToBuffers(chunk);
+                addChunk(chunk);
+            };
+            this->chunkStorageBuffer.setBindingPoint(3);
+
+        };
+        virtual void fillBuffer(BufferType bufferToFill) override {
+            std::cout << "\nFilling buffer " << bufferToFill << " with chunks\n";
+
+
+            BufferInt meshSize = world->getWorldMeshSize();
+            switch(bufferToFill){
+                case MESH_BUFFER:
+                    
+                    this->meshBuffer.allocateDynamicBuffer(
+                        meshSize
+                    );
+                    break;
+                case INDIRECT_BUFFER:
+                    this->chunkDrawBuffer.allocateDynamicBuffer(
+                        sizeof(DrawArraysIndirectCommand) * this->world->chunkRenderRefs.size()
+                    );
+                    break;
+                case STORAGE_BUFFER:
+                    this->chunkStorageBuffer.allocateDynamicBuffer(
+                        sizeof(StorageBufferType) * this->world->chunkRenderRefs.size()
+                    );
+                    break;
             }
             
+        
+            for (Chunk* chunk : this->world->chunkRenderRefs){
+                addChunk(chunk, bufferToFill);
+            };
+            this->chunkStorageBuffer.setBindingPoint(3);
+
+        };
+
+        virtual bool addChunk(Chunk *chunk) override {
+            if (!meshBuffer.insertChunkToBuffer(chunk)){
+                ExitError("DESKTOP_RENDERER","error inserting chunk to meshBuffer");
+                return false;
+            };
+            if (!chunkDrawBuffer.insertChunkToBuffer(chunk)){
+                ExitError("DESKTOP_RENDERER","error inserting chunk to indirectBuffer");
+                return false;
+            };
+            if (!chunkStorageBuffer.insertChunkToBuffer(chunk)){
+                ExitError("DESKTOP_RENDERER","error inserting chunk to storage Buffer");
+                return false;
+            };
+
+            chunk->buffersSetUp = true;
+            return true;
         }
+
+        virtual bool updateChunk(Chunk *chunk) override {
+            if (!meshBuffer.updateChunkBuffer(chunk)){
+                ExitError("DESKTOP_RENDERER","error updating chunk to meshBuffer");
+                return false;
+            };
+            if (!chunkDrawBuffer.updateChunkBuffer(chunk)){
+                ExitError("DESKTOP_RENDERER","error updating chunk to indirectBuffer");
+                return false;
+            };
+            if (!chunkStorageBuffer.updateChunkBuffer(chunk)){
+                ExitError("DESKTOP_RENDERER","error updating chunk to storage Buffer");
+                return false;
+            };
+
+            chunk->buffersSetUp = true;
+            return true;
+        }
+
+        virtual bool deleteChunk(Chunk *chunk) override {
+            if (!meshBuffer.deleteChunkFromBuffer(chunk)){
+                ExitError("DESKTOP_RENDERER","error deleting chunk from meshBuffer");
+                return false;
+            };
+            if (!chunkDrawBuffer.deleteChunkFromBuffer(chunk)){
+                ExitError("DESKTOP_RENDERER","error deleting chunk from indirectBuffer");
+                return false;
+            };
+            if (!chunkStorageBuffer.deleteChunkFromBuffer(chunk)){
+                ExitError("DESKTOP_RENDERER","error deleting chunk from storage Buffer");
+                return false;
+            };
+
+            chunk->buffersSetUp = false;
+            return true;
+        }
+        
+        virtual bool addChunk(Chunk *chunk, BufferType bufferToUpdate) override {
+            switch(bufferToUpdate){
+                case MESH_BUFFER:
+                    if (!meshBuffer.insertChunkToBuffer(chunk)){
+                        ExitError("DESKTOP_RENDERER","error inserting chunk to meshBuffer");
+                        return false;
+                    };
+                    break;
+                case INDIRECT_BUFFER:
+                    if (!chunkDrawBuffer.insertChunkToBuffer(chunk)){
+                        ExitError("DESKTOP_RENDERER","error inserting chunk to indirectBuffer");
+                        return false;
+                    };
+                    break;
+                case STORAGE_BUFFER:
+                    if (!chunkStorageBuffer.insertChunkToBuffer(chunk)){
+                        ExitError("DESKTOP_RENDERER","error inserting chunk to storage Buffer");
+                        return false;
+                    };
+                    break;
+            }
+            chunk->buffersSetUp = true;
+            return true;
+        }
+
+        virtual bool updateChunk(Chunk *chunk, BufferType bufferToUpdate) override {
+            switch(bufferToUpdate){
+                case MESH_BUFFER:
+                    if (!meshBuffer.updateChunkBuffer(chunk)){
+                        ExitError("DESKTOP_RENDERER","error updating chunk to meshBuffer");
+                        return false;
+                    };
+                    break;
+                case INDIRECT_BUFFER:
+                    if (!chunkDrawBuffer.updateChunkBuffer(chunk)){
+                        ExitError("DESKTOP_RENDERER","error updating chunk to indirectBuffer");
+                        return false;
+                    };
+                    break;
+                case STORAGE_BUFFER:
+                    if (!chunkStorageBuffer.updateChunkBuffer(chunk)){
+                        ExitError("DESKTOP_RENDERER","error updating chunk to storage Buffer");
+                        return false;
+                    };
+                    break;
+            }
+            chunk->buffersSetUp = true;
+            return true;
+        }
+
+        virtual bool deleteChunk(Chunk *chunk, BufferType bufferToUpdate) override {
+            switch(bufferToUpdate){
+                case MESH_BUFFER:
+                    if (!meshBuffer.deleteChunkFromBuffer(chunk)){
+                        ExitError("DESKTOP_RENDERER","error deleting chunk to meshBuffer");
+                        return false;
+                    };
+                    break;
+                case INDIRECT_BUFFER:
+                    if (!chunkDrawBuffer.deleteChunkFromBuffer(chunk)){
+                        ExitError("DESKTOP_RENDERER","error deleting chunk to indirectBuffer");
+                        return false;
+                    };
+                    break;
+                case STORAGE_BUFFER:
+                    if (!chunkStorageBuffer.deleteChunkFromBuffer(chunk)){
+                        ExitError("DESKTOP_RENDERER","error deleting chunk to storage Buffer");
+                        return false;
+                    };
+                    break;
+            }
+            chunk->buffersSetUp = false;
+            return true;
+        }
+        
 };
 #endif

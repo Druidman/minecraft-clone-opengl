@@ -70,11 +70,12 @@ public:
         renderUi();
 
         GLenum err;
+        
+        /* Swap front and back buffers */
+        glfwSwapBuffers(gameState->window);
         while ((err = glGetError()) != GL_NO_ERROR) {
             printf("OpenGL Error: %x\n", err);
         }
-        /* Swap front and back buffers */
-        glfwSwapBuffers(gameState->window);
 
         /* Poll for and process events */
         glfwPollEvents();
@@ -87,8 +88,16 @@ public:
     };
 
     virtual void fillBuffers() = 0;
+    virtual void fillBuffer(BufferType bufferToFill) = 0;
+
+    virtual bool updateChunk(Chunk* chunk) = 0;
+    virtual bool addChunk(Chunk* chunk) = 0;
+    virtual bool deleteChunk(Chunk* chunk) = 0;
+
+    virtual bool updateChunk(Chunk* chunk, BufferType bufferToUpdate) = 0;
+    virtual bool addChunk(Chunk* chunk, BufferType bufferToUpdate) = 0;
+    virtual bool deleteChunk(Chunk* chunk, BufferType bufferToUpdate) = 0;
  
-    
 };
 
 #endif

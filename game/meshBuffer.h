@@ -14,9 +14,13 @@
 
 class MeshBuffer : public DynamicBuffer {
     protected:
+        
         virtual BufferInt getChunkDataSize(Chunk* chunk) override;
     public:
-        MeshBuffer() : DynamicBuffer(GL_ARRAY_BUFFER){};
+        MeshBuffer() : DynamicBuffer(GL_ARRAY_BUFFER){
+            BUFFER_PADDING = 20; // expressed in %
+            CHUNK_PADDING = 10;
+        };
     
         virtual bool updateChunkBuffer(Chunk* chunk) override;
         

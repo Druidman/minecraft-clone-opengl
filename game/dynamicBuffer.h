@@ -34,13 +34,15 @@ be called at chunk destructor
 class DynamicBuffer : protected Buffer {
     private:
         
-        BufferInt BUFFER_PADDING = 20; // expressed in %
-        BufferInt CHUNK_PADDING = 10;
+        
 
         // keeps free zones in bytes as pairs: (B_start, B_end)
         // if empty then entire buffer taken
         std::vector< std::pair<BufferInt, BufferInt> > bufferFreeZones;
     protected:
+        BufferInt BUFFER_PADDING = 0; // expressed in %
+        BufferInt CHUNK_PADDING = 0;
+
         BufferInt getBufferPadding(BufferInt size);
         BufferInt getChunkPadding(BufferInt size);
         void mergeFreeZones();

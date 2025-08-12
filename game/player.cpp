@@ -176,7 +176,8 @@ void Player::destroy_block()
 
     chunk->removeBlock(hitPos);
     chunk->genChunkMesh();
-    world->renderer->fillBuffers();
+    world->renderer->updateChunk(chunk, MESH_BUFFER);
+    world->renderer->updateChunk(chunk, INDIRECT_BUFFER);
     
 }
 
@@ -244,9 +245,8 @@ void Player::place_block()
     Block blockToAdd = Block(EMPTY_LEAF,placePos);
     placeChunk->addBlock(blockToAdd);
     placeChunk->genChunkMesh();
-
-
-    world->renderer->fillBuffers();
+    world->renderer->updateChunk(placeChunk, MESH_BUFFER);
+    world->renderer->updateChunk(placeChunk, INDIRECT_BUFFER);
 }
 
 void Player::update(double delta)
@@ -262,7 +262,7 @@ void Player::update(double delta)
         
     }
 
-    // process_input(delta);
+    process_input(delta);
 
 }
 

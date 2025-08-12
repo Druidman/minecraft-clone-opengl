@@ -12,15 +12,14 @@
 #include "vendor/glm/glm.hpp"
 
 #include "block.h"
+#include "buffer.h"
 #include <thread>
 
 class Player;
 class Renderer;
 class Chunk;
 
-enum BufferType {
-    STORAGE_BUFFER, MESH_BUFFER, ALL, NONE
-};
+
 struct ChunkVecPos{
     int row,col;
 };
