@@ -42,7 +42,9 @@ class DynamicBuffer : protected Buffer {
     protected:
         BufferInt BUFFER_PADDING = 0; // expressed in %
         BufferInt CHUNK_PADDING = 0;
-
+        
+        bool bufferRequiresMovingElements = false;
+    protected:
         BufferInt getBufferPadding(BufferInt size);
         BufferInt getChunkPadding(BufferInt size);
         void mergeFreeZones();
@@ -65,6 +67,7 @@ class DynamicBuffer : protected Buffer {
             }
         };
     protected:
+        virtual bool requiresContiguousMemoryLayout() = 0;
         virtual BufferInt getChunkDataSize(Chunk* chunk) = 0;
     public:
         void bind() { Buffer::bind(); };
@@ -76,5 +79,6 @@ class DynamicBuffer : protected Buffer {
 
     public:
         virtual bool updateChunkBuffer(Chunk* chunk) = 0;
+        virtual bool insertChunksToBuffer(std::vector<Chunk*> *chunks) = 0;
 };
 #endif

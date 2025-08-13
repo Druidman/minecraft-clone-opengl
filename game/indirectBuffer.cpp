@@ -5,6 +5,11 @@ BufferInt IndirectBuffer::getChunkDataSize(Chunk *chunk)
     return sizeof(DrawArraysIndirectCommand);
 }
 
+bool IndirectBuffer::requiresContiguousMemoryLayout()
+{
+    return true;
+}
+
 bool IndirectBuffer::updateChunkBuffer(Chunk *chunk)
 {
     BufferInt dataSize = getChunkDataSize(chunk);
@@ -53,4 +58,9 @@ bool IndirectBuffer::updateChunkBuffer(Chunk *chunk)
     }
     
     return true;
+}
+
+bool IndirectBuffer::insertChunksToBuffer(std::vector<Chunk *> *chunks)
+{
+    return false;
 }

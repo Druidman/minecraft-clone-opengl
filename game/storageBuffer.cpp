@@ -16,6 +16,11 @@ BufferInt StorageBuffer::getChunkDataSize(Chunk *chunk)
     return sizeof(StorageBufferType);
 }
 
+bool StorageBuffer::requiresContiguousMemoryLayout()
+{
+    return true;
+}
+
 bool StorageBuffer::updateChunkBuffer(Chunk *chunk)
 {
     std::cout << "Storage Buffer insertion: \n";
@@ -45,7 +50,7 @@ bool StorageBuffer::updateChunkBuffer(Chunk *chunk)
         }
 
         insertChunkToBuffer(chunk);
-    }\
+    }
     
     std::cout << world->player->camera->position.x << " " << world->player->camera->position.y << "\n";
     if (!updateData<StorageBufferType>(
@@ -59,3 +64,8 @@ bool StorageBuffer::updateChunkBuffer(Chunk *chunk)
     return true;
 }
 
+bool StorageBuffer::insertChunksToBuffer(std::vector<Chunk *> *chunks)
+{
+
+    return false;
+}

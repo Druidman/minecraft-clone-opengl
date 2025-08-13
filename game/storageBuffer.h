@@ -20,12 +20,14 @@ class StorageBuffer : public DynamicBuffer {
 
     protected:
         virtual BufferInt getChunkDataSize(Chunk* chunk) override;
+        virtual bool requiresContiguousMemoryLayout() override;
     public:
         StorageBuffer() : DynamicBuffer(GL_SHADER_STORAGE_BUFFER){};
         void init(World *world);
         void setBindingPoint(int port);
     
         virtual bool updateChunkBuffer(Chunk* chunk) override;
+        virtual bool insertChunksToBuffer(std::vector<Chunk*> *chunks) override;
         
 };
 #endif

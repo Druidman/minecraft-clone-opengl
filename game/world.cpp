@@ -76,6 +76,8 @@ void World::initChunks()
 
 
 void World::genRenderChunkRefs(){
+   
+    
     this->chunkRenderRefs.clear();
     for (int row = 0; row < CHUNK_ROWS; row++){
         for (int col=0; col < CHUNK_COLUMNS; col++){
@@ -122,23 +124,26 @@ void World::genWorldBase()
     
 }
 
-BufferType World::updateChunks(){ 
+void World::updateChunks(WorldTickData *worldTickData){ 
+    worldTickData->playerChangedChunk = false;
+    worldTickData->playerChangedPosition = false;
     // returns true when this->chunks has been changed
     if (this->lastPlayerPos == player->position){
-        return NONE;
+        return; //player didn't move
     }
     lastPlayerPos = player->position;
+    worldTickData->playerChangedPosition = true;
     
     std::optional<Chunk* > chunkRes = getChunkByPos(player->position);
     if (!chunkRes.has_value()){
-        return NONE; // player is outside of the map so we do nothing
+        return; // player is outside of the map so we do nothing
     }
     Chunk* chunk = chunkRes.value();
     if (lastPlayerChunk == chunk){
-        
-        return STORAGE_BUFFER; // the same chunk so only storage buffer requires update but TODO
+        return; // player didn't change chunks
     }
-
+    
+    worldTickData->playerChangedChunk = true;
     glm::vec3 positionChange = lastPlayerChunk->position - chunk->position;
 
     lastPlayerChunk = chunk;
@@ -149,6 +154,7 @@ BufferType World::updateChunks(){
         // we need to add left chunks
 
         for (std::vector<Chunk> &chunkRow : this->chunks){
+
             chunkRow.pop_back();
         }
         
@@ -306,16 +312,13 @@ BufferType World::updateChunks(){
         spawnChunkPrepareThread(row, chunksDone, chunkPositions);
         // ___
     }
-    
-    
-    return MESH_BUFFER;
 
+    
 }
 
-BufferType World::checkThreads(){
+void World::updateThreads(WorldTickData *worldTickData){
     std::list<ThreadWorkingData>::iterator dataIterator = threadsWorkingData.begin();
     std::list<std::thread>::iterator threadIterator = threads.begin();
-    BufferType anything = NONE;
     while (dataIterator != threadsWorkingData.end() && threadIterator != threads.end()){
         
         bool isReady = dataIterator->ready;
@@ -331,10 +334,10 @@ BufferType World::checkThreads(){
             if (row >= CHUNK_ROWS || col >= CHUNK_COLUMNS){
                 continue;
             }
-            anything = MESH_BUFFER;
             this->chunks[row][col] = dataIterator->chunksToPrepare[chunkInd];
+            this->renderer->addChunk(&this->chunks[row][col]);
        
-            dataIterator->chunksDone[chunkInd] = false;
+            dataIterator->chunksDone[chunkInd] = false; // so that we won't insert it again
             
         }
 
@@ -349,10 +352,10 @@ BufferType World::checkThreads(){
             threadIterator++;
         }
     }
-    return anything;
+  
 }
 
-void World::updateSun(double delta){
+void World::updateSun(double delta, WorldTickData *worldTickData){
     sunPosition = glm::vec3(0.0,WIDTH,0.0);
     glm::mat4 rotate = glm::rotate(glm::mat4(1.0f),glm::radians(sunAngle),glm::vec3(1.0,0.0,1.0));
     sunPosition = glm::vec4(sunPosition,0.0) * rotate;
@@ -361,32 +364,41 @@ void World::updateSun(double delta){
     sunAngle += 6 * delta;
 }
 
+void World::updateChunkRender(WorldTickData *worldTickData){
+    if (!worldTickData->playerChangedChunk){
+        return ;
+    }
+    genRenderChunkRefs();
+
+    // now we need to update indirect buffer and storage buffer
+    // this is not VERY inefficient due to fact that these take small amount of data
+    // AND they are not stored somewhere we would need to copy from
+    // so we can send them each with single call
+    // singleCall insert TODO
+
+    this->renderer->fillBuffer(INDIRECT_BUFFER); 
+    this->renderer->fillBuffer(STORAGE_BUFFER);  
+}
+
 void World::updateWorld(double delta)
 {
-    // updateSun(delta);
-    // BufferType needUpdate2 = updateChunks();
-    // BufferType needUpdate3 = checkThreads();
+    WorldTickData worldTickData = {
+        false, // playerChangedChunk
+        false  // playerChangedPosition
+    };
+    // make sun move
+    updateSun(delta, &worldTickData);
 
-    for (Chunk* chunk : chunkRenderRefs ){
-        renderer->addChunk(chunk,STORAGE_BUFFER);
-    }
+    // handles chunk generation management
+    updateChunks(&worldTickData);
+
+    // handles chunk generation threads
+    updateThreads(&worldTickData);
+
+    // generates render command
+    updateChunkRender(&worldTickData);
+
     
-    // if (needUpdate2 == MESH_BUFFER){
-        
-    //     genRenderChunkRefs();
-    //     renderer->fillBuffers();
-        
-    // }
-    // else if (needUpdate2 == STORAGE_BUFFER && needUpdate3 != MESH_BUFFER){
-
-    //     genRenderChunkRefs();
-    //     renderer->fillBuffers();
-    // }
-    // else if (needUpdate3 == MESH_BUFFER){
-    //     genRenderChunkRefs();
-    //     renderer->fillBuffers();
-        
-    // }
     
 }
 
@@ -395,7 +407,7 @@ World::World(int width, glm::vec3 worldMiddle, Renderer *renderer)
     this->WIDTH = width;
     this->CHUNK_ROWS = this->WIDTH / CHUNK_WIDTH;
     this->CHUNK_COLUMNS = this->WIDTH / CHUNK_WIDTH;
-    this->RENDER_DISTANCE = 512;
+    this->RENDER_DISTANCE = (width / 4) + 1; // render distance is much smaller than stored chunks 
     this->renderer = renderer;
     this->worldMiddle = worldMiddle;
 
@@ -507,6 +519,11 @@ std::optional<Block *> World::getBlockByPos(glm::vec3 pointPositionInWorld, bool
         return std::nullopt; 
     }
     return blockRes.value();
+}
+
+void World::removeChunk(Chunk *chunk)
+{
+    this->renderer->deleteChunk(chunk);
 }
 
 void World::prepareChunks(ThreadWorkingData &data)

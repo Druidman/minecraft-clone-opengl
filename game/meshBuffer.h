@@ -16,6 +16,7 @@ class MeshBuffer : public DynamicBuffer {
     protected:
         
         virtual BufferInt getChunkDataSize(Chunk* chunk) override;
+        virtual bool requiresContiguousMemoryLayout() override;
     public:
         MeshBuffer() : DynamicBuffer(GL_ARRAY_BUFFER){
             BUFFER_PADDING = 20; // expressed in %
@@ -23,6 +24,7 @@ class MeshBuffer : public DynamicBuffer {
         };
     
         virtual bool updateChunkBuffer(Chunk* chunk) override;
+        virtual bool insertChunksToBuffer(std::vector<Chunk*> *chunks) override;
         
 };
 #endif

@@ -27,7 +27,9 @@ class DesktopRenderer : public Renderer
 
         MeshBuffer meshBuffer = MeshBuffer();
         IndirectBuffer chunkDrawBuffer = IndirectBuffer();
-        StorageBuffer chunkStorageBuffer = StorageBuffer();  
+        StorageBuffer chunkStorageBuffer = StorageBuffer(); 
+        
+        glm::vec3 lastCameraPosOnChunkPosChange = glm::vec3(0.0f);
 
     protected:
         void initBuffers() override {
@@ -64,6 +66,7 @@ class DesktopRenderer : public Renderer
             this->shader.setMatrixFloat("model",GL_FALSE,*(gameState->model));
 
             this->shader.setVec3Float("LightPos",world->sunPosition - world->player->camera->position);
+            this->shader.setVec3Float("CameraPos",lastCameraPosOnChunkPosChange - world->player->camera->position);
             
 
 
@@ -86,20 +89,25 @@ class DesktopRenderer : public Renderer
                 sizeof(StorageBufferType) * this->world->chunkRenderRefs.size()
             );
 
-
+            lastCameraPosOnChunkPosChange = this->world->player->camera->position;
             for (Chunk* chunk : this->world->chunkRenderRefs){
                 addChunk(chunk);
             };
             this->chunkStorageBuffer.setBindingPoint(3);
 
         };
-        virtual void fillBuffer(BufferType bufferToFill) override {
+        virtual void fillBuffer(BufferType bufferToFill, bool singleCall = false) override {
             std::cout << "\nFilling buffer " << bufferToFill << " with chunks\n";
 
 
             BufferInt meshSize = world->getWorldMeshSize();
             switch(bufferToFill){
                 case MESH_BUFFER:
+                    if (singleCall){
+                        ExitError("DESKTOP_RENDERER","Trying to fill mesh buffer with single call which is not allowed");
+                        return;
+                        break; 
+                    }
                     
                     this->meshBuffer.allocateDynamicBuffer(
                         meshSize
@@ -111,19 +119,35 @@ class DesktopRenderer : public Renderer
                     );
                     break;
                 case STORAGE_BUFFER:
+                    lastCameraPosOnChunkPosChange = this->world->player->camera->position;
                     this->chunkStorageBuffer.allocateDynamicBuffer(
                         sizeof(StorageBufferType) * this->world->chunkRenderRefs.size()
                     );
                     break;
             }
             
-        
-            for (Chunk* chunk : this->world->chunkRenderRefs){
-                addChunk(chunk, bufferToFill);
-            };
-            this->chunkStorageBuffer.setBindingPoint(3);
+            addChunks(&this->world->chunkRenderRefs, bufferToFill, singleCall);
 
         };
+        virtual bool addChunks(std::vector<Chunk*> *chunks, BufferType bufferToUpdate, bool singleCall = false) override {
+            if (bufferToUpdate == MESH_BUFFER && singleCall){
+                return false ;
+            }
+            if (singleCall){
+                return false; // for now TODO
+            }
+            else {
+                for (Chunk* chunk : *chunks){
+                    addChunk(chunk, bufferToUpdate);
+                }
+                if (bufferToUpdate == STORAGE_BUFFER){
+                    this->chunkStorageBuffer.setBindingPoint(3);
+                }
+
+            }
+            return true;
+
+        }
 
         virtual bool addChunk(Chunk *chunk) override {
             if (!meshBuffer.insertChunkToBuffer(chunk)){

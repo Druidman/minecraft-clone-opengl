@@ -79,7 +79,7 @@ public:
 
 public:
     Chunk(glm::vec3 chunkPosition, World* world);
-    
+    ~Chunk();
 
     glm::vec3 getPositionInWorld(int platform, int row, int column);
     std::optional<Block *> getBlock(int plat, int row, int col, bool noneBlock = false);

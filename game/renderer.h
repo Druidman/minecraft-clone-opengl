@@ -88,7 +88,7 @@ public:
     };
 
     virtual void fillBuffers() = 0;
-    virtual void fillBuffer(BufferType bufferToFill) = 0;
+    virtual void fillBuffer(BufferType bufferToFill, bool singleCall = false) = 0;
 
     virtual bool updateChunk(Chunk* chunk) = 0;
     virtual bool addChunk(Chunk* chunk) = 0;
@@ -97,6 +97,8 @@ public:
     virtual bool updateChunk(Chunk* chunk, BufferType bufferToUpdate) = 0;
     virtual bool addChunk(Chunk* chunk, BufferType bufferToUpdate) = 0;
     virtual bool deleteChunk(Chunk* chunk, BufferType bufferToUpdate) = 0;
+
+    virtual bool addChunks(std::vector<Chunk*> *chunks, BufferType bufferToUpdate, bool singleCall = false) = 0;
  
 };
 

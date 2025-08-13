@@ -5,6 +5,11 @@ BufferInt MeshBuffer::getChunkDataSize(Chunk *chunk)
     return chunk->getMeshSize();
 }
 
+bool MeshBuffer::requiresContiguousMemoryLayout()
+{
+    return false;
+}
+
 bool MeshBuffer::updateChunkBuffer(Chunk *chunk)
 {
     BufferInt meshSize = getChunkDataSize(chunk);
@@ -57,4 +62,9 @@ bool MeshBuffer::updateChunkBuffer(Chunk *chunk)
     
     
     return true;
+}
+
+bool MeshBuffer::insertChunksToBuffer(std::vector<Chunk *> *chunks)
+{
+    return false;
 }

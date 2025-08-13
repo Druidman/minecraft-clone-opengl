@@ -15,10 +15,12 @@
 class IndirectBuffer : public DynamicBuffer {
     protected:
         virtual BufferInt getChunkDataSize(Chunk* chunk) override;
+        virtual bool requiresContiguousMemoryLayout() override;
     public:
         IndirectBuffer() : DynamicBuffer(GL_DRAW_INDIRECT_BUFFER){};
     
         virtual bool updateChunkBuffer(Chunk* chunk) override;
+        virtual bool insertChunksToBuffer(std::vector<Chunk*> *chunks) override;
         
 };
 #endif

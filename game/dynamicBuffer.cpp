@@ -106,6 +106,8 @@ bool DynamicBuffer::allocateDynamicBuffer(BufferInt size)
     return true;
 }
 
+
+
 bool DynamicBuffer::insertChunkToBuffer(Chunk *chunk)
 {   
     if (!chunk->hasBufferSpace[bufferType]){
@@ -128,6 +130,9 @@ bool DynamicBuffer::insertChunkToBuffer(Chunk *chunk)
 
 bool DynamicBuffer::deleteChunkFromBuffer(Chunk *chunk)
 {
+    if (!chunk->hasBufferSpace[bufferType]){
+        return true;
+    }
     bool insertedZone = false;
     for (int i = 0; i<this->bufferFreeZones.size(); i++){
         if (this->bufferFreeZones[i].first == chunk->bufferZone[bufferType].second){
@@ -168,6 +173,11 @@ bool DynamicBuffer::deleteChunkFromBuffer(Chunk *chunk)
     chunk->bufferZone[bufferType].first = 0;
     chunk->bufferZone[bufferType].second = 0;
     chunk->hasBufferSpace[bufferType] = false;
+
+    if (requiresContiguousMemoryLayout()){
+        ExitError("DYNAMIC_BUFFER","removed elements in buffer that requires contiguous memory layout");
+        return false; // TODO
+    }
     
     return true;
 }
