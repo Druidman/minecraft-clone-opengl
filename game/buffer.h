@@ -38,7 +38,7 @@ class Buffer{
         BufferInt getBufferSize(){ return bufferSize; };
 
         void allocateBuffer(BufferInt size);
-        void expandBuffer(BufferInt by);
+        
 
         template <typename T>
         bool fillData(const std::vector< T > *data);

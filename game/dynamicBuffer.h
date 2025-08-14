@@ -39,6 +39,9 @@ class DynamicBuffer : protected Buffer {
         // keeps free zones in bytes as pairs: (B_start, B_end)
         // if empty then entire buffer taken
         std::vector< std::pair<BufferInt, BufferInt> > bufferFreeZones;
+
+    
+        
     protected:
         BufferInt BUFFER_PADDING = 0; // expressed in %
         BufferInt CHUNK_PADDING = 0;
@@ -54,6 +57,7 @@ class DynamicBuffer : protected Buffer {
         int getChunkBufferSpaceIndex(Chunk* chunk);
         
         GLenum getBufferType();
+        void expandBuffer(BufferInt by);
 
     protected:
         DynamicBuffer(GLenum bufferT) : Buffer(bufferT){
@@ -69,6 +73,7 @@ class DynamicBuffer : protected Buffer {
     protected:
         virtual bool requiresContiguousMemoryLayout() = 0;
         virtual BufferInt getChunkDataSize(Chunk* chunk) = 0;
+        
     public:
         void bind() { Buffer::bind(); };
         void getId() { Buffer::getId(); };
@@ -76,6 +81,7 @@ class DynamicBuffer : protected Buffer {
 
         bool insertChunkToBuffer(Chunk* chunk);
         bool deleteChunkFromBuffer(Chunk* chunk);
+
 
     public:
         virtual bool updateChunkBuffer(Chunk* chunk) = 0;

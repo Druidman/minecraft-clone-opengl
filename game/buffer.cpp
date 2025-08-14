@@ -45,29 +45,4 @@ void Buffer::allocateBuffer(unsigned long long int size)
     this->bufferSize = size;
 }
 
-void Buffer::expandBuffer(BufferInt by){
-    BufferInt newBufferSize = this->bufferSize + by;
 
-    // create temp buffer
-    Buffer tempBuffer = Buffer(bufferType);
-    tempBuffer.allocateBuffer(this->bufferSize);
-
-    // setup for copying
-    tempBuffer.bindAsWrite();
-    this->bindAsRead();
-
-    // copy data to temp buffer
-    GLCall( glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, this->bufferSize) ); 
-
-    //expand buffer
-    this->allocateBuffer(newBufferSize); 
-
-    // setup for copying
-    tempBuffer.bindAsRead();
-    this->bindAsWrite();
-
-    GLCall( glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, tempBuffer.bufferSize) ); 
-
-    tempBuffer.unBind();
-    this->unBind();
-}
