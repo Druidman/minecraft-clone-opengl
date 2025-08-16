@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <utility>
+#include <string>
 
 #include "vendor/glm/glm.hpp"
 #include "vendor/glm/gtc/type_ptr.hpp"
@@ -12,15 +13,16 @@
 #include "chunk.h"
 #include "buffer.h"
 
-class IndirectBuffer : public DynamicBuffer {
-    protected:
-        virtual BufferInt getChunkDataSize(Chunk* chunk) override;
-        virtual bool requiresContiguousMemoryLayout() override;
+class IndirectBuffer : public Buffer {
+    private:
+        // this is relatively small data so we keep it here for optimized buffer insertions
+        std::vector<DrawArraysIndirectCommand> bufferContent;
+        
     public:
-        IndirectBuffer() : DynamicBuffer(GL_DRAW_INDIRECT_BUFFER){};
+        IndirectBuffer() : Buffer(GL_DRAW_INDIRECT_BUFFER){};
     
-        virtual bool updateChunkBuffer(Chunk* chunk) override;
-        virtual bool insertChunksToBuffer(std::vector<Chunk*> *chunks) override;
+
+        bool fillBufferWithChunks(std::vector<Chunk*> *chunks);
         
 };
 #endif

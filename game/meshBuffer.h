@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <utility>
+#include <string>
 
 #include "vendor/glm/glm.hpp"
 #include "vendor/glm/gtc/type_ptr.hpp"
@@ -17,6 +18,8 @@ class MeshBuffer : public DynamicBuffer {
         
         virtual BufferInt getChunkDataSize(Chunk* chunk) override;
         virtual bool requiresContiguousMemoryLayout() override;
+        
+        virtual std::string getBufferTypeString() override;
     public:
         MeshBuffer() : DynamicBuffer(GL_ARRAY_BUFFER){
             BUFFER_PADDING = 20; // expressed in %

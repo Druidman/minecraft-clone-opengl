@@ -82,86 +82,59 @@ class DesktopRenderer : public Renderer
             this->meshBuffer.allocateDynamicBuffer(
                 meshSize
             );
-            this->chunkDrawBuffer.allocateDynamicBuffer(
-                sizeof(DrawArraysIndirectCommand) * this->world->chunkRenderRefs.size()
-            );
-            this->chunkStorageBuffer.allocateDynamicBuffer(
-                sizeof(StorageBufferType) * this->world->chunkRenderRefs.size()
-            );
 
-            lastCameraPosOnChunkPosChange = this->world->player->camera->position;
+           
             for (Chunk* chunk : this->world->chunkRenderRefs){
                 addChunk(chunk);
             };
+
+            lastCameraPosOnChunkPosChange = this->world->player->camera->position;
+            this->chunkDrawBuffer.fillBufferWithChunks(&this->world->chunkRenderRefs);
+            this->chunkStorageBuffer.fillBufferWithChunks(&this->world->chunkRenderRefs);
+
             this->chunkStorageBuffer.setBindingPoint(3);
 
         };
-        virtual void fillBuffer(BufferType bufferToFill, bool singleCall = false) override {
+        virtual void fillBuffer(BufferType bufferToFill) override {
             std::cout << "\nFilling buffer " << bufferToFill << " with chunks\n";
 
 
             BufferInt meshSize = world->getWorldMeshSize();
             switch(bufferToFill){
                 case MESH_BUFFER:
-                    if (singleCall){
-                        ExitError("DESKTOP_RENDERER","Trying to fill mesh buffer with single call which is not allowed");
-                        return;
-                        break; 
-                    }
-                    
                     this->meshBuffer.allocateDynamicBuffer(
                         meshSize
                     );
+                    for (Chunk* chunk : this->world->chunkRenderRefs){
+                        addChunk(chunk);
+                    }
                     break;
                 case INDIRECT_BUFFER:
-                    this->chunkDrawBuffer.allocateDynamicBuffer(
-                        sizeof(DrawArraysIndirectCommand) * this->world->chunkRenderRefs.size()
-                    );
+                    this->chunkDrawBuffer.fillBufferWithChunks(&this->world->chunkRenderRefs);
                     break;
                 case STORAGE_BUFFER:
                     lastCameraPosOnChunkPosChange = this->world->player->camera->position;
-                    this->chunkStorageBuffer.allocateDynamicBuffer(
-                        sizeof(StorageBufferType) * this->world->chunkRenderRefs.size()
-                    );
+                    this->chunkStorageBuffer.fillBufferWithChunks(&this->world->chunkRenderRefs);
                     break;
             }
             
-            addChunks(&this->world->chunkRenderRefs, bufferToFill, singleCall);
+            
 
         };
-        virtual bool addChunks(std::vector<Chunk*> *chunks, BufferType bufferToUpdate, bool singleCall = false) override {
-            if (bufferToUpdate == MESH_BUFFER && singleCall){
-                return false ;
-            }
-            if (singleCall){
-                return false; // for now TODO
-            }
-            else {
-                for (Chunk* chunk : *chunks){
-                    addChunk(chunk, bufferToUpdate);
-                }
-                if (bufferToUpdate == STORAGE_BUFFER){
-                    this->chunkStorageBuffer.setBindingPoint(3);
-                }
-
-            }
-            return true;
-
-        }
 
         virtual bool addChunk(Chunk *chunk) override {
             if (!meshBuffer.insertChunkToBuffer(chunk)){
                 ExitError("DESKTOP_RENDERER","error inserting chunk to meshBuffer");
                 return false;
             };
-            if (!chunkDrawBuffer.insertChunkToBuffer(chunk)){
-                ExitError("DESKTOP_RENDERER","error inserting chunk to indirectBuffer");
-                return false;
-            };
-            if (!chunkStorageBuffer.insertChunkToBuffer(chunk)){
-                ExitError("DESKTOP_RENDERER","error inserting chunk to storage Buffer");
-                return false;
-            };
+            // if (!chunkDrawBuffer.insertChunkToBuffer(chunk)){
+            //     ExitError("DESKTOP_RENDERER","error inserting chunk to indirectBuffer");
+            //     return false;
+            // };
+            // if (!chunkStorageBuffer.insertChunkToBuffer(chunk)){
+            //     ExitError("DESKTOP_RENDERER","error inserting chunk to storage Buffer");
+            //     return false;
+            // };
 
             chunk->buffersSetUp = true;
             return true;
@@ -172,14 +145,14 @@ class DesktopRenderer : public Renderer
                 ExitError("DESKTOP_RENDERER","error updating chunk to meshBuffer");
                 return false;
             };
-            if (!chunkDrawBuffer.updateChunkBuffer(chunk)){
-                ExitError("DESKTOP_RENDERER","error updating chunk to indirectBuffer");
-                return false;
-            };
-            if (!chunkStorageBuffer.updateChunkBuffer(chunk)){
-                ExitError("DESKTOP_RENDERER","error updating chunk to storage Buffer");
-                return false;
-            };
+            // if (!chunkDrawBuffer.updateChunkBuffer(chunk)){
+            //     ExitError("DESKTOP_RENDERER","error updating chunk to indirectBuffer");
+            //     return false;
+            // };
+            // if (!chunkStorageBuffer.updateChunkBuffer(chunk)){
+            //     ExitError("DESKTOP_RENDERER","error updating chunk to storage Buffer");
+            //     return false;
+            // };
 
             chunk->buffersSetUp = true;
             return true;
@@ -190,14 +163,14 @@ class DesktopRenderer : public Renderer
                 ExitError("DESKTOP_RENDERER","error deleting chunk from meshBuffer");
                 return false;
             };
-            if (!chunkDrawBuffer.deleteChunkFromBuffer(chunk)){
-                ExitError("DESKTOP_RENDERER","error deleting chunk from indirectBuffer");
-                return false;
-            };
-            if (!chunkStorageBuffer.deleteChunkFromBuffer(chunk)){
-                ExitError("DESKTOP_RENDERER","error deleting chunk from storage Buffer");
-                return false;
-            };
+            // if (!chunkDrawBuffer.deleteChunkFromBuffer(chunk)){
+            //     ExitError("DESKTOP_RENDERER","error deleting chunk from indirectBuffer");
+            //     return false;
+            // };
+            // if (!chunkStorageBuffer.deleteChunkFromBuffer(chunk)){
+            //     ExitError("DESKTOP_RENDERER","error deleting chunk from storage Buffer");
+            //     return false;
+            // };
 
             chunk->buffersSetUp = false;
             return true;
@@ -211,18 +184,18 @@ class DesktopRenderer : public Renderer
                         return false;
                     };
                     break;
-                case INDIRECT_BUFFER:
-                    if (!chunkDrawBuffer.insertChunkToBuffer(chunk)){
-                        ExitError("DESKTOP_RENDERER","error inserting chunk to indirectBuffer");
-                        return false;
-                    };
-                    break;
-                case STORAGE_BUFFER:
-                    if (!chunkStorageBuffer.insertChunkToBuffer(chunk)){
-                        ExitError("DESKTOP_RENDERER","error inserting chunk to storage Buffer");
-                        return false;
-                    };
-                    break;
+                // case INDIRECT_BUFFER:
+                //     if (!chunkDrawBuffer.insertChunkToBuffer(chunk)){
+                //         ExitError("DESKTOP_RENDERER","error inserting chunk to indirectBuffer");
+                //         return false;
+                //     };
+                //     break;
+                // case STORAGE_BUFFER:
+                //     if (!chunkStorageBuffer.insertChunkToBuffer(chunk)){
+                //         ExitError("DESKTOP_RENDERER","error inserting chunk to storage Buffer");
+                //         return false;
+                //     };
+                //     break;
             }
             chunk->buffersSetUp = true;
             return true;
@@ -236,18 +209,18 @@ class DesktopRenderer : public Renderer
                         return false;
                     };
                     break;
-                case INDIRECT_BUFFER:
-                    if (!chunkDrawBuffer.updateChunkBuffer(chunk)){
-                        ExitError("DESKTOP_RENDERER","error updating chunk to indirectBuffer");
-                        return false;
-                    };
-                    break;
-                case STORAGE_BUFFER:
-                    if (!chunkStorageBuffer.updateChunkBuffer(chunk)){
-                        ExitError("DESKTOP_RENDERER","error updating chunk to storage Buffer");
-                        return false;
-                    };
-                    break;
+                // case INDIRECT_BUFFER:
+                //     if (!chunkDrawBuffer.updateChunkBuffer(chunk)){
+                //         ExitError("DESKTOP_RENDERER","error updating chunk to indirectBuffer");
+                //         return false;
+                //     };
+                //     break;
+                // case STORAGE_BUFFER:
+                //     if (!chunkStorageBuffer.updateChunkBuffer(chunk)){
+                //         ExitError("DESKTOP_RENDERER","error updating chunk to storage Buffer");
+                //         return false;
+                //     };
+                //     break;
             }
             chunk->buffersSetUp = true;
             return true;
@@ -261,18 +234,18 @@ class DesktopRenderer : public Renderer
                         return false;
                     };
                     break;
-                case INDIRECT_BUFFER:
-                    if (!chunkDrawBuffer.deleteChunkFromBuffer(chunk)){
-                        ExitError("DESKTOP_RENDERER","error deleting chunk to indirectBuffer");
-                        return false;
-                    };
-                    break;
-                case STORAGE_BUFFER:
-                    if (!chunkStorageBuffer.deleteChunkFromBuffer(chunk)){
-                        ExitError("DESKTOP_RENDERER","error deleting chunk to storage Buffer");
-                        return false;
-                    };
-                    break;
+                // case INDIRECT_BUFFER:
+                //     if (!chunkDrawBuffer.deleteChunkFromBuffer(chunk)){
+                //         ExitError("DESKTOP_RENDERER","error deleting chunk to indirectBuffer");
+                //         return false;
+                //     };
+                //     break;
+                // case STORAGE_BUFFER:
+                //     if (!chunkStorageBuffer.deleteChunkFromBuffer(chunk)){
+                //         ExitError("DESKTOP_RENDERER","error deleting chunk to storage Buffer");
+                //         return false;
+                //     };
+                //     break;
             }
             chunk->buffersSetUp = false;
             return true;

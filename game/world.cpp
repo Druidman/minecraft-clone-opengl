@@ -335,6 +335,7 @@ void World::updateThreads(WorldTickData *worldTickData){
                 continue;
             }
             this->chunks[row][col] = dataIterator->chunksToPrepare[chunkInd];
+            
             this->renderer->addChunk(&this->chunks[row][col]);
        
             dataIterator->chunksDone[chunkInd] = false; // so that we won't insert it again
@@ -370,12 +371,7 @@ void World::updateChunkRender(WorldTickData *worldTickData){
     }
     genRenderChunkRefs();
 
-    // now we need to update indirect buffer and storage buffer
-    // this is not VERY inefficient due to fact that these take small amount of data
-    // AND they are not stored somewhere we would need to copy from
-    // so we can send them each with single call
-    // singleCall insert TODO
-
+        
     this->renderer->fillBuffer(INDIRECT_BUFFER); 
     this->renderer->fillBuffer(STORAGE_BUFFER);  
 }
@@ -523,7 +519,7 @@ std::optional<Block *> World::getBlockByPos(glm::vec3 pointPositionInWorld, bool
 
 void World::removeChunk(Chunk *chunk)
 {
-    this->renderer->deleteChunk(chunk);
+    this->renderer->deleteChunk(chunk,MESH_BUFFER);
 }
 
 void World::prepareChunks(ThreadWorkingData &data)

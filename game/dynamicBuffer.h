@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <utility>
+#include <string>
 
 #include "vendor/glm/glm.hpp"
 #include "vendor/glm/gtc/type_ptr.hpp"
@@ -59,6 +60,8 @@ class DynamicBuffer : protected Buffer {
         GLenum getBufferType();
         void expandBuffer(BufferInt by);
 
+        bool moveBufferPart(BufferInt from, BufferInt to); // moves all data from -> to 
+
     protected:
         DynamicBuffer(GLenum bufferT) : Buffer(bufferT){
             if (
@@ -73,6 +76,8 @@ class DynamicBuffer : protected Buffer {
     protected:
         virtual bool requiresContiguousMemoryLayout() = 0;
         virtual BufferInt getChunkDataSize(Chunk* chunk) = 0;
+
+        virtual std::string getBufferTypeString() = 0;
         
     public:
         void bind() { Buffer::bind(); };

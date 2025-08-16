@@ -117,11 +117,15 @@ bool DynamicBuffer::insertChunkToBuffer(Chunk *chunk)
         if (assignRes == -2){
             // we need to expand buffer because we have no usable space left
             expandBufferByChunk(chunk);
+
         }
         else if (assignRes == -1){
             std::cout << "-1\n"; 
+            ExitError("DYNAMIC_BUFFER","Attempting to insert invalid chunk");
             return false;
         }
+
+        return insertChunkToBuffer(chunk);
 
         
         
@@ -134,50 +138,63 @@ bool DynamicBuffer::deleteChunkFromBuffer(Chunk *chunk)
     if (!chunk->hasBufferSpace[bufferType]){
         return true;
     }
-    bool insertedZone = false;
-    for (int i = 0; i<this->bufferFreeZones.size(); i++){
-        if (this->bufferFreeZones[i].first == chunk->bufferZone[bufferType].second){
+    
+    if (!requiresContiguousMemoryLayout()){
+        if (this->bufferFreeZones.size() == 0){ // buffer full
+            this->bufferFreeZones.emplace_back(
+                chunk->bufferZone[bufferType].first,
+                chunk->bufferZone[bufferType].second
+            );
+        }
+        else {
+            bool inserted = false;
+            for (int i = 0; i<this->bufferFreeZones.size(); i++){
+                if (this->bufferFreeZones[i].first < chunk->bufferZone[bufferType].first){ // =?
+                    continue;
+                }
+                // this is zone that is farther away in memory than out chunk
+                if (this->bufferFreeZones[i].first == chunk->bufferZone[bufferType].first){
+                    inserted = true;
+                    return true;
+                    break;
+                }
 
-            this->bufferFreeZones.insert(
-                this->bufferFreeZones.begin() + i, // cause i can't be 0
-                std::pair<BufferInt, BufferInt>(
+                // additional freezone mismatch with data
+                if (this->bufferFreeZones[i].first < chunk->bufferZone[bufferType].second){
+                    // 
+                    ExitError("DYNAMIC_BUFFER_" + getBufferTypeString(),"There is some wrong memory handling in free zones. Zones don't match buffer data");
+                    return false;
+                }
+                this->bufferFreeZones.insert(
+                    this->bufferFreeZones.begin() + i, 
+                    std::pair<BufferInt, BufferInt>(
+                        chunk->bufferZone[bufferType].first,
+                        chunk->bufferZone[bufferType].second
+                    )
+                );
+                inserted = true;
+                break;
+            }
+            if (!inserted){
+                this->bufferFreeZones.emplace_back(
                     chunk->bufferZone[bufferType].first,
                     chunk->bufferZone[bufferType].second
-                )
-            );
-            insertedZone = true;
-            break;
+                );
+            }
         }
-        else if (this->bufferFreeZones[i].second == chunk->bufferZone[bufferType].first){
-            this->bufferFreeZones.insert(
-                this->bufferFreeZones.begin() + i + 1, 
-                std::pair<BufferInt, BufferInt>(
-                    chunk->bufferZone[bufferType].first,
-                    chunk->bufferZone[bufferType].second
-                )
-            );
-            insertedZone = true;
-            break;
-        }
-        else if (this->bufferFreeZones[i].first == chunk->bufferZone[bufferType].first && 
-                 this->bufferFreeZones[i].second == chunk->bufferZone[bufferType].second) {
-
-            insertedZone = true;
-            break;
-        }
+        mergeFreeZones();
     }
-    if (!insertedZone){
-        return false;
-    }
-    mergeFreeZones();
 
+    std::pair<BufferInt, BufferInt> freeZone = chunk->bufferZone[bufferType];
     chunk->bufferZone[bufferType].first = 0;
     chunk->bufferZone[bufferType].second = 0;
     chunk->hasBufferSpace[bufferType] = false;
 
     if (requiresContiguousMemoryLayout()){
-        ExitError("DYNAMIC_BUFFER","removed elements in buffer that requires contiguous memory layout");
-        return false; // TODO
+        std::cout << "moving Buffer part\n";
+        moveBufferPart(freeZone.second, freeZone.first);
+        // ExitError("DYNAMIC_BUFFER","removed elements in buffer that requires contiguous memory layout");
+        // return false; // TODO
     }
     
     return true;
@@ -258,9 +275,63 @@ void DynamicBuffer::expandBuffer(BufferInt by){
     tempBuffer.bindAsRead();
     this->bindAsWrite();
 
-    GLCall( glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, tempBuffer.bufferSize) ); 
+    GLCall( glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, tempBuffer.getBufferSize()) ); 
 
     tempBuffer.unBind();
     this->unBind();
 }
 
+bool DynamicBuffer::moveBufferPart(BufferInt from, BufferInt to)
+{
+    if (to > from){
+        ExitError("DYNAMIC_BUFFER","Currently no support for moving only aligning");
+        return false;
+    }
+
+    if (from == to){
+        return false; // no copy
+    }
+    BufferInt moveSize = this->bufferSize - from;
+    if (
+        moveSize + to > this->bufferSize ||
+        moveSize + from > this->bufferSize
+    ){
+        return false; // moving or copying outside buffer
+    }
+    Buffer tempBuffer = Buffer(GL_ARRAY_BUFFER); // array just because
+    tempBuffer.allocateBuffer(moveSize);
+
+
+    tempBuffer.bindAsWrite();
+    this->bindAsRead();
+
+    GLCall( glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, from, 0, moveSize) ); 
+
+    tempBuffer.bindAsRead();
+    this->bindAsWrite();
+
+
+    GLCall( glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, to, moveSize) ); 
+
+    tempBuffer.unBind();
+    this->unBind();
+
+    // now we need to shift free zones
+    for (std::pair<BufferInt, BufferInt> &pair : this->bufferFreeZones){
+        // TODO POSSIBLE MEMORY CORRUPTION DUE TO NO ZONE CHECKING
+        // VERY FRAGILE WATCH OUT
+        if (pair.first >= from){
+            // we know that `to` is smaller than `from` so we shift by this change:
+            // from - to
+            pair.first -= from - to;
+            pair.second -= from - to;
+        }
+    }
+
+    // and here surprise comes in shifting chunk zones
+
+
+
+    return true;
+
+}

@@ -10,8 +10,17 @@ bool MeshBuffer::requiresContiguousMemoryLayout()
     return false;
 }
 
+std::string MeshBuffer::getBufferTypeString()
+{
+    return std::string("MESH_BUFFER");
+}
+
 bool MeshBuffer::updateChunkBuffer(Chunk *chunk)
 {
+    if (!chunk->hasBufferSpace[bufferType]){
+        ExitError("MESH_BUFFER","Calling update on not inserted chunk");
+        return false;
+    }
     BufferInt meshSize = getChunkDataSize(chunk);
     if (meshSize > chunk->bufferZone[bufferType].second - chunk->bufferZone[bufferType].first){
         // chunk is to big so we either find new free zone OR reallocate buffer
