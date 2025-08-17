@@ -24,16 +24,21 @@ BufferInt DynamicBuffer::getChunkPadding(BufferInt size)
 
 void DynamicBuffer::mergeFreeZones()
 {
+  
     if (
         this->bufferFreeZones.size() == 0 ||
         this->bufferFreeZones.size() == 1 
     ){
         return ;
     }
+    std::sort(this->bufferFreeZones.begin(), this->bufferFreeZones.end(), [this](auto a, auto b){
+        return a.first < b.first;
+    });
     for (int i=0; i < this->bufferFreeZones.size() - 1; i++){
+        // is is sorted so we can use >=
         if (this->bufferFreeZones[i].second == this->bufferFreeZones[i + 1].first){
             // merge
-            this->bufferFreeZones[i].second = this->bufferFreeZones[i + 1].second;
+            this->bufferFreeZones[i].second = std::max(this->bufferFreeZones[i + 1].second, this->bufferFreeZones[i].second);
 
             // delete 
             this->bufferFreeZones.erase(
@@ -71,13 +76,21 @@ int DynamicBuffer::getChunkBufferSpaceIndex(Chunk* chunk)
     
     for (int i = 0; i < this->bufferFreeZones.size(); i++){
         std::pair<BufferInt, BufferInt> &freeZone = bufferFreeZones[i];
+        if (freeZone.second < freeZone.first){
+            ExitError("DYNAMIC_BUFFER","smth wrong with free zones second < first, GETCHUNKBUFFERINDEX()");
+            return -2;
+        }
         BufferInt zoneSpace = freeZone.second - freeZone.first;
-        if (zoneSpace - minSpaceSize < 0){
+        if (zoneSpace < minSpaceSize){
             continue;// too small zone
         }
 
-        if (zoneSpace - minSpaceSize < minSpaceDifference){
+        if (zoneSpace < minSpaceDifference + minSpaceSize){
             lowestDifferenceZoneIndex = i;
+            if (minSpaceSize > zoneSpace){
+                ExitError("DYNAMIC_BUFFER","minSpaceSize > zoneSpace, smth went wrong..., GETCHUNKBUFFERSPACEINDEX");
+                return -2;
+            }
             minSpaceDifference = zoneSpace - minSpaceSize;
             zoneFound = true;
         }
@@ -98,7 +111,6 @@ GLenum DynamicBuffer::getBufferType()
 bool DynamicBuffer::allocateDynamicBuffer(BufferInt size)
 {
     std::cout << size << "\n";
-    std::cout << size << "\n"; 
     allocateBuffer(size + getBufferPadding(size));
 
 
@@ -111,6 +123,7 @@ bool DynamicBuffer::allocateDynamicBuffer(BufferInt size)
 
 bool DynamicBuffer::insertChunkToBuffer(Chunk *chunk)
 {   
+    
     if (!chunk->hasBufferSpace[bufferType]){
         std::cout << "assigning space\n";
         int assignRes = assignChunkBufferZone(chunk);
@@ -126,11 +139,14 @@ bool DynamicBuffer::insertChunkToBuffer(Chunk *chunk)
         }
 
         return insertChunkToBuffer(chunk);
-
-        
-        
     }
-    return updateChunkBuffer(chunk);
+   
+    if (!updateChunkBuffer(chunk)){
+        return false;
+    };
+
+    return true;
+
 }
 
 bool DynamicBuffer::deleteChunkFromBuffer(Chunk *chunk)
@@ -138,65 +154,22 @@ bool DynamicBuffer::deleteChunkFromBuffer(Chunk *chunk)
     if (!chunk->hasBufferSpace[bufferType]){
         return true;
     }
-    
-    if (!requiresContiguousMemoryLayout()){
-        if (this->bufferFreeZones.size() == 0){ // buffer full
-            this->bufferFreeZones.emplace_back(
-                chunk->bufferZone[bufferType].first,
-                chunk->bufferZone[bufferType].second
-            );
-        }
-        else {
-            bool inserted = false;
-            for (int i = 0; i<this->bufferFreeZones.size(); i++){
-                if (this->bufferFreeZones[i].first < chunk->bufferZone[bufferType].first){ // =?
-                    continue;
-                }
-                // this is zone that is farther away in memory than out chunk
-                if (this->bufferFreeZones[i].first == chunk->bufferZone[bufferType].first){
-                    inserted = true;
-                    return true;
-                    break;
-                }
 
-                // additional freezone mismatch with data
-                if (this->bufferFreeZones[i].first < chunk->bufferZone[bufferType].second){
-                    // 
-                    ExitError("DYNAMIC_BUFFER_" + getBufferTypeString(),"There is some wrong memory handling in free zones. Zones don't match buffer data");
-                    return false;
-                }
-                this->bufferFreeZones.insert(
-                    this->bufferFreeZones.begin() + i, 
-                    std::pair<BufferInt, BufferInt>(
-                        chunk->bufferZone[bufferType].first,
-                        chunk->bufferZone[bufferType].second
-                    )
-                );
-                inserted = true;
-                break;
-            }
-            if (!inserted){
-                this->bufferFreeZones.emplace_back(
-                    chunk->bufferZone[bufferType].first,
-                    chunk->bufferZone[bufferType].second
-                );
-            }
-        }
-        mergeFreeZones();
+    if (chunk->bufferZone[bufferType].second < chunk->bufferZone[bufferType].first){
+        ExitError("DYNAMIC_BUFFER","smth wrong with chunk free zones second < first, DELETECHUNK()");
+        return false;
     }
 
-    std::pair<BufferInt, BufferInt> freeZone = chunk->bufferZone[bufferType];
+    this->bufferFreeZones.emplace_back(
+        chunk->bufferZone[bufferType].first,
+        chunk->bufferZone[bufferType].second
+    );
     chunk->bufferZone[bufferType].first = 0;
     chunk->bufferZone[bufferType].second = 0;
     chunk->hasBufferSpace[bufferType] = false;
-
-    if (requiresContiguousMemoryLayout()){
-        std::cout << "moving Buffer part\n";
-        moveBufferPart(freeZone.second, freeZone.first);
-        // ExitError("DYNAMIC_BUFFER","removed elements in buffer that requires contiguous memory layout");
-        // return false; // TODO
-    }
     
+    mergeFreeZones();
+
     return true;
 }
 
@@ -218,11 +191,20 @@ int DynamicBuffer::assignChunkBufferZone(Chunk* chunk){
 
     BufferInt maxSpaceSize = dataSize + getChunkPadding(dataSize);
 
+    if (this->bufferFreeZones[zoneIndex].second < this->bufferFreeZones[zoneIndex].first){
+        ExitError("DYNAMIC_BUFFER","smth wrong with chunk free zones second < first, ASSIGNCHUNKZONE()");
+        return false;
+    }
+
     BufferInt zoneSpace = this->bufferFreeZones[zoneIndex].second - this->bufferFreeZones[zoneIndex].first;
-    if (zoneSpace - maxSpaceSize > 0){
+    if (zoneSpace > maxSpaceSize){
         // zone is too big so we resize it and add new free zone
 
         // new zone
+        if (this->bufferFreeZones[zoneIndex].first + maxSpaceSize > this->bufferFreeZones[zoneIndex].second){
+            ExitError("DYNAMIC_BUFFER","smth wrong with chunk free zones second < first, ASSIGNCHUNKZONE(), INSERTING FREE ZONE");
+            return false;
+        }
         this->bufferFreeZones.insert(
             this->bufferFreeZones.begin() + zoneIndex + 1,
             std::pair<BufferInt, BufferInt>(
@@ -242,6 +224,7 @@ int DynamicBuffer::assignChunkBufferZone(Chunk* chunk){
     chunk->hasBufferSpace[bufferType] = true;
 
     this->bufferFreeZones.erase(this->bufferFreeZones.begin() + zoneIndex);
+    mergeFreeZones();
     return 0;
 }
 
@@ -249,13 +232,29 @@ void DynamicBuffer::expandBufferByChunk(Chunk* chunk){
     BufferInt dataSize = getChunkDataSize(chunk);
     BufferInt oldBufferSize = this->bufferSize;
 
-    expandBuffer(dataSize + getBufferPadding(dataSize));
+    BufferInt minBufferSize = oldBufferSize + static_cast<BufferInt>(oldBufferSize * BUFFER_EXPANSION_RATE);
+
+    // always expand by bigger one
+    if (dataSize + getBufferPadding(dataSize) < minBufferSize){
+        expandBuffer(minBufferSize);
+    }
+    else {
+        expandBuffer(dataSize + getBufferPadding(dataSize));
+    }
+   
+
+    if (oldBufferSize > this->bufferSize){
+        ExitError("DYNAMIC_BUFFER","smth wrong with buffer expansion first > second, EXPANDBUFFERBYCHUNK");
+        return ;
+    }
 
     this->bufferFreeZones.push_back(std::pair<BufferInt, BufferInt>(oldBufferSize, this->bufferSize));
 }
 
 void DynamicBuffer::expandBuffer(BufferInt by){
+    std::cout << "\n\nBUFFER EXPANSION..\n\n";
     BufferInt newBufferSize = this->bufferSize + by;
+    newBufferSize -= newBufferSize % sizeof(CHUNK_MESH_DATATYPE); // for fitting
 
     // create temp buffer
     Buffer tempBuffer = Buffer(bufferType);
@@ -283,6 +282,12 @@ void DynamicBuffer::expandBuffer(BufferInt by){
 
 bool DynamicBuffer::moveBufferPart(BufferInt from, BufferInt to)
 {
+
+    ExitError("DYNAMIC_BUFFER","NO SUPPORT OVER MOVING");
+    return false;
+
+
+
     if (to > from){
         ExitError("DYNAMIC_BUFFER","Currently no support for moving only aligning");
         return false;

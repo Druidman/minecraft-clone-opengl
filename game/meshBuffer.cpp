@@ -22,7 +22,7 @@ bool MeshBuffer::updateChunkBuffer(Chunk *chunk)
         return false;
     }
     BufferInt meshSize = getChunkDataSize(chunk);
-    if (meshSize > chunk->bufferZone[bufferType].second - chunk->bufferZone[bufferType].first){
+    if (meshSize + chunk->bufferZone[bufferType].first > chunk->bufferZone[bufferType].second ){
         // chunk is to big so we either find new free zone OR reallocate buffer
 
         // ! in all of these scenarios we need to remove chunk from its current location !
@@ -44,12 +44,13 @@ bool MeshBuffer::updateChunkBuffer(Chunk *chunk)
         return insertChunkToBuffer(chunk);
 
     }
-    std::cout << "Mesh Buffer insertion: \n";
-    std::cout << "Buffer Zone\n";
-    std::cout << "First: " << chunk->bufferZone[bufferType].first;
-    std::cout << "\nSecond: " << chunk->bufferZone[bufferType].second;
-    std::cout << "\n";
     BufferInt transMeshOffset = chunk->getOpaqueMesh()->size() * sizeof(CHUNK_MESH_DATATYPE);
+
+
+    if (chunk->bufferZone[bufferType].second < chunk->bufferZone[bufferType].first){
+        ExitError("DYNAMIC_BUFFER","smth wrong with chunk free zones second < first, UPDATECHUNKBUFFER(), UPDATING");
+        return false;
+    }
     if (chunk->getOpaqueMesh()->size() != 0){
         if (!updateData<CHUNK_MESH_DATATYPE>(
             chunk->getOpaqueMesh(), 

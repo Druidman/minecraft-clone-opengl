@@ -11,7 +11,7 @@ Chunk::Chunk(glm::vec3 chunkPosition, World *world)
 
 Chunk::~Chunk()
 {
-    this->world->removeChunk(this);
+   
 }
 
 std::optional<Block *> Chunk::getBlock(int plat, int row, int col, bool noneBlock)

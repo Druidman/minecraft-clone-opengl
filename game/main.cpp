@@ -119,6 +119,9 @@ void loop(){
     double endRenderTime = glfwGetTime();
 
     double endGameRunTime = glfwGetTime();
+
+
+    
     // std::cout << "FULL: " <<   (endGameRunTime - startGameRunTime) * 1000<< "\n" <<\
     //              "WORLD: " <<  (endWorldUpdateTime - startWorldUpdateTime) * 1000<< "\n" <<\
     //              "RENDER: " << (endRenderTime - startRenderTime) * 1000 << "\n";
@@ -220,6 +223,7 @@ int main()
     
     std::cout << "world generated\n";
     renderer->fillBuffers();
+    
 
     double last = glfwGetTime();
     double avgFPS = 0;

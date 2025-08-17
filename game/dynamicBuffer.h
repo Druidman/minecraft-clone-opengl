@@ -39,13 +39,15 @@ class DynamicBuffer : protected Buffer {
 
         // keeps free zones in bytes as pairs: (B_start, B_end)
         // if empty then entire buffer taken
-        std::vector< std::pair<BufferInt, BufferInt> > bufferFreeZones;
+        
 
     
         
     protected:
+        std::vector< std::pair<BufferInt, BufferInt> > bufferFreeZones;
         BufferInt BUFFER_PADDING = 0; // expressed in %
         BufferInt CHUNK_PADDING = 0;
+        BufferInt BUFFER_EXPANSION_RATE = 0;
         
         bool bufferRequiresMovingElements = false;
     protected:
@@ -59,6 +61,7 @@ class DynamicBuffer : protected Buffer {
         
         GLenum getBufferType();
         void expandBuffer(BufferInt by);
+
 
         bool moveBufferPart(BufferInt from, BufferInt to); // moves all data from -> to 
 
@@ -86,8 +89,6 @@ class DynamicBuffer : protected Buffer {
 
         bool insertChunkToBuffer(Chunk* chunk);
         bool deleteChunkFromBuffer(Chunk* chunk);
-
-
     public:
         virtual bool updateChunkBuffer(Chunk* chunk) = 0;
         virtual bool insertChunksToBuffer(std::vector<Chunk*> *chunks) = 0;

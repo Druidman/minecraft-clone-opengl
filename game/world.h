@@ -59,7 +59,7 @@ class World{ //world class
 
         std::vector< std::vector <Chunk> > chunks;
         
-        std::vector< std::vector < Chunk*  > > chunkRefs;
+
         std::vector < Chunk*  > chunkRenderRefs;
 
         Player* player;

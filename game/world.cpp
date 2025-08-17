@@ -65,15 +65,15 @@ void World::initChunks()
             startX += CHUNK_WIDTH;
             
         }
-    
+        
         this->chunks.push_back(row);
         startX = this->worldMiddle.x - ((float)WIDTH / 2);
         startZ += CHUNK_WIDTH;
         
     }
+
     
 }
-
 
 void World::genRenderChunkRefs(){
    
@@ -155,6 +155,8 @@ void World::updateChunks(WorldTickData *worldTickData){
 
         for (std::vector<Chunk> &chunkRow : this->chunks){
 
+            
+            removeChunk(&chunkRow[chunkRow.size() - 1]);
             chunkRow.pop_back();
         }
         
@@ -203,6 +205,7 @@ void World::updateChunks(WorldTickData *worldTickData){
         
 
         for (std::vector<Chunk> &chunkRow : this->chunks){
+            removeChunk(&chunkRow[0]);
             chunkRow.erase(chunkRow.begin());
         }
         std::vector<Chunk> column;
@@ -245,7 +248,9 @@ void World::updateChunks(WorldTickData *worldTickData){
         // we need to remove bottom chunks
         // we need to add top chunks
 
-        
+        for (Chunk &chunk : this->chunks.back()){
+            removeChunk(&chunk);
+        }
         this->chunks.pop_back();
         std::vector<Chunk> row;
         for (int col=0; col<CHUNK_COLUMNS; col++){
@@ -283,7 +288,9 @@ void World::updateChunks(WorldTickData *worldTickData){
         // we need to remove top chunks
         // we need to add bottom chunks
 
-    
+        for (Chunk &chunk : this->chunks.front()){
+            removeChunk(&chunk);
+        }
         this->chunks.erase(this->chunks.begin());
         std::vector<Chunk> row;
         for (int col=0; col<CHUNK_COLUMNS; col++){
@@ -371,7 +378,7 @@ void World::updateChunkRender(WorldTickData *worldTickData){
     }
     genRenderChunkRefs();
 
-        
+
     this->renderer->fillBuffer(INDIRECT_BUFFER); 
     this->renderer->fillBuffer(STORAGE_BUFFER);  
 }
@@ -382,6 +389,7 @@ void World::updateWorld(double delta)
         false, // playerChangedChunk
         false  // playerChangedPosition
     };
+    
     // make sun move
     updateSun(delta, &worldTickData);
 
@@ -403,7 +411,7 @@ World::World(int width, glm::vec3 worldMiddle, Renderer *renderer)
     this->WIDTH = width;
     this->CHUNK_ROWS = this->WIDTH / CHUNK_WIDTH;
     this->CHUNK_COLUMNS = this->WIDTH / CHUNK_WIDTH;
-    this->RENDER_DISTANCE = (width / 4) + 1; // render distance is much smaller than stored chunks 
+    this->RENDER_DISTANCE = (CHUNK_ROWS / 4) + 1; // render distance is much smaller than stored chunks 
     this->renderer = renderer;
     this->worldMiddle = worldMiddle;
 
@@ -459,10 +467,13 @@ void World::addChunk(Chunk *chunk)
 unsigned long long World::getWorldMeshSize()
 {
     unsigned long long sizeToAlloc = 0;
-    for (Chunk* chunk : chunkRenderRefs){
-        sizeToAlloc += chunk->getMeshSize();
+    for (std::vector< Chunk > &chunkRow : this->chunks){
+        for (Chunk &chunk : chunkRow){
+            sizeToAlloc += chunk.getMeshSize();
+        }
+       
+    };
     
-    }
     return sizeToAlloc;
 }
 

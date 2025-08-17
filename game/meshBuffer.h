@@ -24,6 +24,7 @@ class MeshBuffer : public DynamicBuffer {
         MeshBuffer() : DynamicBuffer(GL_ARRAY_BUFFER){
             BUFFER_PADDING = 20; // expressed in %
             CHUNK_PADDING = 10;
+            BUFFER_EXPANSION_RATE = 20;
         };
     
         virtual bool updateChunkBuffer(Chunk* chunk) override;

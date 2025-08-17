@@ -84,8 +84,11 @@ class DesktopRenderer : public Renderer
             );
 
            
-            for (Chunk* chunk : this->world->chunkRenderRefs){
-                addChunk(chunk);
+            for (std::vector< Chunk > &chunkRow : this->world->chunks){
+                for (Chunk &chunk : chunkRow){
+                    addChunk(&chunk);
+                }
+               
             };
 
             lastCameraPosOnChunkPosChange = this->world->player->camera->position;
@@ -94,9 +97,11 @@ class DesktopRenderer : public Renderer
 
             this->chunkStorageBuffer.setBindingPoint(3);
 
+            
+
         };
         virtual void fillBuffer(BufferType bufferToFill) override {
-            std::cout << "\nFilling buffer " << bufferToFill << " with chunks\n";
+            // std::cout << "\nFilling buffer " << bufferToFill << " with chunks\n";
 
 
             BufferInt meshSize = world->getWorldMeshSize();
@@ -105,9 +110,11 @@ class DesktopRenderer : public Renderer
                     this->meshBuffer.allocateDynamicBuffer(
                         meshSize
                     );
-                    for (Chunk* chunk : this->world->chunkRenderRefs){
-                        addChunk(chunk);
-                    }
+                    for (std::vector< Chunk > &chunkRow : this->world->chunks){
+                        for (Chunk &chunk : chunkRow){
+                            addChunk(&chunk);
+                        }
+                    };
                     break;
                 case INDIRECT_BUFFER:
                     this->chunkDrawBuffer.fillBufferWithChunks(&this->world->chunkRenderRefs);
@@ -123,6 +130,8 @@ class DesktopRenderer : public Renderer
         };
 
         virtual bool addChunk(Chunk *chunk) override {
+
+            
             if (!meshBuffer.insertChunkToBuffer(chunk)){
                 ExitError("DESKTOP_RENDERER","error inserting chunk to meshBuffer");
                 return false;

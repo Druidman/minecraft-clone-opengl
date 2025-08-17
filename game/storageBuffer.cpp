@@ -17,6 +17,7 @@ bool StorageBuffer::fillBufferWithChunks(std::vector<Chunk*> *chunks){
     }
     this->bufferContent.clear();
     for (Chunk* chunk : *chunks){
+        
         this->bufferContent.emplace_back(
             glm::vec4(chunk->position - this->world->player->camera->position,0.0)
         );
