@@ -122,9 +122,9 @@ void loop(){
 
 
     
-    // std::cout << "FULL: " <<   (endGameRunTime - startGameRunTime) * 1000<< "\n" <<\
-    //              "WORLD: " <<  (endWorldUpdateTime - startWorldUpdateTime) * 1000<< "\n" <<\
-    //              "RENDER: " << (endRenderTime - startRenderTime) * 1000 << "\n";
+    std::cout << "FULL: " <<   (endGameRunTime - startGameRunTime) * 1000<< "\n" <<\
+                 "WORLD: " <<  (endWorldUpdateTime - startWorldUpdateTime) * 1000<< "\n" <<\
+                 "RENDER: " << (endRenderTime - startRenderTime) * 1000 << "\n";
     
 
 

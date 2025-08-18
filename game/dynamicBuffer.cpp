@@ -31,9 +31,9 @@ void DynamicBuffer::mergeFreeZones()
     ){
         return ;
     }
-    std::sort(this->bufferFreeZones.begin(), this->bufferFreeZones.end(), [this](auto a, auto b){
-        return a.first < b.first;
-    });
+    // std::sort(this->bufferFreeZones.begin(), this->bufferFreeZones.end(), [this](auto a, auto b){
+    //     return a.first < b.first;
+    // });
     for (int i=0; i < this->bufferFreeZones.size() - 1; i++){
         // is is sorted so we can use >=
         if (this->bufferFreeZones[i].second == this->bufferFreeZones[i + 1].first){
@@ -149,26 +149,80 @@ bool DynamicBuffer::insertChunkToBuffer(Chunk *chunk)
 
 }
 
-bool DynamicBuffer::deleteChunkFromBuffer(Chunk *chunk)
+bool DynamicBuffer::deleteChunkFromBuffer(Chunk *chunk, bool merge)
 {
     if (!chunk->hasBufferSpace[bufferType]){
         return true;
     }
 
+    std::cout << "SIZE: " << this->bufferFreeZones.size() << "\n";
+
     if (chunk->bufferZone[bufferType].second < chunk->bufferZone[bufferType].first){
         ExitError("DYNAMIC_BUFFER","smth wrong with chunk free zones second < first, DELETECHUNK()");
         return false;
     }
+    if (this->bufferFreeZones.size() == 0){
+        this->bufferFreeZones.emplace_back(
+            chunk->bufferZone[bufferType].first,
+            chunk->bufferZone[bufferType].second
+        );
+    }
+    else {
+        bool inserted = false;
+        for (int i =0; i<this->bufferFreeZones.size(); i++){
+            std::pair<BufferInt, BufferInt> &freeZone = this->bufferFreeZones[i];
+            if (freeZone.first == chunk->bufferZone[bufferType].first){
+                ExitError("DYNAMIC_BUFFER","free zones starts at currently not deleted chunk");
+                return false;
+            }
+            if (freeZone.second == chunk->bufferZone[bufferType].second){
+                ExitError("DYNAMIC_BUFFER","free zones ends at currently not deleted chunk");
+                return false;
+            }
 
-    this->bufferFreeZones.emplace_back(
-        chunk->bufferZone[bufferType].first,
-        chunk->bufferZone[bufferType].second
-    );
+
+            if (
+                ( freeZone.first >= chunk->bufferZone[bufferType].first && 
+                  freeZone.first < chunk->bufferZone[bufferType].second) ||
+                ( freeZone.second > chunk->bufferZone[bufferType].first && 
+                  freeZone.second <= chunk->bufferZone[bufferType].second)
+            ){
+                ExitError("DYNAMIC_BUFFER","overlapping freeZone with currently occupied buffer space");
+                return false;
+            }
+
+            if (freeZone.first < chunk->bufferZone[bufferType].first){
+                continue;
+            }
+
+            // this free zone is further in memory than chunk space so 
+            // WE INSERT NEW FREE ZONE RIGHT BEFORE IT
+
+            this->bufferFreeZones.insert(
+                this->bufferFreeZones.begin() + i,
+                chunk->bufferZone[bufferType]
+            );
+            inserted = true;
+            break;
+        }
+        if (!inserted){ // all free zones were before this chunk zone
+            this->bufferFreeZones.emplace_back(
+                chunk->bufferZone[bufferType].first,
+                chunk->bufferZone[bufferType].second
+            );
+        }
+    }
+
+   
     chunk->bufferZone[bufferType].first = 0;
     chunk->bufferZone[bufferType].second = 0;
     chunk->hasBufferSpace[bufferType] = false;
     
-    mergeFreeZones();
+    if (merge){
+        mergeFreeZones();
+    }
+    
+    
 
     return true;
 }
@@ -197,7 +251,7 @@ int DynamicBuffer::assignChunkBufferZone(Chunk* chunk){
     }
 
     BufferInt zoneSpace = this->bufferFreeZones[zoneIndex].second - this->bufferFreeZones[zoneIndex].first;
-    if (zoneSpace > maxSpaceSize){
+    if (zoneSpace > maxSpaceSize + (maxSpaceSize / 2)){
         // zone is too big so we resize it and add new free zone
 
         // new zone

@@ -167,8 +167,8 @@ class DesktopRenderer : public Renderer
             return true;
         }
 
-        virtual bool deleteChunk(Chunk *chunk) override {
-            if (!meshBuffer.deleteChunkFromBuffer(chunk)){
+        virtual bool deleteChunk(Chunk *chunk, bool merge = false) override {
+            if (!meshBuffer.deleteChunkFromBuffer(chunk, merge)){
                 ExitError("DESKTOP_RENDERER","error deleting chunk from meshBuffer");
                 return false;
             };
@@ -235,10 +235,10 @@ class DesktopRenderer : public Renderer
             return true;
         }
 
-        virtual bool deleteChunk(Chunk *chunk, BufferType bufferToUpdate) override {
+        virtual bool deleteChunk(Chunk *chunk, BufferType bufferToUpdate, bool merge = false) override {
             switch(bufferToUpdate){
                 case MESH_BUFFER:
-                    if (!meshBuffer.deleteChunkFromBuffer(chunk)){
+                    if (!meshBuffer.deleteChunkFromBuffer(chunk, merge)){
                         ExitError("DESKTOP_RENDERER","error deleting chunk to meshBuffer");
                         return false;
                     };

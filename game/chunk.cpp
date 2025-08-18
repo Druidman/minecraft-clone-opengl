@@ -236,7 +236,7 @@ void Chunk::genChunk()
             
             addBlock(block);
             
-            // fillUnderBlock(block); // to speed up testing
+            fillUnderBlock(block); 
             
         }
     }

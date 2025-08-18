@@ -92,11 +92,11 @@ public:
 
     virtual bool updateChunk(Chunk* chunk) = 0;
     virtual bool addChunk(Chunk* chunk) = 0;
-    virtual bool deleteChunk(Chunk* chunk) = 0;
+    virtual bool deleteChunk(Chunk* chunk, bool merge = false) = 0;
 
     virtual bool updateChunk(Chunk* chunk, BufferType bufferToUpdate) = 0;
     virtual bool addChunk(Chunk* chunk, BufferType bufferToUpdate) = 0;
-    virtual bool deleteChunk(Chunk* chunk, BufferType bufferToUpdate) = 0;
+    virtual bool deleteChunk(Chunk* chunk, BufferType bufferToUpdate, bool merge = false) = 0;
 
  
 };

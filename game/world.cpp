@@ -149,15 +149,26 @@ void World::updateChunks(WorldTickData *worldTickData){
     lastPlayerChunk = chunk;
     int lastPlayerChunkRow = getChunkRow(lastPlayerChunk);
     int lastPlayerChunkCol = getChunkCol(lastPlayerChunk);
+
+    double removeStart = 0;
+    double removeEnd = 0;
     if (positionChange.x > 0){ // that means we moved: -x
         // we need to remove right chunks
         // we need to add left chunks
 
+        bool merge = false;
+        int i = this->chunks.size();
         for (std::vector<Chunk> &chunkRow : this->chunks){
-
+            i--;
+            if (i == 0){
+                merge = true; // we are removing last chunk row so we need to merge free zones
+            }
+            removeStart = glfwGetTime();
+            removeChunk(&chunkRow[chunkRow.size() - 1], merge);
+            removeEnd = glfwGetTime();
+            std::cout << "REMOVE: " << (removeEnd - removeStart) * 1000 << '\n';
+            chunkRow.erase(chunkRow.end());
             
-            removeChunk(&chunkRow[chunkRow.size() - 1]);
-            chunkRow.pop_back();
         }
         
         std::vector<Chunk> column;
@@ -203,10 +214,20 @@ void World::updateChunks(WorldTickData *worldTickData){
         // we need to remove left chunks
 
         
-
+        bool merge = false;
+        int i = this->chunks.size();
         for (std::vector<Chunk> &chunkRow : this->chunks){
-            removeChunk(&chunkRow[0]);
+            i--;
+            if (i == 0){
+                merge = true; // we are removing last chunk row so we need to merge free zones
+            }
+            removeStart = glfwGetTime();
+            removeChunk(&chunkRow[0], merge);
+            removeEnd = glfwGetTime();
+            std::cout << "REMOVE: " << (removeEnd - removeStart) * 1000 << '\n';
+            
             chunkRow.erase(chunkRow.begin());
+            
         }
         std::vector<Chunk> column;
         for (int row=0; row<CHUNK_ROWS; row++){
@@ -247,10 +268,20 @@ void World::updateChunks(WorldTickData *worldTickData){
     else if (positionChange.z > 0){ // that means we moved: -z
         // we need to remove bottom chunks
         // we need to add top chunks
-
+        bool merge = false;
+        int i = this->chunks.back().size();
         for (Chunk &chunk : this->chunks.back()){
-            removeChunk(&chunk);
+            i--;
+            if (i == 0){
+                merge = true; // we are removing last chunk row so we need to merge free zones
+            }
+            removeStart = glfwGetTime();
+            removeChunk(&chunk, merge);
+            removeEnd = glfwGetTime();
+            std::cout << "REMOVE: " << (removeEnd - removeStart) * 1000 << '\n';
+            
         }
+       
         this->chunks.pop_back();
         std::vector<Chunk> row;
         for (int col=0; col<CHUNK_COLUMNS; col++){
@@ -287,9 +318,17 @@ void World::updateChunks(WorldTickData *worldTickData){
     else if (positionChange.z < 0){ // that means we moved: +z
         // we need to remove top chunks
         // we need to add bottom chunks
-
+        bool merge = false;
+        int i = this->chunks.front().size();
         for (Chunk &chunk : this->chunks.front()){
-            removeChunk(&chunk);
+            i--;
+            if (i == 0){
+                merge = true; // we are removing last chunk row so we need to merge free zones
+            }
+            removeStart = glfwGetTime();
+            removeChunk(&chunk, merge);
+            removeEnd = glfwGetTime();
+            std::cout << "REMOVE: " << (removeEnd - removeStart) * 1000 << '\n';
         }
         this->chunks.erase(this->chunks.begin());
         std::vector<Chunk> row;
@@ -347,6 +386,8 @@ void World::updateThreads(WorldTickData *worldTickData){
        
             dataIterator->chunksDone[chunkInd] = false; // so that we won't insert it again
             
+
+       
         }
 
         if (isReady){
@@ -359,6 +400,9 @@ void World::updateThreads(WorldTickData *worldTickData){
             dataIterator++;
             threadIterator++;
         }
+
+
+      
     }
   
 }
@@ -376,11 +420,22 @@ void World::updateChunkRender(WorldTickData *worldTickData){
     if (!worldTickData->playerChangedChunk){
         return ;
     }
+    double refsStart = glfwGetTime();
     genRenderChunkRefs();
+    double refsEnd = glfwGetTime();
 
-
+    double indirectStart = glfwGetTime();
     this->renderer->fillBuffer(INDIRECT_BUFFER); 
+    double indirectEnd = glfwGetTime();
+
+    double storageStart = glfwGetTime();
     this->renderer->fillBuffer(STORAGE_BUFFER);  
+    double storageEnd = glfwGetTime();
+
+
+    std::cout << "INDIRECT_BUFFER: " << (indirectEnd - indirectStart) * 1000 << "\n"
+     << "STORAGE_BUFFER: " << (storageEnd - storageStart) * 1000 << "\n" 
+     << "REFS: " << (refsEnd - refsStart) * 1000 << "\n";
 }
 
 void World::updateWorld(double delta)
@@ -390,17 +445,29 @@ void World::updateWorld(double delta)
         false  // playerChangedPosition
     };
     
+    
     // make sun move
     updateSun(delta, &worldTickData);
 
+    double chunkStart = glfwGetTime();
     // handles chunk generation management
     updateChunks(&worldTickData);
+    double chunkEnd = glfwGetTime();
 
+    double threadsStart = glfwGetTime();
     // handles chunk generation threads
     updateThreads(&worldTickData);
+    double threadsEnd = glfwGetTime();
 
+    double chunkRenderStart = glfwGetTime();
     // generates render command
     updateChunkRender(&worldTickData);
+    double chunkRenderEnd = glfwGetTime();
+
+    std::cout << "CHUNK UPDATE: " << (chunkEnd - chunkStart) * 1000 << "\n"
+     << "THREADS: " << (threadsEnd - threadsStart) * 1000 << "\n" 
+     << "CHUNK RENDER: " << (chunkRenderEnd - chunkRenderStart) * 1000 << "\n";
+  
 
     
     
@@ -528,10 +595,11 @@ std::optional<Block *> World::getBlockByPos(glm::vec3 pointPositionInWorld, bool
     return blockRes.value();
 }
 
-void World::removeChunk(Chunk *chunk)
+void World::removeChunk(Chunk *chunk, bool merge)
 {
-    this->renderer->deleteChunk(chunk,MESH_BUFFER);
+    this->renderer->deleteChunk(chunk,MESH_BUFFER, merge);
 }
+
 
 void World::prepareChunks(ThreadWorkingData &data)
 {
@@ -539,14 +607,14 @@ void World::prepareChunks(ThreadWorkingData &data)
     for (Chunk &chunk : data.chunksToPrepare){
   
         chunk.genChunk();
-        std::cout << "threadWorking\n";
+
        
     }
     int ind=0;
     for (Chunk &chunk : data.chunksToPrepare){
  
         chunk.genChunkMesh();
-        std::cout << "threadWorking\n";
+
 
         data.chunksDone[ind] = true;
         ind++;

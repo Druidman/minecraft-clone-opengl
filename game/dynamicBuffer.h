@@ -88,7 +88,7 @@ class DynamicBuffer : protected Buffer {
         bool allocateDynamicBuffer(BufferInt meshSize);
 
         bool insertChunkToBuffer(Chunk* chunk);
-        bool deleteChunkFromBuffer(Chunk* chunk);
+        bool deleteChunkFromBuffer(Chunk* chunk, bool merge = false);
     public:
         virtual bool updateChunkBuffer(Chunk* chunk) = 0;
         virtual bool insertChunksToBuffer(std::vector<Chunk*> *chunks) = 0;

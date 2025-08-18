@@ -110,7 +110,7 @@ class World{ //world class
         std::optional<Chunk*> getChunkByPos(glm::vec3 pointPositionInWorld);
         std::optional<Block*> getBlockByPos(glm::vec3 pointPositionInWorld, bool noneBlock = false);
 
-        void removeChunk(Chunk* chunk);
+        void removeChunk(Chunk* chunk, bool merge = false);
     public:
         void prepareChunks(ThreadWorkingData &data);
 
