@@ -12,16 +12,14 @@
 #include "vendor/glm/glm.hpp"
 
 #include "block.h"
+#include "buffer.h"
 #include <thread>
-
 
 class Player;
 class Renderer;
 class Chunk;
 
-enum BufferType {
-    STORAGE_BUFFER, MESH_BUFFER, ALL, NONE
-};
+
 struct ChunkVecPos{
     int row,col;
 };
@@ -31,6 +29,11 @@ struct ThreadWorkingData {
     std::vector< bool > chunksDone;
     std::vector< ChunkVecPos > chunkPositions;
     bool ready = false;
+};
+
+struct WorldTickData {
+    bool playerChangedChunk = false;
+    bool playerChangedPosition = false;
 };
 
 class World{ //world class
@@ -56,7 +59,7 @@ class World{ //world class
 
         std::vector< std::vector <Chunk> > chunks;
         
-        std::vector< std::vector < Chunk*  > > chunkRefs;
+
         std::vector < Chunk*  > chunkRenderRefs;
 
         Player* player;
@@ -81,15 +84,22 @@ class World{ //world class
         int genBlockHeight(glm::vec2 positionXZ);
         float genTreeChance(glm::vec2 positionXZ);
 
-        void updateSun(double delta);
+        
         
         void addChunk(Chunk* chunk);
         void genRenderChunkRefs();
         void genWorldBase();
-        BufferType updateChunks();
-        void updateWorld(double delta);
-        BufferType checkThreads();
 
+
+        void updateWorld(double delta);
+
+        void updateSun(double delta, WorldTickData *worldTickData);
+        void updateChunkRender(WorldTickData *worldTickData);
+        void updateChunks(WorldTickData *worldTickData);
+        void updateThreads(WorldTickData *worldTickData);
+
+
+        
         unsigned long long getWorldMeshSize();
 
         int getChunkRow(Chunk* chunk);
@@ -100,6 +110,7 @@ class World{ //world class
         std::optional<Chunk*> getChunkByPos(glm::vec3 pointPositionInWorld);
         std::optional<Block*> getBlockByPos(glm::vec3 pointPositionInWorld, bool noneBlock = false);
 
+        void removeChunk(Chunk* chunk, bool merge = false);
     public:
         void prepareChunks(ThreadWorkingData &data);
 

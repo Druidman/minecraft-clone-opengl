@@ -10,6 +10,10 @@
 #include "player.h"
 #include "betterGL.h"
 
+#include "meshBuffer.h"
+#include "indirectBuffer.h"
+#include "storageBuffer.h"
+
 class DesktopRenderer : public Renderer
 {
     public:
@@ -20,30 +24,17 @@ class DesktopRenderer : public Renderer
         
         VertexArray vao;
         Buffer baseVbo = Buffer(GL_ARRAY_BUFFER);
-        Buffer meshBuffer = Buffer(GL_ARRAY_BUFFER);
-        Buffer chunkDrawBuffer = Buffer(GL_DRAW_INDIRECT_BUFFER);
-    private:
-        void addChunkToBuffers(Chunk *chunk){
-            DrawArraysIndirectCommand data = {
-                BLOCK_FACE_VERTICES_COUNT,
-                (uint)chunk->transparentMesh.size() + (uint)chunk->opaqueMesh.size(),
-                0,
-                (uint)(this->meshBuffer.getFilledDataSize() / sizeof(CHUNK_MESH_DATATYPE))
-            };
-            this->chunkDrawBuffer.addData<DrawArraysIndirectCommand>(data);
 
-            // vec4 due to std430 in shader
-            // this approach passes regular chunk coord to buffer but if we place cam always at 0,0,0 then it won't work
-            // this->chunkStorageBuffer->addData<glm::vec4>(glm::vec4(chunk->position,0.0)); 
-            // SO we shift chunks pos by camera position
-            this->chunkStorageBuffer.addData<glm::vec4>(glm::vec4(chunk->position - this->world->player->camera->position,0.0)); 
-
-            this->meshBuffer.addData< CHUNK_MESH_DATATYPE >(chunk->getOpaqueMesh());
-            this->meshBuffer.addData< CHUNK_MESH_DATATYPE >(chunk->getTransparentMesh());
-        }
+        MeshBuffer meshBuffer = MeshBuffer();
+        IndirectBuffer chunkDrawBuffer = IndirectBuffer();
+        StorageBuffer chunkStorageBuffer = StorageBuffer(); 
+        
+        glm::vec3 lastCameraPosOnChunkPosChange = glm::vec3(0.0f);
 
     protected:
         void initBuffers() override {
+            this->chunkStorageBuffer.init(this->world);
+
             vao.bind();
             baseVbo.fillData<float>(&BLOCK_FACE_VERTICES);
 
@@ -64,9 +55,17 @@ class DesktopRenderer : public Renderer
             
         };
     public:
-        DesktopRenderer() : Renderer(Buffer(GL_SHADER_STORAGE_BUFFER)){};
+        DesktopRenderer() : Renderer(){};
     public:
-        void renderGame(GameState *gameState) override {
+        virtual void updateLogs() override{
+            std::cout << "\n\nDESKTOP_RENDERER_BUFFER_LOGS\n\n";
+
+            std::cout << "BUFFER_CALLS\n";
+            std::cout << "MeshBuffer: " << this->meshBuffer.getBufferCallsNum() << "\n";
+            
+            
+        };
+        virtual void renderGame(GameState *gameState) override {
             this->shader.use();
 
             this->shader.setInt("playerState",world->player->state);
@@ -75,6 +74,7 @@ class DesktopRenderer : public Renderer
             this->shader.setMatrixFloat("model",GL_FALSE,*(gameState->model));
 
             this->shader.setVec3Float("LightPos",world->sunPosition - world->player->camera->position);
+            this->shader.setVec3Float("CameraPos",lastCameraPosOnChunkPosChange - world->player->camera->position);
             
 
 
@@ -82,18 +82,191 @@ class DesktopRenderer : public Renderer
             GLCall( glMultiDrawArraysIndirect(GL_TRIANGLES,0,this->world->chunkRenderRefs.size() ,sizeof(DrawArraysIndirectCommand)) );
         }
 
-        void fillBuffers() override {
-            unsigned long long sizeToAlloc = this->world->getWorldMeshSize();
+        virtual void fillBuffers() override {
+            std::cout << "\nFilling buffers with chunks\n";
 
-            this->meshBuffer.allocateBuffer(sizeToAlloc);
-            this->chunkDrawBuffer.allocateBuffer(sizeof(DrawArraysIndirectCommand) * this->world->chunkRenderRefs.size());
-            this->chunkStorageBuffer.allocateBuffer(sizeof(glm::vec4) * this->world->chunkRenderRefs.size()); // vec4 due to std430 in shader
-            for (Chunk* chunk : this->world->chunkRenderRefs){
-                
-                addChunkToBuffers(chunk);
+            BufferInt meshSize = world->getWorldMeshSize();
+            
+            this->meshBuffer.allocateDynamicBuffer(
+                meshSize
+            );
+
+           
+            for (std::vector< Chunk > &chunkRow : this->world->chunks){
+                for (Chunk &chunk : chunkRow){
+                    addChunk(&chunk);
+                }
+               
+            };
+
+            lastCameraPosOnChunkPosChange = this->world->player->camera->position;
+            this->chunkDrawBuffer.fillBufferWithChunks(&this->world->chunkRenderRefs);
+            this->chunkStorageBuffer.fillBufferWithChunks(&this->world->chunkRenderRefs);
+
+            this->chunkStorageBuffer.setBindingPoint(3);
+
+            
+
+        };
+        virtual void fillBuffer(BufferType bufferToFill) override {
+            // std::cout << "\nFilling buffer " << bufferToFill << " with chunks\n";
+
+
+            BufferInt meshSize = world->getWorldMeshSize();
+            switch(bufferToFill){
+                case MESH_BUFFER:
+                    this->meshBuffer.allocateDynamicBuffer(
+                        meshSize
+                    );
+                    for (std::vector< Chunk > &chunkRow : this->world->chunks){
+                        for (Chunk &chunk : chunkRow){
+                            addChunk(&chunk);
+                        }
+                    };
+                    break;
+                case INDIRECT_BUFFER:
+                    this->chunkDrawBuffer.fillBufferWithChunks(&this->world->chunkRenderRefs);
+                    break;
+                case STORAGE_BUFFER:
+                    lastCameraPosOnChunkPosChange = this->world->player->camera->position;
+                    this->chunkStorageBuffer.fillBufferWithChunks(&this->world->chunkRenderRefs);
+                    break;
             }
-            GLCall( glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, this->chunkStorageBuffer.getId()) );
+            
+            
+
+        };
+
+        virtual bool addChunk(Chunk *chunk) override {
+
+            
+            if (!meshBuffer.insertChunkToBuffer(chunk)){
+                ExitError("DESKTOP_RENDERER","error inserting chunk to meshBuffer");
+                return false;
+            };
+            // if (!chunkDrawBuffer.insertChunkToBuffer(chunk)){
+            //     ExitError("DESKTOP_RENDERER","error inserting chunk to indirectBuffer");
+            //     return false;
+            // };
+            // if (!chunkStorageBuffer.insertChunkToBuffer(chunk)){
+            //     ExitError("DESKTOP_RENDERER","error inserting chunk to storage Buffer");
+            //     return false;
+            // };
+
+            chunk->buffersSetUp = true;
+            return true;
         }
-   
+
+        virtual bool updateChunk(Chunk *chunk) override {
+            if (!meshBuffer.updateChunkBuffer(chunk)){
+                ExitError("DESKTOP_RENDERER","error updating chunk to meshBuffer");
+                return false;
+            };
+            // if (!chunkDrawBuffer.updateChunkBuffer(chunk)){
+            //     ExitError("DESKTOP_RENDERER","error updating chunk to indirectBuffer");
+            //     return false;
+            // };
+            // if (!chunkStorageBuffer.updateChunkBuffer(chunk)){
+            //     ExitError("DESKTOP_RENDERER","error updating chunk to storage Buffer");
+            //     return false;
+            // };
+
+            chunk->buffersSetUp = true;
+            return true;
+        }
+
+        virtual bool deleteChunk(Chunk *chunk, bool merge = false) override {
+            if (!meshBuffer.deleteChunkFromBuffer(chunk, merge)){
+                ExitError("DESKTOP_RENDERER","error deleting chunk from meshBuffer");
+                return false;
+            };
+            // if (!chunkDrawBuffer.deleteChunkFromBuffer(chunk)){
+            //     ExitError("DESKTOP_RENDERER","error deleting chunk from indirectBuffer");
+            //     return false;
+            // };
+            // if (!chunkStorageBuffer.deleteChunkFromBuffer(chunk)){
+            //     ExitError("DESKTOP_RENDERER","error deleting chunk from storage Buffer");
+            //     return false;
+            // };
+
+            chunk->buffersSetUp = false;
+            return true;
+        }
+        
+        virtual bool addChunk(Chunk *chunk, BufferType bufferToUpdate) override {
+            switch(bufferToUpdate){
+                case MESH_BUFFER:
+                    if (!meshBuffer.insertChunkToBuffer(chunk)){
+                        ExitError("DESKTOP_RENDERER","error inserting chunk to meshBuffer");
+                        return false;
+                    };
+                    break;
+                // case INDIRECT_BUFFER:
+                //     if (!chunkDrawBuffer.insertChunkToBuffer(chunk)){
+                //         ExitError("DESKTOP_RENDERER","error inserting chunk to indirectBuffer");
+                //         return false;
+                //     };
+                //     break;
+                // case STORAGE_BUFFER:
+                //     if (!chunkStorageBuffer.insertChunkToBuffer(chunk)){
+                //         ExitError("DESKTOP_RENDERER","error inserting chunk to storage Buffer");
+                //         return false;
+                //     };
+                //     break;
+            }
+            chunk->buffersSetUp = true;
+            return true;
+        }
+
+        virtual bool updateChunk(Chunk *chunk, BufferType bufferToUpdate) override {
+            switch(bufferToUpdate){
+                case MESH_BUFFER:
+                    if (!meshBuffer.updateChunkBuffer(chunk)){
+                        ExitError("DESKTOP_RENDERER","error updating chunk to meshBuffer");
+                        return false;
+                    };
+                    break;
+                // case INDIRECT_BUFFER:
+                //     if (!chunkDrawBuffer.updateChunkBuffer(chunk)){
+                //         ExitError("DESKTOP_RENDERER","error updating chunk to indirectBuffer");
+                //         return false;
+                //     };
+                //     break;
+                // case STORAGE_BUFFER:
+                //     if (!chunkStorageBuffer.updateChunkBuffer(chunk)){
+                //         ExitError("DESKTOP_RENDERER","error updating chunk to storage Buffer");
+                //         return false;
+                //     };
+                //     break;
+            }
+            chunk->buffersSetUp = true;
+            return true;
+        }
+
+        virtual bool deleteChunk(Chunk *chunk, BufferType bufferToUpdate, bool merge = false) override {
+            switch(bufferToUpdate){
+                case MESH_BUFFER:
+                    if (!meshBuffer.deleteChunkFromBuffer(chunk, merge)){
+                        ExitError("DESKTOP_RENDERER","error deleting chunk to meshBuffer");
+                        return false;
+                    };
+                    break;
+                // case INDIRECT_BUFFER:
+                //     if (!chunkDrawBuffer.deleteChunkFromBuffer(chunk)){
+                //         ExitError("DESKTOP_RENDERER","error deleting chunk to indirectBuffer");
+                //         return false;
+                //     };
+                //     break;
+                // case STORAGE_BUFFER:
+                //     if (!chunkStorageBuffer.deleteChunkFromBuffer(chunk)){
+                //         ExitError("DESKTOP_RENDERER","error deleting chunk to storage Buffer");
+                //         return false;
+                //     };
+                //     break;
+            }
+            chunk->buffersSetUp = false;
+            return true;
+        }
+        
 };
 #endif

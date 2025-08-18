@@ -10,6 +10,7 @@
 #include "chunk.h"
 #include "player.h"
 #include "renderer.h"
+#include "buffer.h"
 
 
 
@@ -64,17 +65,19 @@ void World::initChunks()
             startX += CHUNK_WIDTH;
             
         }
-    
+        
         this->chunks.push_back(row);
         startX = this->worldMiddle.x - ((float)WIDTH / 2);
         startZ += CHUNK_WIDTH;
         
     }
+
     
 }
 
-
 void World::genRenderChunkRefs(){
+   
+    
     this->chunkRenderRefs.clear();
     for (int row = 0; row < CHUNK_ROWS; row++){
         for (int col=0; col < CHUNK_COLUMNS; col++){
@@ -121,38 +124,60 @@ void World::genWorldBase()
     
 }
 
-BufferType World::updateChunks(){ 
+void World::updateChunks(WorldTickData *worldTickData){ 
+    worldTickData->playerChangedChunk = false;
+    worldTickData->playerChangedPosition = false;
     // returns true when this->chunks has been changed
     if (this->lastPlayerPos == player->position){
-        return NONE;
+        return; //player didn't move
     }
     lastPlayerPos = player->position;
+    worldTickData->playerChangedPosition = true;
 
     
     std::optional<Chunk* > chunkRes = getChunkByPos(player->position);
     if (!chunkRes.has_value()){
-        return NONE; // player is outside of the map so we do nothing
+        return; // player is outside of the map so we do nothing
     }
     Chunk* chunk = chunkRes.value();
     if (lastPlayerChunk == chunk){
         // player changed pos but is in the same chunk
-        
-        return STORAGE_BUFFER; // the same chunk so only storage buffer requires update but TODO
+        return; // player didn't change chunks
     }
-    //player changed chunks
+        //player changed chunks
 
 
+    worldTickData->playerChangedChunk = true;
     glm::vec3 positionChange = lastPlayerChunk->position - chunk->position;
 
     lastPlayerChunk = chunk;
     int lastPlayerChunkRow = getChunkRow(lastPlayerChunk);
     int lastPlayerChunkCol = getChunkCol(lastPlayerChunk);
+
+
+
+
     if (positionChange.x > 0){ // that means we moved: -x
         // we need to remove right chunks
         // we need to add left chunks
 
+        bool merge = false;
+        int i = this->chunks.size();
         for (std::vector<Chunk> &chunkRow : this->chunks){
+            i--;
+            if (i == 0){
+                merge = true; // we are removing last chunk row so we need to merge free zones
+            }
+ 
+            removeChunk(&chunkRow[chunkRow.size() - 1], merge);
+            
+            
+
+
+
             chunkRow.pop_back();
+       
+            
         }
         
         std::vector<Chunk> column;
@@ -198,9 +223,21 @@ BufferType World::updateChunks(){
         // we need to remove left chunks
 
         
-
+        bool merge = false;
+        int i = this->chunks.size();
         for (std::vector<Chunk> &chunkRow : this->chunks){
+            i--;
+            if (i == 0){
+                merge = true; // we are removing last chunk row so we need to merge free zones
+            }
+   
+            removeChunk(&chunkRow[0], merge);
+            
+ 
             chunkRow.erase(chunkRow.begin());
+            
+            
+            
         }
         std::vector<Chunk> column;
         for (int row=0; row<CHUNK_ROWS; row++){
@@ -241,9 +278,22 @@ BufferType World::updateChunks(){
     else if (positionChange.z > 0){ // that means we moved: -z
         // we need to remove bottom chunks
         // we need to add top chunks
+        bool merge = false;
+        int i = this->chunks.back().size();
+        for (Chunk &chunk : this->chunks.back()){
+            i--;
+            if (i == 0){
+                merge = true; // we are removing last chunk row so we need to merge free zones
+            }
+
+            removeChunk(&chunk, merge);
+
+            
+        }
+
+        this->chunks.pop_back();
 
         
-        this->chunks.pop_back();
         std::vector<Chunk> row;
         for (int col=0; col<CHUNK_COLUMNS; col++){
             glm::vec3 chunkPos = this->chunks.front()[col].position - glm::vec3(0.0,0.0,CHUNK_WIDTH);
@@ -279,9 +329,21 @@ BufferType World::updateChunks(){
     else if (positionChange.z < 0){ // that means we moved: +z
         // we need to remove top chunks
         // we need to add bottom chunks
+        bool merge = false;
+        int i = this->chunks.front().size();
+        for (Chunk &chunk : this->chunks.front()){
+            i--;
+            if (i == 0){
+                merge = true; // we are removing last chunk row so we need to merge free zones
+            }
+            
+            removeChunk(&chunk, merge);
+            
+           
+        }
 
-    
         this->chunks.erase(this->chunks.begin());
+    
         std::vector<Chunk> row;
         for (int col=0; col<CHUNK_COLUMNS; col++){
             glm::vec3 chunkPos = this->chunks.back()[col].position + glm::vec3(0.0,0.0,CHUNK_WIDTH);
@@ -311,14 +373,11 @@ BufferType World::updateChunks(){
     }
     
     
-    return MESH_BUFFER;
-
 }
 
-BufferType World::checkThreads(){
+void World::updateThreads(WorldTickData *worldTickData){
     std::list<ThreadWorkingData>::iterator dataIterator = threadsWorkingData.begin();
     std::list<std::thread>::iterator threadIterator = threads.begin();
-    BufferType anything = NONE;
     while (dataIterator != threadsWorkingData.end() && threadIterator != threads.end()){
         
         bool isReady = dataIterator->ready;
@@ -334,11 +393,14 @@ BufferType World::checkThreads(){
             if (row >= CHUNK_ROWS || col >= CHUNK_COLUMNS){
                 continue;
             }
-            anything = MESH_BUFFER;
             this->chunks[row][col] = dataIterator->chunksToPrepare[chunkInd];
-       
-            dataIterator->chunksDone[chunkInd] = false;
             
+            this->renderer->addChunk(&this->chunks[row][col]);
+       
+            dataIterator->chunksDone[chunkInd] = false; // so that we won't insert it again
+            
+
+       
         }
 
         if (isReady){
@@ -351,11 +413,14 @@ BufferType World::checkThreads(){
             dataIterator++;
             threadIterator++;
         }
+
+
+      
     }
-    return anything;
+  
 }
 
-void World::updateSun(double delta){
+void World::updateSun(double delta, WorldTickData *worldTickData){
     sunPosition = glm::vec3(0.0,WIDTH,0.0);
     glm::mat4 rotate = glm::rotate(glm::mat4(1.0f),glm::radians(sunAngle),glm::vec3(1.0,0.0,1.0));
     sunPosition = glm::vec4(sunPosition,0.0) * rotate;
@@ -364,27 +429,60 @@ void World::updateSun(double delta){
     sunAngle += 6 * delta;
 }
 
+void World::updateChunkRender(WorldTickData *worldTickData){
+    if (!worldTickData->playerChangedChunk){
+        return ;
+    }
+    double refsStart = glfwGetTime();
+    genRenderChunkRefs();
+    double refsEnd = glfwGetTime();
+
+    double indirectStart = glfwGetTime();
+    this->renderer->fillBuffer(INDIRECT_BUFFER); 
+    double indirectEnd = glfwGetTime();
+
+    double storageStart = glfwGetTime();
+    this->renderer->fillBuffer(STORAGE_BUFFER);  
+    double storageEnd = glfwGetTime();
+
+
+    std::cout << "INDIRECT_BUFFER: " << (indirectEnd - indirectStart) * 1000 << "\n"
+     << "STORAGE_BUFFER: " << (storageEnd - storageStart) * 1000 << "\n" 
+     << "REFS: " << (refsEnd - refsStart) * 1000 << "\n";
+}
+
 void World::updateWorld(double delta)
 {
-    updateSun(delta);
-    BufferType needUpdate2 = updateChunks();
-    BufferType needUpdate3 = checkThreads();
-    if (needUpdate2 == MESH_BUFFER){
-        
-        genRenderChunkRefs();
-        renderer->fillBuffers();
-        
-    }
-    else if (needUpdate2 == STORAGE_BUFFER && needUpdate3 != MESH_BUFFER){
+    WorldTickData worldTickData = {
+        false, // playerChangedChunk
+        false  // playerChangedPosition
+    };
+    
+    
+    // make sun move
+    updateSun(delta, &worldTickData);
 
-        genRenderChunkRefs();
-        renderer->fillBuffers();
-    }
-    else if (needUpdate3 == MESH_BUFFER){
-        genRenderChunkRefs();
-        renderer->fillBuffers();
-        
-    }
+    double chunkStart = glfwGetTime();
+    // handles chunk generation management
+    updateChunks(&worldTickData);
+    double chunkEnd = glfwGetTime();
+
+    double threadsStart = glfwGetTime();
+    // handles chunk generation threads
+    updateThreads(&worldTickData);
+    double threadsEnd = glfwGetTime();
+
+    double chunkRenderStart = glfwGetTime();
+    // generates render command
+    updateChunkRender(&worldTickData);
+    double chunkRenderEnd = glfwGetTime();
+
+    std::cout << "CHUNK UPDATE: " << (chunkEnd - chunkStart) * 1000 << "\n"
+     << "THREADS: " << (threadsEnd - threadsStart) * 1000 << "\n" 
+     << "CHUNK RENDER: " << (chunkRenderEnd - chunkRenderStart) * 1000 << "\n";
+  
+
+    
     
 }
 
@@ -393,7 +491,7 @@ World::World(int width, glm::vec3 worldMiddle, Renderer *renderer)
     this->WIDTH = width;
     this->CHUNK_ROWS = this->WIDTH / CHUNK_WIDTH;
     this->CHUNK_COLUMNS = this->WIDTH / CHUNK_WIDTH;
-    this->RENDER_DISTANCE = CHUNK_ROWS / 2;
+    this->RENDER_DISTANCE = (CHUNK_ROWS / 4) + 1; // render distance is much smaller than stored chunks 
     this->renderer = renderer;
     this->worldMiddle = worldMiddle;
 
@@ -449,10 +547,13 @@ void World::addChunk(Chunk *chunk)
 unsigned long long World::getWorldMeshSize()
 {
     unsigned long long sizeToAlloc = 0;
-    for (Chunk* chunk : chunkRenderRefs){
-        sizeToAlloc += chunk->getMeshSize();
+    for (std::vector< Chunk > &chunkRow : this->chunks){
+        for (Chunk &chunk : chunkRow){
+            sizeToAlloc += chunk.getMeshSize();
+        }
+       
+    };
     
-    }
     return sizeToAlloc;
 }
 
@@ -507,20 +608,26 @@ std::optional<Block *> World::getBlockByPos(glm::vec3 pointPositionInWorld, bool
     return blockRes.value();
 }
 
+void World::removeChunk(Chunk *chunk, bool merge)
+{
+    this->renderer->deleteChunk(chunk,MESH_BUFFER, merge);
+}
+
+
 void World::prepareChunks(ThreadWorkingData &data)
 {
     
     for (Chunk &chunk : data.chunksToPrepare){
   
         chunk.genChunk();
-        std::cout << "threadWorking\n";
+
        
     }
     int ind=0;
     for (Chunk &chunk : data.chunksToPrepare){
  
         chunk.genChunkMesh();
-        std::cout << "threadWorking\n";
+
 
         data.chunksDone[ind] = true;
         ind++;

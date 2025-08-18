@@ -37,7 +37,7 @@ void Player::updateAction()
     std::optional<Chunk*> res = this->world->getChunkByPos(position);
     if (!res.has_value()){
         this->action = FALLING; //player is outside of the map
-        std::cout << "falling1\n";
+ 
         return ;
     }
 
@@ -47,7 +47,7 @@ void Player::updateAction()
     
     if (!blockRes.has_value()){
         this->action = FALLING; // no block under player
-        std::cout << "falling2\n";
+
         return ;
     } 
 
@@ -60,7 +60,7 @@ void Player::updateAction()
     }
     else{
         this->action = FALLING; // player is in water
-        std::cout << "falling3\n";
+
     }
 }
 
@@ -176,7 +176,8 @@ void Player::destroy_block()
 
     chunk->removeBlock(hitPos);
     chunk->genChunkMesh();
-    world->renderer->fillBuffers();
+    // world->renderer->updateChunk(chunk, MESH_BUFFER);
+    // world->renderer->updateChunk(chunk, INDIRECT_BUFFER);
     
 }
 
@@ -244,9 +245,8 @@ void Player::place_block()
     Block blockToAdd = Block(STONE,placePos);
     placeChunk->addBlock(blockToAdd);
     placeChunk->genChunkMesh();
-
-
-    world->renderer->fillBuffers();
+    // world->renderer->updateChunk(placeChunk, MESH_BUFFER);
+    // world->renderer->updateChunk(placeChunk, INDIRECT_BUFFER);
 }
 
 void Player::update(double delta)
@@ -266,7 +266,7 @@ void Player::update(double delta)
     
 
     process_input(delta);
-    // world->renderer->fillChunkStorageBuffer();
+    
 }
 
 void Player::buttonPressed(int button)

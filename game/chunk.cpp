@@ -10,6 +10,7 @@ Chunk::Chunk(glm::vec3 chunkPosition, World *world)
 }
 
 
+
 std::optional<Block *> Chunk::getBlock(int plat, int row, int col, bool noneBlock)
 {
     if (
@@ -235,7 +236,7 @@ void Chunk::genChunk()
             
             addBlock(block);
             
-            fillUnderBlock(block);
+            fillUnderBlock(block); 
             
         }
     }

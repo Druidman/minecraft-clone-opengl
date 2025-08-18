@@ -137,6 +137,9 @@ void loop(){
     double endRenderTime = glfwGetTime();
 
     double endGameRunTime = glfwGetTime();
+
+
+    
     std::cout << "FULL: " <<   (endGameRunTime - startGameRunTime) * 1000<< "\n" <<\
                  "WORLD: " <<  (endWorldUpdateTime - startWorldUpdateTime) * 1000<< "\n" <<\
                  "RENDER: " << (endRenderTime - startRenderTime) * 1000 << "\n";
@@ -193,7 +196,7 @@ int main()
         }
     #endif
     
-    glfwSwapInterval( 0 );
+    // glfwSwapInterval( 0 );
 
     stbi_set_flip_vertically_on_load(true);
     
@@ -226,11 +229,14 @@ int main()
     std::cout << "World init\n";
     world.init(&player);
     
-
+    std::cout << "generating world base\n";
     world.genWorldBase();
+    std::cout << "generating render chunks\n";
     world.genRenderChunkRefs();
-    renderer->fillBuffers();
+    
     std::cout << "world generated\n";
+    renderer->fillBuffers();
+    
 
     double last = glfwGetTime();
     double avgFPS = 0;

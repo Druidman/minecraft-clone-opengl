@@ -12,12 +12,7 @@
 
 class World;
 class Chunk;
-struct DrawArraysIndirectCommand{
-    unsigned int  count;
-    unsigned int  instanceCount;
-    unsigned int  first;
-    unsigned int  baseInstance;
-};
+
 
 struct GameState {
 
@@ -49,14 +44,12 @@ protected:
     VertexArray crosshairVAO = VertexArray();
     Buffer crosshairVBO = Buffer(GL_ARRAY_BUFFER);
     
-    Buffer chunkStorageBuffer;
-    
     World* world;
 
     glm::vec3 cameraPosOnChunkUpdate = glm::vec3(0.0f);
 
 protected:
-    Renderer(Buffer csb) : chunkStorageBuffer(csb){
+    Renderer(){
 
     }
     virtual void initBuffers() = 0;
@@ -68,6 +61,7 @@ public:
         initBuffers();
     };
 
+    virtual void updateLogs() = 0;
     virtual void renderGame(GameState *gameState) = 0;
     
     void render(GameState *gameState){
@@ -78,8 +72,14 @@ public:
         renderGame(gameState);
         renderUi();
 
+        updateLogs();
+        GLenum err;
+        
         /* Swap front and back buffers */
         glfwSwapBuffers(gameState->window);
+        while ((err = glGetError()) != GL_NO_ERROR) {
+            printf("OpenGL Error: %x\n", err);
+        }
 
         /* Poll for and process events */
         glfwPollEvents();
@@ -92,21 +92,17 @@ public:
     };
 
     virtual void fillBuffers() = 0;
-    
-    void fillChunkStorageBuffer()
-    {   
-        std::cout << "CHUNK STORAGE BUFFER UPDATE\n";
-        std::vector<glm::vec4> chunkPositions;
-        for (Chunk* chunk : this->world->chunkRenderRefs){
-            
-            chunkPositions.push_back(glm::vec4(chunk->position - this->world->player->camera->position,0.0));
-            
-        }       
-        
-        this->chunkStorageBuffer.fillData<glm::vec4>(&chunkPositions, sizeof(glm::vec4) * 1024);
-        
-        cameraPosOnChunkUpdate = this->world->player->camera->position;
-    }
+    virtual void fillBuffer(BufferType bufferToFill) = 0;
+
+    virtual bool updateChunk(Chunk* chunk) = 0;
+    virtual bool addChunk(Chunk* chunk) = 0;
+    virtual bool deleteChunk(Chunk* chunk, bool merge = false) = 0;
+
+    virtual bool updateChunk(Chunk* chunk, BufferType bufferToUpdate) = 0;
+    virtual bool addChunk(Chunk* chunk, BufferType bufferToUpdate) = 0;
+    virtual bool deleteChunk(Chunk* chunk, BufferType bufferToUpdate, bool merge = false) = 0;
+
+ 
 };
 
 #endif
