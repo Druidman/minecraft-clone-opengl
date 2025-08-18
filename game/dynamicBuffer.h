@@ -50,6 +50,8 @@ class DynamicBuffer : protected Buffer {
         BufferInt BUFFER_EXPANSION_RATE = 0;
         
         bool bufferRequiresMovingElements = false;
+
+        int bufferCalls = 0;
     protected:
         BufferInt getBufferPadding(BufferInt size);
         BufferInt getChunkPadding(BufferInt size);
@@ -83,6 +85,7 @@ class DynamicBuffer : protected Buffer {
         virtual std::string getBufferTypeString() = 0;
         
     public:
+        int getBufferCallsNum();
         void bind() { Buffer::bind(); };
         void getId() { Buffer::getId(); };
         bool allocateDynamicBuffer(BufferInt meshSize);

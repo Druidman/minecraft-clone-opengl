@@ -1,4 +1,5 @@
 #include "meshBuffer.h"
+#include "dynamicBuffer.h"
 
 BufferInt MeshBuffer::getChunkDataSize(Chunk *chunk)
 {
@@ -14,6 +15,7 @@ std::string MeshBuffer::getBufferTypeString()
 {
     return std::string("MESH_BUFFER");
 }
+
 
 bool MeshBuffer::updateChunkBuffer(Chunk *chunk)
 {
@@ -59,6 +61,7 @@ bool MeshBuffer::updateChunkBuffer(Chunk *chunk)
         )){
             return false;
         }
+        this->bufferCalls++;
     }
     if (chunk->getTransparentMesh()->size() != 0){
         if (!updateData<CHUNK_MESH_DATATYPE>(
@@ -68,6 +71,7 @@ bool MeshBuffer::updateChunkBuffer(Chunk *chunk)
         )){
             return false;
         }
+        this->bufferCalls++;
     }
     
     

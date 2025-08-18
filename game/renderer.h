@@ -59,6 +59,7 @@ public:
         initBuffers();
     };
 
+    virtual void updateLogs() = 0;
     virtual void renderGame(GameState *gameState) = 0;
     
     void render(GameState *gameState){
@@ -69,6 +70,7 @@ public:
         renderGame(gameState);
         renderUi();
 
+        updateLogs();
         GLenum err;
         
         /* Swap front and back buffers */

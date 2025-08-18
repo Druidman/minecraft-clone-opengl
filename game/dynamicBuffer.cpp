@@ -31,9 +31,6 @@ void DynamicBuffer::mergeFreeZones()
     ){
         return ;
     }
-    // std::sort(this->bufferFreeZones.begin(), this->bufferFreeZones.end(), [this](auto a, auto b){
-    //     return a.first < b.first;
-    // });
     for (int i=0; i < this->bufferFreeZones.size() - 1; i++){
         // is is sorted so we can use >=
         if (this->bufferFreeZones[i].second == this->bufferFreeZones[i + 1].first){
@@ -112,6 +109,7 @@ bool DynamicBuffer::allocateDynamicBuffer(BufferInt size)
 {
     std::cout << size << "\n";
     allocateBuffer(size + getBufferPadding(size));
+    this->bufferCalls++;
 
 
     this->bufferFreeZones.clear();
@@ -320,6 +318,7 @@ void DynamicBuffer::expandBuffer(BufferInt by){
 
     // copy data to temp buffer
     GLCall( glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, this->bufferSize) ); 
+    this->bufferCalls++;
 
     //expand buffer
     this->allocateBuffer(newBufferSize); 
@@ -329,6 +328,7 @@ void DynamicBuffer::expandBuffer(BufferInt by){
     this->bindAsWrite();
 
     GLCall( glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, tempBuffer.getBufferSize()) ); 
+    this->bufferCalls++;
 
     tempBuffer.unBind();
     this->unBind();
@@ -365,12 +365,14 @@ bool DynamicBuffer::moveBufferPart(BufferInt from, BufferInt to)
     this->bindAsRead();
 
     GLCall( glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, from, 0, moveSize) ); 
+    this->bufferCalls++;
 
     tempBuffer.bindAsRead();
     this->bindAsWrite();
 
 
     GLCall( glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, to, moveSize) ); 
+    this->bufferCalls++;
 
     tempBuffer.unBind();
     this->unBind();
@@ -393,4 +395,11 @@ bool DynamicBuffer::moveBufferPart(BufferInt from, BufferInt to)
 
     return true;
 
+}
+
+int DynamicBuffer::getBufferCallsNum()
+{   
+    int calls = this->bufferCalls;
+    this->bufferCalls = 0;
+    return calls;
 }

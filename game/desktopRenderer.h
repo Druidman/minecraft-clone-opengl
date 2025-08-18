@@ -57,7 +57,15 @@ class DesktopRenderer : public Renderer
     public:
         DesktopRenderer() : Renderer(){};
     public:
-        void renderGame(GameState *gameState) override {
+        virtual void updateLogs() override{
+            std::cout << "\n\nDESKTOP_RENDERER_BUFFER_LOGS\n\n";
+
+            std::cout << "BUFFER_CALLS\n";
+            std::cout << "MeshBuffer: " << this->meshBuffer.getBufferCallsNum() << "\n";
+            
+            
+        };
+        virtual void renderGame(GameState *gameState) override {
             this->shader.use();
 
             this->shader.setInt("playerState",world->player->state);

@@ -150,8 +150,9 @@ void World::updateChunks(WorldTickData *worldTickData){
     int lastPlayerChunkRow = getChunkRow(lastPlayerChunk);
     int lastPlayerChunkCol = getChunkCol(lastPlayerChunk);
 
-    double removeStart = 0;
-    double removeEnd = 0;
+
+
+
     if (positionChange.x > 0){ // that means we moved: -x
         // we need to remove right chunks
         // we need to add left chunks
@@ -163,11 +164,15 @@ void World::updateChunks(WorldTickData *worldTickData){
             if (i == 0){
                 merge = true; // we are removing last chunk row so we need to merge free zones
             }
-            removeStart = glfwGetTime();
+ 
             removeChunk(&chunkRow[chunkRow.size() - 1], merge);
-            removeEnd = glfwGetTime();
-            std::cout << "REMOVE: " << (removeEnd - removeStart) * 1000 << '\n';
-            chunkRow.erase(chunkRow.end());
+            
+            
+
+
+
+            chunkRow.pop_back();
+       
             
         }
         
@@ -221,12 +226,13 @@ void World::updateChunks(WorldTickData *worldTickData){
             if (i == 0){
                 merge = true; // we are removing last chunk row so we need to merge free zones
             }
-            removeStart = glfwGetTime();
+   
             removeChunk(&chunkRow[0], merge);
-            removeEnd = glfwGetTime();
-            std::cout << "REMOVE: " << (removeEnd - removeStart) * 1000 << '\n';
             
+ 
             chunkRow.erase(chunkRow.begin());
+            
+            
             
         }
         std::vector<Chunk> column;
@@ -275,14 +281,15 @@ void World::updateChunks(WorldTickData *worldTickData){
             if (i == 0){
                 merge = true; // we are removing last chunk row so we need to merge free zones
             }
-            removeStart = glfwGetTime();
+
             removeChunk(&chunk, merge);
-            removeEnd = glfwGetTime();
-            std::cout << "REMOVE: " << (removeEnd - removeStart) * 1000 << '\n';
+
             
         }
-       
+
         this->chunks.pop_back();
+
+        
         std::vector<Chunk> row;
         for (int col=0; col<CHUNK_COLUMNS; col++){
             glm::vec3 chunkPos = this->chunks.front()[col].position - glm::vec3(0.0,0.0,CHUNK_WIDTH);
@@ -325,12 +332,14 @@ void World::updateChunks(WorldTickData *worldTickData){
             if (i == 0){
                 merge = true; // we are removing last chunk row so we need to merge free zones
             }
-            removeStart = glfwGetTime();
+            
             removeChunk(&chunk, merge);
-            removeEnd = glfwGetTime();
-            std::cout << "REMOVE: " << (removeEnd - removeStart) * 1000 << '\n';
+            
+           
         }
+
         this->chunks.erase(this->chunks.begin());
+    
         std::vector<Chunk> row;
         for (int col=0; col<CHUNK_COLUMNS; col++){
             glm::vec3 chunkPos = this->chunks.back()[col].position + glm::vec3(0.0,0.0,CHUNK_WIDTH);
@@ -358,7 +367,7 @@ void World::updateChunks(WorldTickData *worldTickData){
         spawnChunkPrepareThread(row, chunksDone, chunkPositions);
         // ___
     }
-
+    
     
 }
 

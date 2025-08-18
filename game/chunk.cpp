@@ -9,10 +9,7 @@ Chunk::Chunk(glm::vec3 chunkPosition, World *world)
     addBlockPlatform();
 }
 
-Chunk::~Chunk()
-{
-   
-}
+
 
 std::optional<Block *> Chunk::getBlock(int plat, int row, int col, bool noneBlock)
 {
