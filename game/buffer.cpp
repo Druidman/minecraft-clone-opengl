@@ -37,11 +37,18 @@ void Buffer::bindAsWrite(){
     lastBoundTarget = GL_COPY_WRITE_BUFFER;
 }
 
+BufferInt Buffer::getBufferSize()
+{
+    return bufferSize;
+}
+
+
+
 void Buffer::allocateBuffer(unsigned long long int size)
 {
     std::cout << "allocating: " << size << " in buffer: "<< m_bo << "\n";
     bind();
-    GLCall( glBufferData(bufferType, size, nullptr, GL_STATIC_DRAW) );
+    GLCall( glBufferData(bufferType, size, nullptr, GL_DYNAMIC_DRAW) );
     this->bufferSize = size;
 }
 

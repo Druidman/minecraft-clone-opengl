@@ -4,8 +4,8 @@ layout (location = 0) in vec3 aBasePosition;
 layout (location = 1) in float vertexType;
 layout (location = 2) in float vertexData; 
 
-layout(std430, binding = 3) buffer ssbo{
-    vec3 chunkPositions[];
+layout(std140) uniform ubo{
+    vec3 chunkPositions[1024];
 };
 
 
@@ -162,6 +162,7 @@ vec3 NORMALS[6] = vec3[](
 
 void main()
 {
+    
     // Decode position from bit-packed int
     int intBits = floatBitsToInt(vertexData);
     float zPos = float((intBits >> 0) & 0xF) + 0.5;

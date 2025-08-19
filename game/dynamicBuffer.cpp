@@ -99,7 +99,6 @@ int DynamicBuffer::getChunkBufferSpaceIndex(Chunk* chunk)
     return lowestDifferenceZoneIndex;
 }
 
-
 GLenum DynamicBuffer::getBufferType()
 {
     return bufferType;
@@ -110,14 +109,18 @@ bool DynamicBuffer::allocateDynamicBuffer(BufferInt size)
     std::cout << size << "\n";
     allocateBuffer(size + getBufferPadding(size));
     this->bufferCalls++;
-
+    if (this->deleteData){
+    
+        markData(0,this->bufferSize);
+        
+    }
+    
+    
 
     this->bufferFreeZones.clear();
     this->bufferFreeZones.push_back(std::pair<BufferInt, BufferInt>(0, this->bufferSize));
     return true;
 }
-
-
 
 bool DynamicBuffer::insertChunkToBuffer(Chunk *chunk)
 {   
@@ -211,6 +214,10 @@ bool DynamicBuffer::deleteChunkFromBuffer(Chunk *chunk, bool merge)
         }
     }
 
+    if (this->deleteData){
+        markData(chunk->bufferZone[bufferType].first, chunk->bufferZone[bufferType].second);
+        
+    }
    
     chunk->bufferZone[bufferType].first = 0;
     chunk->bufferZone[bufferType].second = 0;
@@ -299,6 +306,9 @@ void DynamicBuffer::expandBufferByChunk(Chunk* chunk){
         ExitError("DYNAMIC_BUFFER","smth wrong with buffer expansion first > second, EXPANDBUFFERBYCHUNK");
         return ;
     }
+    if (this->deleteData){
+        markData(oldBufferSize, this->bufferSize);
+    }
 
     this->bufferFreeZones.push_back(std::pair<BufferInt, BufferInt>(oldBufferSize, this->bufferSize));
 }
@@ -332,6 +342,22 @@ void DynamicBuffer::expandBuffer(BufferInt by){
 
     tempBuffer.unBind();
     this->unBind();
+}
+
+bool DynamicBuffer::markData(BufferInt markStart, BufferInt markEnd)
+{
+     // now lets mark elements as unactive
+    // to mark data as delete we need to change it to have face == 6
+    // 393216 - masks face bits to be 6
+    if (
+        markEnd < markStart ||
+        markStart > this->bufferSize ||
+        markEnd > this->bufferSize
+    ){
+        return false;
+    }
+    std::vector<CHUNK_MESH_DATATYPE> data(markEnd - markStart,UNACTIVE_MESH_ELEMENT);
+    return updateData<CHUNK_MESH_DATATYPE>(&data,markStart, markEnd); 
 }
 
 bool DynamicBuffer::moveBufferPart(BufferInt from, BufferInt to)

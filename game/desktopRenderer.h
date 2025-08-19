@@ -25,9 +25,9 @@ class DesktopRenderer : public Renderer
         VertexArray vao;
         Buffer baseVbo = Buffer(GL_ARRAY_BUFFER);
 
-        MeshBuffer meshBuffer = MeshBuffer();
+        MeshBuffer meshBuffer = MeshBuffer(false);
         IndirectBuffer chunkDrawBuffer = IndirectBuffer();
-        StorageBuffer chunkStorageBuffer = StorageBuffer(); 
+        StorageBuffer chunkStorageBuffer = StorageBuffer(GL_UNIFORM_BUFFER); 
         
         glm::vec3 lastCameraPosOnChunkPosChange = glm::vec3(0.0f);
 
@@ -103,7 +103,16 @@ class DesktopRenderer : public Renderer
             this->chunkDrawBuffer.fillBufferWithChunks(&this->world->chunkRenderRefs);
             this->chunkStorageBuffer.fillBufferWithChunks(&this->world->chunkRenderRefs);
 
-            this->chunkStorageBuffer.setBindingPoint(3);
+            GLint success;
+            glGetProgramiv(shader.getProgram(), GL_LINK_STATUS, &success);
+            if (!success) {
+                ExitError("DESKTOP_RENDERER","wrong link");
+            }
+
+            GLuint blockIndex = glGetUniformBlockIndex(shader.getProgram(), "ubo");
+            GLCall( glUniformBlockBinding(shader.getProgram(), blockIndex, 0) );
+
+            this->chunkStorageBuffer.setBindingPoint(0);
 
             
 

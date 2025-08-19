@@ -19,7 +19,8 @@ out vec3 Pos;
 uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
-uniform vec3 camPos;
+
+uniform vec3 CameraPos;
     
 vec3 rotateVertexPosition(vec3 pos, int face) {
     if (face == 0) { // top (Y+)
@@ -162,20 +163,31 @@ vec3 NORMALS[6] = vec3[](
 
 void main()
 {
-    // Decode position from bit-packed int
+    // check if active
     int intBits = floatBitsToInt(vertexData);
+
+    int face = (intBits >> 16) & 0x7;
+    if (face == 6){ // this face does not exist
+        TexCoords = vec2(0.0);
+        Normal = vec3(0.0, 1.0, 0.0); 
+        Pos = vec3(0.0);
+        gl_Position = vec4(-100.0); // degenerate position
+        return ;
+    }
+    // Decode position from bit-packed int
+    
     float zPos = float((intBits >> 0) & 0xF) + 0.5;
     float yPos = float((intBits >> 4) & 0xFF) + 0.5;
     float xPos = float((intBits >> 12) & 0xF) + 0.5;
 
-    int face = (intBits >> 16) & 0x7;
+  
     int textureId = (intBits >> 19) & 0x7F;
     vec3 rotatedBasePos = rotateVertexPosition(aBasePosition,face);
     
 
     vec3 blockOffset = vec3(xPos, yPos, zPos);
     vec3 chunkPos = vec3(chunkPositions[chunkIndex]);
-    vec3 worldPosition = rotatedBasePos + chunkPos + blockOffset - vec3(8.0,0.0,8.0) - camPos;
+    vec3 worldPosition = rotatedBasePos + chunkPos + blockOffset - vec3(8.0,0.0,8.0) + CameraPos;
 
     gl_Position = projection * view * model * vec4(worldPosition, 1.0);
     Pos = vec3(model * vec4(worldPosition, 1.0));
