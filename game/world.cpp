@@ -486,7 +486,7 @@ void World::updateWorld(double delta)
 
     std::cout << "CHUNK UPDATE: " << (chunkEnd - chunkStart) * 1000 << "\n"
      << "THREADS: " << (threadsEnd - threadsStart) * 1000 << "\n" 
-     << "CHUNK RENDER: " << (chunkRenderEnd - chunkRenderStart) * 1000 << "\n";
+     << "CHUNK RENDER UPDATE: " << (chunkRenderEnd - chunkRenderStart) * 1000 << "\n";
   
 
     

@@ -32,8 +32,14 @@ bool StorageBuffer::insertChunksToBuffer(std::vector<Chunk*> *chunks){
         dataFilled += sizeof(StorageBufferType);
     }
     
-   
-    return fillData<StorageBufferType>(&this->bufferContent); // filling buffer
+    if (bufferType == GL_SHADER_STORAGE_BUFFER){
+        return fillData<StorageBufferType>(&this->bufferContent); // filling buffer
+    }
+    else if (bufferType == GL_UNIFORM_BUFFER){
+        allocateBuffer(UNIFORM_BUFFER_LENGTH * sizeof(StorageBufferType));
+        return updateData<StorageBufferType>(&this->bufferContent, 0, this->bufferSize); // filling buffer
+    }
+    
     
     
 

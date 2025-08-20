@@ -86,7 +86,26 @@ class WebRenderer : public Renderer
 
             this->shader.setVec3Float("LightPos",world->sunPosition - world->player->camera->position);
             this->shader.setVec3Float("CameraPos",lastCameraPosOnChunkPosChange - world->player->camera->position);
-            std::cout << "BUFFER_SIZE: " << this->meshBuffer.getBufferSize() << "\n";
+
+            
+
+            this->meshBuffer.bind();
+            GLint64 meshData;
+            GLCall( glGetBufferParameteri64v(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &meshData) );
+
+            this->chunkIdBuffer.bind();
+            GLint64 idData;
+            GLCall( glGetBufferParameteri64v(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &idData) );
+
+            std::cout << "BUFFER_SIZE_MESH: " << this->meshBuffer.getBufferSize() << "\n";
+            std::cout << "BUFFER_SIZE_ID: " << this->chunkIdBuffer.getBufferSize() << "\n";
+
+            std::cout << "BUFFER_REAL_SIZE_MESH: " << meshData << "\n";
+            std::cout << "BUFFER_REAL_SIZE_ID: " << idData << "\n";
+
+
+
+
             this->vao.bind();
         
             GLCall( 
@@ -94,7 +113,7 @@ class WebRenderer : public Renderer
                     GL_TRIANGLES,
                     0,
                     BLOCK_FACE_VERTICES_COUNT,
-                    this->meshBuffer.getBufferSize() / sizeof(CHUNK_MESH_DATATYPE)
+                    this->chunkIdBuffer.getBufferSize() / sizeof(CHUNK_MESH_DATATYPE)
                 ) 
             );
             
@@ -104,10 +123,10 @@ class WebRenderer : public Renderer
         virtual void fillBuffers() override {
             std::cout << "\nFilling buffers with chunks\n";
 
-            BufferInt meshSize = world->getWorldMeshSize();
+      
             
             this->meshBuffer.allocateDynamicBuffer(
-                meshSize
+                world->getWorldMeshSize()
             );
             this->chunkIdBuffer.allocateBuffer(
                 (this->meshBuffer.getBufferSize() / sizeof(CHUNK_MESH_DATATYPE)) * sizeof(int)

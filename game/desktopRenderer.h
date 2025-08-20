@@ -76,6 +76,7 @@ class DesktopRenderer : public Renderer
             this->shader.setVec3Float("LightPos",world->sunPosition - world->player->camera->position);
             this->shader.setVec3Float("CameraPos",lastCameraPosOnChunkPosChange - world->player->camera->position);
             
+            std::cout << "BUFFER_SIZE: " << this->meshBuffer.getBufferSize();
 
 
             this->vao.bind();

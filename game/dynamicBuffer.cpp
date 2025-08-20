@@ -291,6 +291,7 @@ int DynamicBuffer::assignChunkBufferZone(Chunk* chunk){
 }
 
 void DynamicBuffer::expandBufferByChunk(Chunk* chunk){
+   
     BufferInt dataSize = getChunkDataSize(chunk);
     BufferInt oldBufferSize = this->bufferSize;
 

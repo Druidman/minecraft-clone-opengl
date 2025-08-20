@@ -4,8 +4,8 @@
 // during testing define TEST and define which instance you are testing:
 // WEB_GL_INSTANCE
 // OPENGL_INSTANCE
-#define TEST
-#define WEB_GL_INSTANCE
+// #define TEST
+// #define WEB_GL_INSTANCE
 
 #ifndef TEST 
     #ifdef __EMSCRIPTEN__
@@ -103,6 +103,7 @@ void cursor_pos_callback(GLFWwindow *window, double xpos, double ypos){
 }
 
 void loop(){
+    std::cout << "\n\nNEW FRAME\n\n";
     if (exitApp){
         return ;
     }
@@ -167,7 +168,7 @@ int main()
     setWindowHints();
 
     GLFWwindow* window;
-    window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Hello World", NULL, NULL);
+    window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "MinecraftClone", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -214,7 +215,7 @@ int main()
         #error Is this webGlInstance or desktopInstance? Why is it not defined??
     #endif
 
-    int worldWidth = 512;
+    int worldWidth = 320;
     glm::vec3 worldMiddle = glm::vec3(3000,180.0,3000);
 
     std::cout << "initializing world\n";

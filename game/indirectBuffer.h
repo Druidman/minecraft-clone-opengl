@@ -5,6 +5,7 @@
 #include <utility>
 #include <string>
 
+
 #include "vendor/glm/glm.hpp"
 #include "vendor/glm/gtc/type_ptr.hpp"
 
@@ -12,6 +13,8 @@
 #include "betterGL.h"
 #include "chunk.h"
 #include "buffer.h"
+
+typedef unsigned int uint;
 
 class IndirectBuffer : public Buffer {
     private:

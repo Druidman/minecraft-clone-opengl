@@ -50,6 +50,7 @@ void Buffer::allocateBuffer(unsigned long long int size)
     bind();
     GLCall( glBufferData(bufferType, size, nullptr, GL_DYNAMIC_DRAW) );
     this->bufferSize = size;
+    std::cout << "BufferSize: " << bufferSize << "\n";
 }
 
 
