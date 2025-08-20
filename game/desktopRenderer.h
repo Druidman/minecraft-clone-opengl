@@ -101,7 +101,7 @@ class DesktopRenderer : public Renderer
 
             lastCameraPosOnChunkPosChange = this->world->player->camera->position;
             this->chunkDrawBuffer.fillBufferWithChunks(&this->world->chunkRenderRefs);
-            this->chunkStorageBuffer.fillBufferWithChunks(&this->world->chunkRenderRefs);
+            this->chunkStorageBuffer.insertChunksToBuffer(&this->world->chunkRenderRefs);
 
             GLint success;
             glGetProgramiv(shader.getProgram(), GL_LINK_STATUS, &success);
@@ -138,7 +138,7 @@ class DesktopRenderer : public Renderer
                     break;
                 case STORAGE_BUFFER:
                     lastCameraPosOnChunkPosChange = this->world->player->camera->position;
-                    this->chunkStorageBuffer.fillBufferWithChunks(&this->world->chunkRenderRefs);
+                    this->chunkStorageBuffer.insertChunksToBuffer(&this->world->chunkRenderRefs);
                     break;
             }
             

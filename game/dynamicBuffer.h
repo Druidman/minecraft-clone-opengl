@@ -69,7 +69,8 @@ class DynamicBuffer : protected Buffer {
             if (
                 bufferT != GL_ARRAY_BUFFER && 
                 bufferT != GL_DRAW_INDIRECT_BUFFER &&
-                bufferT != GL_SHADER_STORAGE_BUFFER
+                bufferT != GL_SHADER_STORAGE_BUFFER &&
+                bufferT != GL_UNIFORM_BUFFER
             ){
                 ExitError("DYNAMIC_BUFFER", "Invalid buffer type for DynamicBuffer ONLY MESH_BUFFER, INDIRECT_BUFFER and STORAGE_BUFFER are allowed");
                 return;

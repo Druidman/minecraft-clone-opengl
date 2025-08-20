@@ -215,7 +215,10 @@ bool DynamicBuffer::deleteChunkFromBuffer(Chunk *chunk, bool merge)
     }
 
     if (this->deleteData){
-        markData(chunk->bufferZone[bufferType].first, chunk->bufferZone[bufferType].second);
+        std::cout << "DATA: " << chunk->bufferZone[bufferType].first << " " << chunk->bufferZone[bufferType].second << " " << this->bufferSize << "\n";
+        if (!markData(chunk->bufferZone[bufferType].first, chunk->bufferZone[bufferType].second)){
+            ExitError("DYNAMIC_BUFFER","Marking data failed");
+        };
         
     }
    
@@ -291,7 +294,7 @@ void DynamicBuffer::expandBufferByChunk(Chunk* chunk){
     BufferInt dataSize = getChunkDataSize(chunk);
     BufferInt oldBufferSize = this->bufferSize;
 
-    BufferInt minBufferSize = oldBufferSize + static_cast<BufferInt>(oldBufferSize * BUFFER_EXPANSION_RATE);
+    BufferInt minBufferSize = oldBufferSize + static_cast<BufferInt>(oldBufferSize * (BUFFER_EXPANSION_RATE / 100));
 
     // always expand by bigger one
     if (dataSize + getBufferPadding(dataSize) < minBufferSize){
@@ -307,7 +310,9 @@ void DynamicBuffer::expandBufferByChunk(Chunk* chunk){
         return ;
     }
     if (this->deleteData){
-        markData(oldBufferSize, this->bufferSize);
+        if (!markData(oldBufferSize, this->bufferSize)){
+            ExitError("DYNAMIC_BUFFER","marking failed");
+        };
     }
 
     this->bufferFreeZones.push_back(std::pair<BufferInt, BufferInt>(oldBufferSize, this->bufferSize));
@@ -354,9 +359,11 @@ bool DynamicBuffer::markData(BufferInt markStart, BufferInt markEnd)
         markStart > this->bufferSize ||
         markEnd > this->bufferSize
     ){
+        std::cout  << "FAIL MARK\n";
         return false;
     }
-    std::vector<CHUNK_MESH_DATATYPE> data(markEnd - markStart,UNACTIVE_MESH_ELEMENT);
+    std::vector<CHUNK_MESH_DATATYPE> data((markEnd - markStart) / sizeof(CHUNK_MESH_DATATYPE),UNACTIVE_MESH_ELEMENT);
+ 
     return updateData<CHUNK_MESH_DATATYPE>(&data,markStart, markEnd); 
 }
 

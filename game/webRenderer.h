@@ -86,7 +86,7 @@ class WebRenderer : public Renderer
 
             this->shader.setVec3Float("LightPos",world->sunPosition - world->player->camera->position);
             this->shader.setVec3Float("CameraPos",lastCameraPosOnChunkPosChange - world->player->camera->position);
-
+            std::cout << "BUFFER_SIZE: " << this->meshBuffer.getBufferSize() << "\n";
             this->vao.bind();
         
             GLCall( 
@@ -121,6 +121,7 @@ class WebRenderer : public Renderer
                     ExitError("WEB_RENDERER","can't add chunk");
                 };
                 BufferInt instanceCount = (chunk->bufferZone[GL_ARRAY_BUFFER].second - chunk->bufferZone[GL_ARRAY_BUFFER].first) / sizeof(CHUNK_MESH_DATATYPE);
+                
                 for (int i = 0; i<instanceCount; i++){
                     data.push_back(id);
                 };
@@ -129,14 +130,16 @@ class WebRenderer : public Renderer
 
             }  
             
-            if (!this->chunkIdBuffer.fillData<int>(&data)){
-                ExitError("WEB_RENDERER","Filling id buffer went wrong");
-            };
+            
 
             lastCameraPosOnChunkPosChange = this->world->player->camera->position;
 
-            if (!this->chunkStorageBuffer.fillBufferWithChunks(&this->world->chunkRenderRefs)){
+            if (!this->chunkStorageBuffer.insertChunksToBuffer(&this->world->chunkRenderRefs)){
                 ExitError("WEB_RENDERER","Filling storage buffer went wrong");
+            };
+
+            if (!this->chunkIdBuffer.fillData<int>(&data)){
+                ExitError("WEB_RENDERER","Filling id buffer went wrong");
             };
 
         };
@@ -157,21 +160,25 @@ class WebRenderer : public Renderer
                     lastCameraPosOnChunkPosChange = this->world->player->camera->position;
                     
               
-                    this->chunkStorageBuffer.fillBufferWithChunks(&this->world->chunkRenderRefs);
+                    this->chunkStorageBuffer.insertChunksToBuffer(&this->world->chunkRenderRefs);
 
                     
                     break;
                 case INDIRECT_BUFFER:
                     std::vector<int> data(this->meshBuffer.getBufferSize() / sizeof(CHUNK_MESH_DATATYPE), 0); 
-                    int id = 0;
+                    
                     for (Chunk* chunk : this->world->chunkRenderRefs){
                         BufferInt startInstance = chunk->bufferZone[GL_ARRAY_BUFFER].first / sizeof(CHUNK_MESH_DATATYPE);
                         BufferInt instanceCount = (chunk->bufferZone[GL_ARRAY_BUFFER].second - chunk->bufferZone[GL_ARRAY_BUFFER].first) / sizeof(CHUNK_MESH_DATATYPE);
+                        if (!chunk->hasBufferSpace[GL_UNIFORM_BUFFER]){
+                            ExitError("WEB_RENDERER", "CHUNK NOT IN STORAGE BUFFER ADDED TO ID BUFFER");
+                        }
+                        int id = chunk->bufferZone[GL_UNIFORM_BUFFER].first / sizeof(StorageBufferType);
                         for (int i = startInstance; i<startInstance + instanceCount; i++){
                             data[i] = id;
                         };
                         
-                        id++;
+                        
                     }
                     this->chunkIdBuffer.fillData<int>(&data);
                     
@@ -182,7 +189,7 @@ class WebRenderer : public Renderer
 
         };
 
-        virtual bool addChunk(Chunk *chunk) override {
+        virtual bool addChunk(Chunk *chunk) override { 
 
             
             if (!meshBuffer.insertChunkToBuffer(chunk)){

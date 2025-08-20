@@ -8,6 +8,7 @@
 #include "vendor/glm/gtc/type_ptr.hpp"
 
 #include "betterGL.h"
+#include "dynamicBuffer.h"
 #include "chunk.h"
 #include "buffer.h"
 #include "world.h"
@@ -15,6 +16,8 @@
 
 const int UNIFORM_BUFFER_LENGTH = 1024;
 class StorageBuffer : public Buffer {
+    
+
     private:
 
         World *world;
@@ -30,8 +33,8 @@ class StorageBuffer : public Buffer {
         };
         void init(World *world);
         void setBindingPoint(int port);
+        bool insertChunksToBuffer(std::vector<Chunk*> *chunks);
 
-        bool fillBufferWithChunks(std::vector<Chunk*> *chunks);
-        
+    
 };
 #endif
