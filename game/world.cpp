@@ -91,6 +91,7 @@ void World::genRenderChunkRefs(){
             if (dist / (float)CHUNK_WIDTH < RENDER_DISTANCE){
                 this->chunkRenderRefs.push_back(chunk);
                 
+
             }
             
         }
@@ -401,6 +402,7 @@ void World::updateThreads(WorldTickData *worldTickData){
 
        
             dataIterator->chunksDone[chunkInd] = false; // so that we won't insert it again
+            worldTickData->requiresRefsUpdate = true;
             
 
        
@@ -433,9 +435,9 @@ void World::updateSun(double delta, WorldTickData *worldTickData){
 }
 
 void World::updateChunkRender(WorldTickData *worldTickData){
-    // if (!worldTickData->playerChangedChunk){
-    //     return ;
-    // }
+    if (!worldTickData->playerChangedChunk && !worldTickData->requiresRefsUpdate){
+        return ;
+    }
     double refsStart = glfwGetTime();
     genRenderChunkRefs();
     double refsEnd = glfwGetTime();
