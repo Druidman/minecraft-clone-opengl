@@ -1,8 +1,10 @@
 #ifndef ID_BUFFER_H
 #define ID_BUFFER_H
 #include <vector>
+
 #include "buffer.h"
 #include "chunk.h"
+
 
 class IdBuffer : public Buffer{
     private:

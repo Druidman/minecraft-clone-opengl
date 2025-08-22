@@ -389,6 +389,7 @@ void World::updateThreads(WorldTickData *worldTickData){
             if (!dataIterator->chunksDone[chunkInd]){
                 continue;
             }
+            
             int row = dataIterator->chunkPositions[chunkInd].row;
             int col = dataIterator->chunkPositions[chunkInd].col;
             if (row < 0 || col < 0){
@@ -403,6 +404,7 @@ void World::updateThreads(WorldTickData *worldTickData){
        
             dataIterator->chunksDone[chunkInd] = false; // so that we won't insert it again
             worldTickData->requiresRefsUpdate = true;
+            // break;
             
 
        
@@ -418,6 +420,7 @@ void World::updateThreads(WorldTickData *worldTickData){
             dataIterator++;
             threadIterator++;
         }
+        // break;
 
 
       
