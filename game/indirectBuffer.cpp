@@ -18,6 +18,7 @@ bool IndirectBuffer::fillBufferWithChunks(std::vector<Chunk *> *chunks)
         };
         i++;
     }
+    
 
     return fillData<DrawArraysIndirectCommand>(&this->bufferContent); // filling buffer
 }
