@@ -34,6 +34,7 @@ struct ThreadWorkingData {
 struct WorldTickData {
     bool playerChangedChunk = false;
     bool playerChangedPosition = false;
+    bool requiresRefsUpdate = false;
 };
 
 class World{ //world class

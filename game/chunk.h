@@ -67,13 +67,15 @@ public:
     std::map<GLenum, bool> hasBufferSpace = {
         {GL_ARRAY_BUFFER, false},
         {GL_DRAW_INDIRECT_BUFFER, false},
-        {GL_SHADER_STORAGE_BUFFER, false}
+        {GL_SHADER_STORAGE_BUFFER, false},
+        {GL_UNIFORM_BUFFER, false}
     };
     // buffer zones
     std::map<GLenum, std::pair<BufferInt, BufferInt>> bufferZone = {
         {GL_ARRAY_BUFFER, {0,0}},
         {GL_DRAW_INDIRECT_BUFFER, {0,0}},
-        {GL_SHADER_STORAGE_BUFFER, {0,0}}
+        {GL_SHADER_STORAGE_BUFFER, {0,0}},
+        {GL_UNIFORM_BUFFER, {0,0}}
     };
     
 

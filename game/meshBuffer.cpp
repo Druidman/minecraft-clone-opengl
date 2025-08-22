@@ -43,7 +43,7 @@ bool MeshBuffer::updateChunkBuffer(Chunk *chunk)
         }
 
         
-        return insertChunkToBuffer(chunk);
+        return updateChunkBuffer(chunk);
 
     }
     BufferInt transMeshOffset = chunk->getOpaqueMesh()->size() * sizeof(CHUNK_MESH_DATATYPE);

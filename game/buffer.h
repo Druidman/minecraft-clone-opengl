@@ -35,7 +35,7 @@ class Buffer{
         void bindAsRead();
         void bindAsWrite();
         unsigned int getId(){return m_bo;};
-        BufferInt getBufferSize(){ return bufferSize; };
+        BufferInt getBufferSize();
 
         void allocateBuffer(BufferInt size);
         
@@ -50,11 +50,13 @@ class Buffer{
         bool updateData(const std::vector< T > *data, BufferInt dataByteStart, BufferInt dataByteEnd);
         template <typename T>
         bool updateData(const T data,BufferInt dataByteStart, BufferInt dataByteEnd);
+  
 };
+
 template <typename T>
 bool Buffer::fillData(const std::vector< T > *data){
     bind();
-    GLCall( glBufferData(bufferType, sizeof(T) * data->size(), data->data(), GL_STATIC_DRAW) );
+    GLCall( glBufferData(bufferType, sizeof(T) * data->size(), data->data(), GL_DYNAMIC_DRAW) );
     this->bufferSize = sizeof(T) * data->size();
     return true;
 }
@@ -62,7 +64,7 @@ bool Buffer::fillData(const std::vector< T > *data){
 template <typename T>
 bool Buffer::fillData(const T data){
     bind();
-    GLCall( glBufferData(bufferType, sizeof(T), &data, GL_STATIC_DRAW) );
+    GLCall( glBufferData(bufferType, sizeof(T), &data, GL_DYNAMIC_DRAW) );
     this->bufferSize = sizeof(T);
     return true;
 }

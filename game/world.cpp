@@ -85,9 +85,13 @@ void World::genRenderChunkRefs(){
             if (!chunk->renderReady){
                 continue;
             }
+            
+            
             float dist = glm::distance(glm::vec2(chunk->position.x , chunk->position.z), glm::vec2(player->position.x , player->position.z));
             if (dist / (float)CHUNK_WIDTH < RENDER_DISTANCE){
                 this->chunkRenderRefs.push_back(chunk);
+                
+
             }
             
         }
@@ -394,10 +398,11 @@ void World::updateThreads(WorldTickData *worldTickData){
                 continue;
             }
             this->chunks[row][col] = dataIterator->chunksToPrepare[chunkInd];
-            
-            this->renderer->addChunk(&this->chunks[row][col]);
+            this->renderer->addChunk(&this->chunks[row][col],MESH_BUFFER);
+
        
             dataIterator->chunksDone[chunkInd] = false; // so that we won't insert it again
+            worldTickData->requiresRefsUpdate = true;
             
 
        
@@ -430,20 +435,22 @@ void World::updateSun(double delta, WorldTickData *worldTickData){
 }
 
 void World::updateChunkRender(WorldTickData *worldTickData){
-    if (!worldTickData->playerChangedChunk){
+    if (!worldTickData->playerChangedChunk && !worldTickData->requiresRefsUpdate){
         return ;
     }
     double refsStart = glfwGetTime();
     genRenderChunkRefs();
     double refsEnd = glfwGetTime();
 
+    double storageStart = glfwGetTime();
+    this->renderer->fillBuffer(STORAGE_BUFFER);  
+    double storageEnd = glfwGetTime();
+
     double indirectStart = glfwGetTime();
     this->renderer->fillBuffer(INDIRECT_BUFFER); 
     double indirectEnd = glfwGetTime();
 
-    double storageStart = glfwGetTime();
-    this->renderer->fillBuffer(STORAGE_BUFFER);  
-    double storageEnd = glfwGetTime();
+    
 
 
     std::cout << "INDIRECT_BUFFER: " << (indirectEnd - indirectStart) * 1000 << "\n"
@@ -479,7 +486,7 @@ void World::updateWorld(double delta)
 
     std::cout << "CHUNK UPDATE: " << (chunkEnd - chunkStart) * 1000 << "\n"
      << "THREADS: " << (threadsEnd - threadsStart) * 1000 << "\n" 
-     << "CHUNK RENDER: " << (chunkRenderEnd - chunkRenderStart) * 1000 << "\n";
+     << "CHUNK RENDER UPDATE: " << (chunkRenderEnd - chunkRenderStart) * 1000 << "\n";
   
 
     
@@ -491,7 +498,7 @@ World::World(int width, glm::vec3 worldMiddle, Renderer *renderer)
     this->WIDTH = width;
     this->CHUNK_ROWS = this->WIDTH / CHUNK_WIDTH;
     this->CHUNK_COLUMNS = this->WIDTH / CHUNK_WIDTH;
-    this->RENDER_DISTANCE = (CHUNK_ROWS / 4) + 1; // render distance is much smaller than stored chunks 
+    this->RENDER_DISTANCE = CHUNK_ROWS * 2; //(CHUN`K_ROWS / 4) + 1; // render distance is much smaller than stored chunks 
     this->renderer = renderer;
     this->worldMiddle = worldMiddle;
 
