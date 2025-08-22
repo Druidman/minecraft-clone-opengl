@@ -4,8 +4,8 @@
 // during testing define TEST and define which instance you are testing:
 // WEB_GL_INSTANCE
 // OPENGL_INSTANCE
-// #define TEST
-// #define WEB_GL_INSTANCE
+#define TEST
+#define WEB_GL_INSTANCE
 
 #ifndef TEST 
     #ifdef __EMSCRIPTEN__
@@ -61,7 +61,7 @@ int RENDER_DISTANCE = 16;
 
 
 glm::mat4 model(1.0f);
-glm::mat4 projection = glm::perspective(glm::radians(45.0),(double)WINDOW_WIDTH/WINDOW_HEIGHT,0.1,1000.0);
+glm::mat4 projection = glm::perspective(glm::radians(45.0),(double)WINDOW_WIDTH/WINDOW_HEIGHT,0.45,1000.0);
 glm::mat4 view;
 Camera camera = Camera();
 
@@ -73,7 +73,7 @@ bool exitApp = false;
 
 void resize_callback(GLFWwindow *window, int width, int height){
     glViewport(0,0,width,height);
-    projection = glm::perspective(glm::radians(45.0),(double)width/height,0.1,1000.0);
+    projection = glm::perspective(glm::radians(45.0),(double)width/height,0.45,1000.0);
     WINDOW_WIDTH = width;
     WINDOW_HEIGHT = height;
 }
@@ -215,7 +215,7 @@ int main()
         #error Is this webGlInstance or desktopInstance? Why is it not defined??
     #endif
 
-    int worldWidth = 320;
+    int worldWidth = 512;
     glm::vec3 worldMiddle = glm::vec3(3000,180.0,3000);
 
     std::cout << "initializing world\n";

@@ -28,13 +28,13 @@ void main()
     vec3 result = (ambient + diffuse) * vec3(objectColor);
     // vec3 result = vec3(objectColor);
   
-    if (playerState == 0){
-        Color = vec4(result,objectColor[3]);
+   if (objectColor[3] < 0.1){ // alpha discard
+        discard;
     }
-    else if (playerState == 1){
+    if (playerState == 1){
         Color = vec4(result + vec3(0.0,0.069,0.247),objectColor[3]);
     }
-    else if (playerState == 2){
+    else {
         Color = vec4(result,objectColor[3]);
     }
     

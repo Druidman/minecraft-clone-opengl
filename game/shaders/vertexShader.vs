@@ -4,8 +4,8 @@ layout (location = 0) in vec3 aBasePosition;
 layout (location = 1) in float vertexType;
 layout (location = 2) in float vertexData; 
 
-layout(std140) uniform ubo{
-    vec3 chunkPositions[1024];
+layout(std430, binding=0) buffer ssbo{
+    vec3 chunkPositions[];
 };
 
 
