@@ -97,11 +97,11 @@ void World::genRenderChunkRefs(){
         }
     }
     
-    std::sort(chunkRenderRefs.begin(), chunkRenderRefs.end(), [this](Chunk* a, Chunk* b){
-        float distA = glm::distance(worldMiddle, a->position);
-        float distB = glm::distance(worldMiddle, b->position);
-        return distA > distB;
-    });
+    // std::sort(chunkRenderRefs.begin(), chunkRenderRefs.end(), [this](Chunk* a, Chunk* b){
+    //     float distA = glm::distance(worldMiddle, a->position);
+    //     float distB = glm::distance(worldMiddle, b->position);
+    //     return distA > distB;
+    // });
 }
 
 int World::genBlockHeight(glm::vec2 positionXZ){

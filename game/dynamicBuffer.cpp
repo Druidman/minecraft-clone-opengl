@@ -285,6 +285,8 @@ int DynamicBuffer::assignChunkBufferZone(Chunk* chunk){
     chunk->bufferZone[bufferType].second = this->bufferFreeZones[zoneIndex].second;
     chunk->hasBufferSpace[bufferType] = true;
 
+    bufferOccupiedZones.insert(chunk->bufferZone[bufferType].first, chunk->bufferZone[bufferType].second);
+
     this->bufferFreeZones.erase(this->bufferFreeZones.begin() + zoneIndex);
     mergeFreeZones();
     return 0;
