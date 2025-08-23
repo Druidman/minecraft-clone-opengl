@@ -3,7 +3,7 @@
 bool IdBuffer::fillBufferWithChunks(std::vector<Chunk*> *chunks, size_t elements){
 
     if (elements != this->bufferContent.size()){
-        this->bufferContent.resize(elements, 0);
+        this->bufferContent.resize(elements);
     }
     for (Chunk* chunk : *chunks){
         
@@ -14,9 +14,11 @@ bool IdBuffer::fillBufferWithChunks(std::vector<Chunk*> *chunks, size_t elements
         BufferInt instanceCount = (chunk->bufferZone[GL_ARRAY_BUFFER].second - chunk->bufferZone[GL_ARRAY_BUFFER].first) / sizeof(CHUNK_MESH_DATATYPE);
         int id = chunk->bufferZone[GL_UNIFORM_BUFFER].first / sizeof(StorageBufferType);
         if (id != bufferContent[startInstance]){
+            std::cout << "NEW ID: " << id << "\n";
             for (int i = startInstance; i<startInstance + instanceCount; i++){
                 bufferContent[i] = id;
             };
+        
             
         }
         
