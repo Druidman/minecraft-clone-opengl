@@ -72,6 +72,7 @@ class DesktopRenderer : public Renderer
             this->shader.use();
 
             this->shader.setInt("playerState",world->player->state);
+            this->shader.setInt("chunkIndexCount",this->world->chunkRenderRefs.size());
             this->shader.setMatrixFloat("projection",GL_FALSE,*(gameState->projection));
             this->shader.setMatrixFloat("view",GL_FALSE,*(gameState->view));
             this->shader.setMatrixFloat("model",GL_FALSE,*(gameState->model));
@@ -83,7 +84,7 @@ class DesktopRenderer : public Renderer
 
 
             this->vao.bind();
-            GLCall( glMultiDrawArraysIndirect(GL_TRIANGLES,0,this->world->chunkRenderRefs.size() ,sizeof(DrawArraysIndirectCommand)) );
+            GLCall( glMultiDrawArraysIndirect(GL_TRIANGLES,0,this->world->chunkRenderRefs.size() * 2 ,sizeof(DrawArraysIndirectCommand)) );
         }
 
         virtual void fillBuffers() override {
