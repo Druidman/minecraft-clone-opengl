@@ -4,17 +4,14 @@
 // during testing define TEST and define which instance you are testing:
 // WEB_GL_INSTANCE
 // OPENGL_INSTANCE
-// #define TEST
-// #define WEB_GL_INSTANCE
+#define TEST
+#define WEB_GL_INSTANCE
 
 #ifndef TEST 
     #ifdef __EMSCRIPTEN__
         #define WEB_GL_INSTANCE
         #include <emscripten/emscripten.h>
-        #include <emscripten/html5.h>
         #include <emscripten/bind.h>
-
-        
     #else
         #define OPENGL_INSTANCE
     #endif
@@ -46,7 +43,6 @@ typedef unsigned int uint;
 
 
 #ifdef __EMSCRIPTEN__
-    
     void shutdown_game() {
    
         emscripten_cancel_main_loop();
@@ -56,7 +52,6 @@ typedef unsigned int uint;
     EMSCRIPTEN_BINDINGS(my_module) {
         emscripten::function("shutdown_game", &shutdown_game);
     }
-    
 #endif
 
 int WINDOW_WIDTH = 800;
@@ -75,9 +70,6 @@ Renderer* renderer;
 double lastDeltaTime = 0;
 std::vector<double> renderFpsS;
 bool exitApp = false;
-
-
-
 
 void resize_callback(GLFWwindow *window, int width, int height){
     glViewport(0,0,width,height);
@@ -213,11 +205,6 @@ int main()
     GLCall( glEnable(GL_DEPTH_TEST) );
     GLCall( glEnable(GL_BLEND) ) ;
     GLCall( glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) ) ;
-    #ifdef WEB_GL_INSTANCE
-    EMSCRIPTEN_WEBGL_CONTEXT_HANDLE context = emscripten_webgl_get_current_context();
-    emscripten_webgl_enable_extension(context, "WEBGL_multi_draw");
-    initExtensions();
-    #endif
 
    
     #if defined(WEB_GL_INSTANCE)
@@ -282,6 +269,5 @@ int main()
 
     return 0;
 }
-
 
 
