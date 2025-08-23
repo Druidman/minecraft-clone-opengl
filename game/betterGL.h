@@ -24,4 +24,20 @@ inline void ExitError(std::string errorType, std::string msg){
     std::exit(EXIT_FAILURE);
 }
 
+#ifdef __EMSCRIPTEN__
+typedef void (*PFNGLMULTIDRAWARRAYSINSTANCEDWEBGLPROC)(
+    GLenum mode,
+    const GLint* firsts, GLint firstsOffset,
+    const GLsizei* counts, GLint countsOffset,
+    const GLsizei* instanceCounts, GLint instanceCountsOffset,
+    GLsizei drawCount
+);
+
+
+extern PFNGLMULTIDRAWARRAYSINSTANCEDWEBGLPROC glMultiDrawArraysInstancedWEBGL;
+
+void initExtensions();
+
+#endif
+
 #endif

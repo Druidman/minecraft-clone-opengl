@@ -1,4 +1,5 @@
 #version 300 es
+#extension GL_ANGLE_multi_draw : require
 precision highp float;
 
 
@@ -186,7 +187,7 @@ void main()
     
 
     vec3 blockOffset = vec3(xPos, yPos, zPos);
-    vec3 chunkPos = vec3(chunkPositions[chunkIndex]);
+    vec3 chunkPos = vec3(chunkPositions[gl_DrawID]);
     vec3 worldPosition = rotatedBasePos + chunkPos + blockOffset - vec3(8.0,0.0,8.0) + CameraPos;
 
     gl_Position = projection * view * model * vec4(worldPosition, 1.0);

@@ -15,6 +15,7 @@
 
 
 
+
 class WebRenderer : public Renderer
 {
     private:
@@ -88,35 +89,36 @@ class WebRenderer : public Renderer
             this->shader.setVec3Float("LightPos",world->sunPosition - world->player->camera->position);
             this->shader.setVec3Float("CameraPos",lastCameraPosOnChunkPosChange - world->player->camera->position);
 
-            
-
-            this->meshBuffer.bind();
-            GLint64 meshData;
-            GLCall( glGetBufferParameteri64v(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &meshData) );
-
-            this->chunkIdBuffer.bind();
-            GLint64 idData;
-            GLCall( glGetBufferParameteri64v(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &idData) );
-
-            std::cout << "BUFFER_SIZE_MESH: " << this->meshBuffer.getBufferSize() << "\n";
-            std::cout << "BUFFER_SIZE_ID: " << this->chunkIdBuffer.getBufferSize() << "\n";
-
-            std::cout << "BUFFER_REAL_SIZE_MESH: " << meshData << "\n";
-            std::cout << "BUFFER_REAL_SIZE_ID: " << idData << "\n";
-
-
-
-
             this->vao.bind();
-        
-            GLCall( 
-                glDrawArraysInstanced(
-                    GL_TRIANGLES,
-                    0,
-                    BLOCK_FACE_VERTICES_COUNT,
-                    this->chunkIdBuffer.getBufferSize() / sizeof(CHUNK_MESH_DATATYPE)
-                ) 
-            );
+
+            std::vector<GLsizei> firsts;
+            std::vector<GLsizei> counts;
+            std::vector<GLsizei> vertexCounts(this->world->chunkRenderRefs.size(), 6);
+            firsts.resize(this->world->chunkRenderRefs.size());
+            counts.resize(this->world->chunkRenderRefs.size());
+            int i = 0;
+            for (Chunk* chunk : this->world->chunkRenderRefs){
+                firsts[i] = chunk->bufferZone[GL_ARRAY_BUFFER].first;
+                counts[i] = chunk->getMeshSize() / sizeof(CHUNK_MESH_DATATYPE);
+                i++;
+            };
+
+            #ifdef __EMSCRIPTEN__
+                GLCall( 
+                    glMultiDrawArraysInstancedWEBGL(
+                        GL_TRIANGLES,
+                        firsts.data(),
+                        0,
+                        vertexCounts.data(),
+                        0,
+                        counts.data(),
+                        0,
+                        this->world->chunkRenderRefs.size()
+                    )
+                    
+                );
+            #endif
+           
             
   
         }
@@ -128,9 +130,6 @@ class WebRenderer : public Renderer
             
             this->meshBuffer.allocateDynamicBuffer(
                 world->getWorldMeshSize()
-            );
-            this->chunkIdBuffer.allocateBuffer(
-                (this->meshBuffer.getBufferSize() / sizeof(CHUNK_MESH_DATATYPE)) * sizeof(int)
             );
 
             for (Chunk* chunk : this->world->chunkRenderRefs){
@@ -146,10 +145,6 @@ class WebRenderer : public Renderer
 
             if (!this->chunkStorageBuffer.insertChunksToBuffer(&this->world->chunkRenderRefs)){
                 ExitError("WEB_RENDERER","Filling storage buffer went wrong");
-            };
-
-            if (!this->chunkIdBuffer.fillBufferWithChunks(&this->world->chunkRenderRefs, this->meshBuffer.getBufferSize() / sizeof(CHUNK_MESH_DATATYPE))){
-                ExitError("WEB_RENDERER","Filling id buffer went wrong");
             };
 
         };
@@ -175,7 +170,7 @@ class WebRenderer : public Renderer
                     
                     break;
                 case INDIRECT_BUFFER:
-                    this->chunkIdBuffer.fillBufferWithChunks(&this->world->chunkRenderRefs, this->meshBuffer.getBufferSize() / sizeof(CHUNK_MESH_DATATYPE));
+                    break;
                     
                     
                     
@@ -263,4 +258,5 @@ class WebRenderer : public Renderer
         
 };
 #endif
+
 
