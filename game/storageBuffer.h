@@ -43,7 +43,6 @@ class StorageBuffer : public DynamicBuffer {
         };
         void init(World *world);
         void setBindingPoint(int port);
-        bool insertChunksToBuffer(std::vector<Chunk*> *chunks);
 
         virtual bool updateChunkBuffer(Chunk* chunk) override;
         virtual bool insertChunksToBuffer(std::vector<Chunk*> *chunks) override;

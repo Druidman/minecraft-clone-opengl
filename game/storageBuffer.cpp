@@ -36,6 +36,9 @@ bool StorageBuffer::insertChunksToBuffer(std::vector<Chunk*> *chunks){
     
     
     for (Chunk* chunk : *chunks){
+        if (!chunk->hasBufferSpace[GL_ARRAY_BUFFER]){
+            continue;
+        }
         if (!chunk->hasBufferSpace[bufferType]){
             std::cout << "storageBuffer assigning\n"; 
             int zone = assignChunkBufferZone(chunk);

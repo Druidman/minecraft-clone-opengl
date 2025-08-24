@@ -146,6 +146,7 @@ class WebRenderer : public Renderer
                 
 
             }  
+            this->world->genRenderChunkRefs();
             
             
 

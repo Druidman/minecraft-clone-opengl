@@ -84,7 +84,7 @@ void World::genRenderChunkRefs(){
         for (int col=0; col < CHUNK_COLUMNS; col++){
             Chunk* chunk = &this->chunks[row][col];
             if (!chunk->renderReady){
-                continue;
+                continue;                          
             }
             
             
