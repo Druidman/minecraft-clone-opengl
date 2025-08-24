@@ -79,6 +79,7 @@ void World::genRenderChunkRefs(){
    
     
     this->chunkRenderRefs.clear();
+    
     for (int row = 0; row < CHUNK_ROWS; row++){
         for (int col=0; col < CHUNK_COLUMNS; col++){
             Chunk* chunk = &this->chunks[row][col];
@@ -89,6 +90,7 @@ void World::genRenderChunkRefs(){
             
             float dist = glm::distance(glm::vec2(chunk->position.x , chunk->position.z), glm::vec2(player->position.x , player->position.z));
             if (dist / (float)CHUNK_WIDTH < RENDER_DISTANCE){
+                
                 this->chunkRenderRefs.push_back(chunk);
                 
 
@@ -98,9 +100,8 @@ void World::genRenderChunkRefs(){
     }
     
     // std::sort(chunkRenderRefs.begin(), chunkRenderRefs.end(), [this](Chunk* a, Chunk* b){
-    //     float distA = glm::distance(worldMiddle, a->position);
-    //     float distB = glm::distance(worldMiddle, b->position);
-    //     return distA > distB;
+       
+    //     return a->bufferZone[GL_ARRAY_BUFFER] < b->bufferZone[GL_ARRAY_BUFFER];
     // });
 }
 
@@ -621,6 +622,7 @@ std::optional<Block *> World::getBlockByPos(glm::vec3 pointPositionInWorld, bool
 void World::removeChunk(Chunk *chunk, bool merge)
 {
     this->renderer->deleteChunk(chunk,MESH_BUFFER, merge);
+    this->renderer->deleteChunk(chunk,STORAGE_BUFFER, false);
 }
 
 

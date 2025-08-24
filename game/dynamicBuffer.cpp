@@ -255,7 +255,7 @@ int DynamicBuffer::assignChunkBufferZone(Chunk* chunk){
 
     if (this->bufferFreeZones[zoneIndex].second < this->bufferFreeZones[zoneIndex].first){
         ExitError("DYNAMIC_BUFFER","smth wrong with chunk free zones second < first, ASSIGNCHUNKZONE()");
-        return false;
+     
     }
 
     BufferInt zoneSpace = this->bufferFreeZones[zoneIndex].second - this->bufferFreeZones[zoneIndex].first;
@@ -265,7 +265,7 @@ int DynamicBuffer::assignChunkBufferZone(Chunk* chunk){
         // new zone
         if (this->bufferFreeZones[zoneIndex].first + maxSpaceSize > this->bufferFreeZones[zoneIndex].second){
             ExitError("DYNAMIC_BUFFER","smth wrong with chunk free zones second < first, ASSIGNCHUNKZONE(), INSERTING FREE ZONE");
-            return false;
+      
         }
         this->bufferFreeZones.insert(
             this->bufferFreeZones.begin() + zoneIndex + 1,
@@ -285,7 +285,7 @@ int DynamicBuffer::assignChunkBufferZone(Chunk* chunk){
     chunk->bufferZone[bufferType].second = this->bufferFreeZones[zoneIndex].second;
     chunk->hasBufferSpace[bufferType] = true;
 
-    bufferOccupiedZones.insert(chunk->bufferZone[bufferType].first, chunk->bufferZone[bufferType].second);
+    
 
     this->bufferFreeZones.erase(this->bufferFreeZones.begin() + zoneIndex);
     mergeFreeZones();

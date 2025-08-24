@@ -133,10 +133,17 @@ class WebRenderer : public Renderer
                 (this->meshBuffer.getBufferSize() / sizeof(CHUNK_MESH_DATATYPE)) * sizeof(int)
             );
 
+            this->chunkStorageBuffer.allocateDynamicBuffer(
+                this->world->chunkRenderRefs.size() * sizeof(StorageBufferType)
+            );
+            
+
             for (Chunk* chunk : this->world->chunkRenderRefs){
+                std::cout << chunk->getMeshSize() << "\n";
                 if (!addChunk(chunk)){
                     ExitError("WEB_RENDERER","can't add chunk");
                 };
+                
 
             }  
             
@@ -170,16 +177,19 @@ class WebRenderer : public Renderer
                     lastCameraPosOnChunkPosChange = this->world->player->camera->position;
                     
               
-                    this->chunkStorageBuffer.insertChunksToBuffer(&this->world->chunkRenderRefs);
+                    if (!this->chunkStorageBuffer.insertChunksToBuffer(&this->world->chunkRenderRefs)){
+                        ExitError("WEB_RENDERER","Filling storage Buffer went wrong");
+                    };
 
                     
                     break;
                 case INDIRECT_BUFFER:
-                    this->chunkIdBuffer.fillBufferWithChunks(&this->world->chunkRenderRefs, this->meshBuffer.getBufferSize() / sizeof(CHUNK_MESH_DATATYPE));
+                    if (!this->chunkIdBuffer.fillBufferWithChunks(&this->world->chunkRenderRefs, this->meshBuffer.getBufferSize() / sizeof(CHUNK_MESH_DATATYPE))){
+                        ExitError("WEB_RENDERER","Filling id buffer went wrong");
+                    };
                     
                     
                     
-                
             }
             
             
@@ -255,7 +265,12 @@ class WebRenderer : public Renderer
                         return false;
                     };
                     break;
-                
+                case STORAGE_BUFFER:
+                    if (!chunkStorageBuffer.deleteChunkFromBuffer(chunk, merge)){
+                        ExitError("WEB_RENDERER", "deleting chunk from storageBuffer");
+                        return false;
+                    };
+                    break;
             }
             chunk->buffersSetUp = false;
             return true;
