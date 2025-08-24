@@ -40,6 +40,8 @@ class DynamicBuffer : protected Buffer {
 
     protected:
         std::vector< std::pair<BufferInt, BufferInt> > bufferFreeZones;
+        std::map<BufferInt, BufferInt> occupiedZones;
+        
         BufferInt BUFFER_PADDING = 0; // expressed in %
         BufferInt CHUNK_PADDING = 0;
         BufferInt BUFFER_EXPANSION_RATE = 0;

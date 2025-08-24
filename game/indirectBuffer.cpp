@@ -7,17 +7,28 @@ bool IndirectBuffer::fillBufferWithChunks(std::vector<Chunk *> *chunks)
         return false;
     }
     this->bufferContent.clear();
-    this->bufferContent.resize(chunks->size());
+    this->bufferContent.resize(chunks->size() * 2);
     int i = 0;
     for (Chunk* chunk : *chunks){
         this->bufferContent[i] = {
             (unsigned int)BLOCK_FACE_VERTICES_COUNT,
-            (unsigned int)chunk->transparentMesh.size() + (uint)chunk->opaqueMesh.size(),
+            (unsigned int)chunk->opaqueMesh.size(),
             0,
             (unsigned int)(chunk->bufferZone[GL_ARRAY_BUFFER].first / sizeof(CHUNK_MESH_DATATYPE))
         };
         i++;
     }
+
+    for (Chunk* chunk : *chunks){
+        this->bufferContent[i] = {
+            (unsigned int)BLOCK_FACE_VERTICES_COUNT,
+            (unsigned int)chunk->transparentMesh.size(),
+            0,
+            (unsigned int)((chunk->bufferZone[GL_ARRAY_BUFFER].first / sizeof(CHUNK_MESH_DATATYPE) + chunk->opaqueMesh.size()))
+        };
+        i++;
+    }
+    
 
     return fillData<DrawArraysIndirectCommand>(&this->bufferContent); // filling buffer
 }

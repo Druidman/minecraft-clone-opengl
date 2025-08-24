@@ -36,7 +36,9 @@ void main()
 
     vec3 result = (ambient + diffuse) * vec3(objectColor);
   
-    
+    if (objectColor[3] < 0.1){ // alpha discard
+        discard;
+    }
     if (playerState == 1){
         Color = vec4(result + vec3(0.0,0.069,0.247),objectColor[3]);
     }

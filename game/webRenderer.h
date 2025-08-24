@@ -11,6 +11,7 @@
 #include "player.h"
 #include "shader.h"
 #include "betterGL.h"
+#include "idBuffer.h"
 
 
 
@@ -25,7 +26,7 @@ class WebRenderer : public Renderer
         VertexArray vao;
         Buffer baseVbo = Buffer(GL_ARRAY_BUFFER);
 
-        Buffer chunkIdBuffer = Buffer(GL_ARRAY_BUFFER);
+        IdBuffer chunkIdBuffer = IdBuffer();
         MeshBuffer meshBuffer = MeshBuffer(true);
         StorageBuffer chunkStorageBuffer = StorageBuffer(GL_UNIFORM_BUFFER); 
 
@@ -132,20 +133,17 @@ class WebRenderer : public Renderer
                 (this->meshBuffer.getBufferSize() / sizeof(CHUNK_MESH_DATATYPE)) * sizeof(int)
             );
 
-            int id = 0;
-    
-            std::vector<int> data;
+            this->chunkStorageBuffer.allocateDynamicBuffer(
+                this->world->chunkRenderRefs.size() * sizeof(StorageBufferType)
+            );
+            
+
             for (Chunk* chunk : this->world->chunkRenderRefs){
+                std::cout << chunk->getMeshSize() << "\n";
                 if (!addChunk(chunk)){
                     ExitError("WEB_RENDERER","can't add chunk");
                 };
-                BufferInt instanceCount = (chunk->bufferZone[GL_ARRAY_BUFFER].second - chunk->bufferZone[GL_ARRAY_BUFFER].first) / sizeof(CHUNK_MESH_DATATYPE);
                 
-                for (int i = 0; i<instanceCount; i++){
-                    data.push_back(id);
-                };
-                
-                id += 1;
 
             }  
             
@@ -157,7 +155,7 @@ class WebRenderer : public Renderer
                 ExitError("WEB_RENDERER","Filling storage buffer went wrong");
             };
 
-            if (!this->chunkIdBuffer.fillData<int>(&data)){
+            if (!this->chunkIdBuffer.fillBufferWithChunks(&this->world->chunkRenderRefs, this->meshBuffer.getBufferSize() / sizeof(CHUNK_MESH_DATATYPE))){
                 ExitError("WEB_RENDERER","Filling id buffer went wrong");
             };
 
@@ -179,27 +177,17 @@ class WebRenderer : public Renderer
                     lastCameraPosOnChunkPosChange = this->world->player->camera->position;
                     
               
-                    this->chunkStorageBuffer.insertChunksToBuffer(&this->world->chunkRenderRefs);
+                    if (!this->chunkStorageBuffer.insertChunksToBuffer(&this->world->chunkRenderRefs)){
+                        ExitError("WEB_RENDERER","Filling storage Buffer went wrong");
+                    };
 
                     
                     break;
                 case INDIRECT_BUFFER:
-                    std::vector<int> data(this->meshBuffer.getBufferSize() / sizeof(CHUNK_MESH_DATATYPE), 0); 
+                    if (!this->chunkIdBuffer.fillBufferWithChunks(&this->world->chunkRenderRefs, this->meshBuffer.getBufferSize() / sizeof(CHUNK_MESH_DATATYPE))){
+                        ExitError("WEB_RENDERER","Filling id buffer went wrong");
+                    };
                     
-                    for (Chunk* chunk : this->world->chunkRenderRefs){
-                        BufferInt startInstance = chunk->bufferZone[GL_ARRAY_BUFFER].first / sizeof(CHUNK_MESH_DATATYPE);
-                        BufferInt instanceCount = (chunk->bufferZone[GL_ARRAY_BUFFER].second - chunk->bufferZone[GL_ARRAY_BUFFER].first) / sizeof(CHUNK_MESH_DATATYPE);
-                        if (!chunk->hasBufferSpace[GL_UNIFORM_BUFFER]){
-                            ExitError("WEB_RENDERER", "CHUNK NOT IN STORAGE BUFFER ADDED TO ID BUFFER");
-                        }
-                        int id = chunk->bufferZone[GL_UNIFORM_BUFFER].first / sizeof(StorageBufferType);
-                        for (int i = startInstance; i<startInstance + instanceCount; i++){
-                            data[i] = id;
-                        };
-                        
-                        
-                    }
-                    this->chunkIdBuffer.fillData<int>(&data);
                     
                     
             }
@@ -277,7 +265,12 @@ class WebRenderer : public Renderer
                         return false;
                     };
                     break;
-                
+                case STORAGE_BUFFER:
+                    if (!chunkStorageBuffer.deleteChunkFromBuffer(chunk, merge)){
+                        ExitError("WEB_RENDERER", "deleting chunk from storageBuffer");
+                        return false;
+                    };
+                    break;
             }
             chunk->buffersSetUp = false;
             return true;

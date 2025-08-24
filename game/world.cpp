@@ -79,6 +79,7 @@ void World::genRenderChunkRefs(){
    
     
     this->chunkRenderRefs.clear();
+    
     for (int row = 0; row < CHUNK_ROWS; row++){
         for (int col=0; col < CHUNK_COLUMNS; col++){
             Chunk* chunk = &this->chunks[row][col];
@@ -89,6 +90,7 @@ void World::genRenderChunkRefs(){
             
             float dist = glm::distance(glm::vec2(chunk->position.x , chunk->position.z), glm::vec2(player->position.x , player->position.z));
             if (dist / (float)CHUNK_WIDTH < RENDER_DISTANCE){
+                
                 this->chunkRenderRefs.push_back(chunk);
                 
 
@@ -97,11 +99,10 @@ void World::genRenderChunkRefs(){
         }
     }
     
-    std::sort(chunkRenderRefs.begin(), chunkRenderRefs.end(), [this](Chunk* a, Chunk* b){
-        float distA = glm::distance(worldMiddle, a->position);
-        float distB = glm::distance(worldMiddle, b->position);
-        return distA > distB;
-    });
+    // std::sort(chunkRenderRefs.begin(), chunkRenderRefs.end(), [this](Chunk* a, Chunk* b){
+       
+    //     return a->bufferZone[GL_ARRAY_BUFFER] < b->bufferZone[GL_ARRAY_BUFFER];
+    // });
 }
 
 int World::genBlockHeight(glm::vec2 positionXZ){
@@ -389,6 +390,7 @@ void World::updateThreads(WorldTickData *worldTickData){
             if (!dataIterator->chunksDone[chunkInd]){
                 continue;
             }
+            
             int row = dataIterator->chunkPositions[chunkInd].row;
             int col = dataIterator->chunkPositions[chunkInd].col;
             if (row < 0 || col < 0){
@@ -403,6 +405,7 @@ void World::updateThreads(WorldTickData *worldTickData){
        
             dataIterator->chunksDone[chunkInd] = false; // so that we won't insert it again
             worldTickData->requiresRefsUpdate = true;
+            // break;
             
 
        
@@ -418,6 +421,7 @@ void World::updateThreads(WorldTickData *worldTickData){
             dataIterator++;
             threadIterator++;
         }
+        // break;
 
 
       
@@ -618,6 +622,7 @@ std::optional<Block *> World::getBlockByPos(glm::vec3 pointPositionInWorld, bool
 void World::removeChunk(Chunk *chunk, bool merge)
 {
     this->renderer->deleteChunk(chunk,MESH_BUFFER, merge);
+    this->renderer->deleteChunk(chunk,STORAGE_BUFFER, false);
 }
 
 
