@@ -1,38 +1,32 @@
 #include "idBuffer.h"
 
 bool IdBuffer::fillBufferWithChunks(std::vector<Chunk*> *chunks, size_t elements){
-
-    // if (elements != this->bufferContent.size()){
-    this->bufferContent.clear();
-    this->bufferContent.resize(elements, -1);
-    // }
-
+    if (elements != this->bufferContent.size()){
+        this->bufferContent.resize(elements, -1);
+    }
     for (Chunk* chunk : *chunks){
-        if (!chunk->hasBufferSpace[GL_ARRAY_BUFFER]){
-            continue;
-        }
+        
         if (!chunk->hasBufferSpace[GL_UNIFORM_BUFFER]){
             ExitError("ID_BUFFER", "CHUNK NOT IN STORAGE BUFFER ADDED TO ID BUFFER");
         }
-        // std::cout << "IDBUFFERUPDATE: " <<  chunk->bufferZone[GL_ARRAY_BUFFER].first << "\n";
         BufferInt startInstance = chunk->bufferZone[GL_ARRAY_BUFFER].first / sizeof(CHUNK_MESH_DATATYPE);
-        if (chunk->bufferZone[GL_ARRAY_BUFFER].second < chunk->bufferZone[GL_ARRAY_BUFFER].first){
-            ExitError("ID_BUFFER","WRONG CHUNK MESH BUFFER LAYOUIT");
-        }
         BufferInt instanceCount = (chunk->bufferZone[GL_ARRAY_BUFFER].second - chunk->bufferZone[GL_ARRAY_BUFFER].first) / sizeof(CHUNK_MESH_DATATYPE);
-        if (instanceCount + startInstance > this->bufferContent.size()){
-            ExitError("ID_BUFFER", "bufferContent overflow");
-        }
         int id = chunk->bufferZone[GL_UNIFORM_BUFFER].first / sizeof(StorageBufferType);
-        // if (id != bufferContent[startInstance] || id != bufferContent[startInstance + instanceCount]){
-        std::cout << "ADDING ID: " << id << " at:" << startInstance << " - " << startInstance + instanceCount << "\n";
-        for (int i = startInstance; i<startInstance + instanceCount; i++){
-            bufferContent[i] = id;
-        };
-        // }
+        if (id != bufferContent[startInstance]){
+            std::cout << "NEW ID: " << id << "\n";
+            for (int i = startInstance; i<startInstance + instanceCount; i++){
+                
+                bufferContent[i] = id;
+            };
+        
+            
+        }
+        
+        
     }
-
+    std::cout << "fill\n";
     return fillData<int>(&bufferContent);
+
 
     
 }   

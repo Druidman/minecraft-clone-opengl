@@ -18,7 +18,7 @@ const int UNIFORM_BUFFER_LENGTH = 1024;
 class StorageBufferDynamic : public DynamicBuffer {
 
     protected:
-        
+        virtual bool markData(BufferInt markStart, BufferInt markEnd) override;
         virtual BufferInt getChunkDataSize(Chunk* chunk) override {return sizeof(StorageBufferType);};
         virtual bool requiresContiguousMemoryLayout() override {return false;};
         
@@ -26,6 +26,7 @@ class StorageBufferDynamic : public DynamicBuffer {
        
         
     private:
+        glm::vec4 UNACTIVE_STORAGE_ELEMENT = glm::vec4(0.0, 0.0, 0.0, -1.0); 
 
         World *world;
 

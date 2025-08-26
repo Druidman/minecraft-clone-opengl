@@ -3,7 +3,27 @@
 #include "world.h"
 #include "player.h"
 
-void StorageBufferDynamic::init(World* world){
+bool StorageBufferDynamic::markData(BufferInt markStart, BufferInt markEnd)
+{
+    // now lets mark elements as unactive
+    // to mark data as delete we need to change it to have wrong position
+    
+    if (
+        markEnd < markStart ||
+        markStart > this->bufferSize ||
+        markEnd > this->bufferSize
+    ){
+        std::cout  << "FAIL MARK\n";
+        return false;
+    }
+    
+    std::vector<glm::vec4> data((markEnd - markStart) / sizeof(glm::vec4),UNACTIVE_STORAGE_ELEMENT);
+ 
+    return updateData<glm::vec4>(&data,markStart, markEnd); 
+}
+
+void StorageBufferDynamic::init(World *world)
+{
     this->world = world;
 }
 
@@ -65,16 +85,10 @@ bool StorageBufferDynamic::insertChunksToBuffer(std::vector<Chunk*> *chunks){
 
   
     std::cout << "insert to buffers\n";
-    if (bufferType == GL_SHADER_STORAGE_BUFFER){
-        return updateData<StorageBufferType>(&this->bufferContent, 0, this->bufferSize); // filling buffer
-    }
-    else if (bufferType == GL_UNIFORM_BUFFER){
-        
-        return updateData<StorageBufferType>(&this->bufferContent, 0, this->bufferSize); // filling buffer
-    }
-    else{
-        return false;
-    }
+    
+    return updateData<StorageBufferType>(&this->bufferContent, 0, this->bufferSize); // filling buffer
 }
+    
+   
 
 

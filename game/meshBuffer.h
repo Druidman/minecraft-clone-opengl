@@ -14,8 +14,10 @@
 #include "buffer.h"
 
 class MeshBuffer : public DynamicBuffer {
+    private:
+        CHUNK_MESH_DATATYPE UNACTIVE_MESH_ELEMENT = 393216; // masks face bits to be 6
     protected:
-        
+        virtual bool markData(BufferInt markStart, BufferInt markEnd) override;
         virtual BufferInt getChunkDataSize(Chunk* chunk) override;
         virtual bool requiresContiguousMemoryLayout() override;
         

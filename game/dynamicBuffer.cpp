@@ -352,23 +352,7 @@ void DynamicBuffer::expandBuffer(BufferInt by){
     this->unBind();
 }
 
-bool DynamicBuffer::markData(BufferInt markStart, BufferInt markEnd)
-{
-     // now lets mark elements as unactive
-    // to mark data as delete we need to change it to have face == 6
-    // 393216 - masks face bits to be 6
-    if (
-        markEnd < markStart ||
-        markStart > this->bufferSize ||
-        markEnd > this->bufferSize
-    ){
-        std::cout  << "FAIL MARK\n";
-        return false;
-    }
-    std::vector<CHUNK_MESH_DATATYPE> data((markEnd - markStart) / sizeof(CHUNK_MESH_DATATYPE),UNACTIVE_MESH_ELEMENT);
- 
-    return updateData<CHUNK_MESH_DATATYPE>(&data,markStart, markEnd); 
-}
+
 
 bool DynamicBuffer::moveBufferPart(BufferInt from, BufferInt to)
 {

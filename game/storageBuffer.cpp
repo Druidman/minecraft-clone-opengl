@@ -16,6 +16,8 @@ void StorageBuffer::setBindingPoint(int port)
 
 bool StorageBuffer::insertChunksToBuffer(std::vector<Chunk*> *chunks){
     
+
+    
     std::cout << "\nSTORAGE_BUFFER_UPDATE\n\n";
     if (chunks->size() == 0){
         std::cout << "size = 0\n";

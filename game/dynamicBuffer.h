@@ -35,7 +35,7 @@ be called at chunk destructor
 class DynamicBuffer : protected Buffer {
     private:
         
-        CHUNK_MESH_DATATYPE UNACTIVE_MESH_ELEMENT = 393216; // masks face bits to be 6
+        
         bool deleteData = false;
 
     protected:
@@ -62,7 +62,7 @@ class DynamicBuffer : protected Buffer {
         GLenum getBufferType();
         void expandBuffer(BufferInt by);
 
-        bool markData(BufferInt markStart, BufferInt markEnd);
+        
 
         bool moveBufferPart(BufferInt from, BufferInt to); // moves all data from -> to 
 
@@ -80,6 +80,7 @@ class DynamicBuffer : protected Buffer {
             this->deleteData = deleteData;
         };
     protected:
+        virtual bool markData(BufferInt markStart, BufferInt markEnd) = 0;
         virtual bool requiresContiguousMemoryLayout() = 0;
         virtual BufferInt getChunkDataSize(Chunk* chunk) = 0;
 
