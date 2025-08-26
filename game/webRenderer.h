@@ -12,6 +12,7 @@
 #include "shader.h"
 #include "betterGL.h"
 #include "idBuffer.h"
+#include "storageBufferDynamic.h"
 
 
 
@@ -28,7 +29,7 @@ class WebRenderer : public Renderer
 
         IdBuffer chunkIdBuffer = IdBuffer();
         MeshBuffer meshBuffer = MeshBuffer(true);
-        StorageBuffer chunkStorageBuffer = StorageBuffer(GL_UNIFORM_BUFFER); 
+        StorageBufferDynamic chunkStorageBuffer = StorageBufferDynamic(GL_UNIFORM_BUFFER); 
 
         
         glm::vec3 lastCameraPosOnChunkPosChange = glm::vec3(0.0f);
@@ -134,7 +135,7 @@ class WebRenderer : public Renderer
             );
 
             this->chunkStorageBuffer.allocateDynamicBuffer(
-                this->world->chunkRenderRefs.size() * sizeof(StorageBufferType)
+                UNIFORM_BUFFER_LENGTH * sizeof(StorageBufferType)
             );
             
 
@@ -144,9 +145,7 @@ class WebRenderer : public Renderer
                     ExitError("WEB_RENDERER","can't add chunk");
                 };
                 
-
             }  
-            this->world->genRenderChunkRefs();
             
             
 

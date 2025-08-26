@@ -175,11 +175,6 @@ void World::updateChunks(WorldTickData *worldTickData){
             }
  
             removeChunk(&chunkRow[chunkRow.size() - 1], merge);
-            
-            
-
-
-
             chunkRow.pop_back();
        
             
@@ -623,6 +618,7 @@ void World::removeChunk(Chunk *chunk, bool merge)
 {
     this->renderer->deleteChunk(chunk,MESH_BUFFER, merge);
     this->renderer->deleteChunk(chunk,STORAGE_BUFFER, false);
+    
 }
 
 

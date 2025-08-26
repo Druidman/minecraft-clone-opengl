@@ -164,14 +164,17 @@ vec3 NORMALS[6] = vec3[](
 void main()
 {
     // check if active
+
+    
+    
     int intBits = floatBitsToInt(vertexData);
 
     int face = (intBits >> 16) & 0x7;
-    if (face == 6){ // this face does not exist
+    if (face == 6 || chunkIndex == -1){ // this face does not exist
         TexCoords = vec2(0.0);
         Normal = vec3(0.0, 1.0, 0.0); 
         Pos = vec3(0.0);
-        gl_Position = vec4(-100.0); // degenerate position
+        gl_Position = vec4(-10000.0); // degenerate position
         return ;
     }
     // Decode position from bit-packed int
