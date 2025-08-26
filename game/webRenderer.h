@@ -133,6 +133,10 @@ class WebRenderer : public Renderer
                 (this->meshBuffer.getBufferSize() / sizeof(CHUNK_MESH_DATATYPE)) * sizeof(int)
             );
 
+            this->chunkStorageBuffer.allocateDynamicBuffer(
+                UNIFORM_BUFFER_LENGTH * sizeof(StorageBufferType)
+            );
+
             for (Chunk* chunk : this->world->chunkRenderRefs){
                 if (!addChunk(chunk)){
                     ExitError("WEB_RENDERER","can't add chunk");
@@ -193,6 +197,10 @@ class WebRenderer : public Renderer
                 ExitError("WEB_RENDERER","error inserting chunk to meshBuffer");
                 return false;
             };
+            if (!chunkStorageBuffer.insertChunkToBuffer(chunk)){
+                ExitError("WEB_RENDERER","error inserting chunk to chunkStorageBuffer");
+                return false;
+            };
 
             chunk->buffersSetUp = true;
             return true;
@@ -203,6 +211,10 @@ class WebRenderer : public Renderer
                 ExitError("WEB_RENDERER","error updating chunk to meshBuffer");
                 return false;
             };
+            if (!chunkStorageBuffer.updateChunkBuffer(chunk)){
+                ExitError("WEB_RENDERER","error updating chunk to storageBuffer");
+                return false;
+            };
             
             chunk->buffersSetUp = true;
             return true;
@@ -211,6 +223,10 @@ class WebRenderer : public Renderer
         virtual bool deleteChunk(Chunk *chunk, bool merge = false) override {
             if (!meshBuffer.deleteChunkFromBuffer(chunk, merge)){
                 ExitError("WEB_RENDERER","error deleting chunk from meshBuffer");
+                return false;
+            };
+            if (!chunkStorageBuffer.deleteChunkFromBuffer(chunk, merge)){
+                ExitError("WEB_RENDERER","error deleting chunk from storageBuffer");
                 return false;
             };
            
@@ -224,6 +240,12 @@ class WebRenderer : public Renderer
                 case MESH_BUFFER:
                     if (!meshBuffer.insertChunkToBuffer(chunk)){
                         ExitError("WEB_RENDERER","error inserting chunk to meshBuffer");
+                        return false;
+                    };
+                    break;
+                case STORAGE_BUFFER:
+                    if (!chunkStorageBuffer.insertChunkToBuffer(chunk)){
+                        ExitError("WEB_RENDERER","error inserting chunk to storageBuffer");
                         return false;
                     };
                     break;
@@ -252,6 +274,13 @@ class WebRenderer : public Renderer
                 case MESH_BUFFER:
                     if (!meshBuffer.deleteChunkFromBuffer(chunk, merge)){
                         ExitError("WEB_RENDERER", "deleting chunk from meshBuffer");
+                        return false;
+                    };
+                    break;
+
+                case STORAGE_BUFFER:
+                    if (!chunkStorageBuffer.deleteChunkFromBuffer(chunk, merge)){
+                        ExitError("WEB_RENDERER", "deleting chunk from storageBuffer");
                         return false;
                     };
                     break;

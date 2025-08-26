@@ -15,17 +15,22 @@
 
 
 const int UNIFORM_BUFFER_LENGTH = 1024;
-class StorageBuffer : public Buffer {
-    
+class StorageBuffer : public DynamicBuffer {
+    protected:
+        
+        virtual BufferInt getChunkDataSize(Chunk* chunk) override{return sizeof(StorageBufferType);};
+        virtual bool requiresContiguousMemoryLayout() override {return false;};
+        
+        virtual std::string getBufferTypeString() override {return "STORAGE_BUFFER";};
 
     private:
 
         World *world;
-
+        bool bufferRequiresRefill = false;
         // this is relatively small data so we keep it here for optimized buffer insertions
         std::vector<StorageBufferType> bufferContent;
     public:
-        StorageBuffer(GLenum bufferType) : Buffer(bufferType){
+        StorageBuffer(GLenum bufferType) : DynamicBuffer(bufferType,false){
             if (bufferType != GL_SHADER_STORAGE_BUFFER && bufferType != GL_UNIFORM_BUFFER ){
                 ExitError("STORAGE_BUFFER","Can't create storage buffer different than uniform/shaderStorage buffer");
                 return ;
@@ -33,7 +38,9 @@ class StorageBuffer : public Buffer {
         };
         void init(World *world);
         void setBindingPoint(int port);
-        bool insertChunksToBuffer(std::vector<Chunk*> *chunks);
+
+        virtual bool updateChunkBuffer(Chunk* chunk) override;
+        virtual bool insertChunksToBuffer(std::vector<Chunk*> *chunks) override;
 
     
 };
