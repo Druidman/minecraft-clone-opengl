@@ -10,10 +10,6 @@
 typedef unsigned long long int BufferInt;
 typedef glm::vec4 StorageBufferType;
 
-enum BufferType {
-    STORAGE_BUFFER, MESH_BUFFER, INDIRECT_BUFFER, NONE
-};
-
 struct DrawArraysIndirectCommand{
     unsigned int  count;
     unsigned int  instanceCount;

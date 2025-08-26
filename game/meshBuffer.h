@@ -23,7 +23,7 @@ class MeshBuffer : public DynamicBuffer {
         
         virtual std::string getBufferTypeString() override;
     public:
-        MeshBuffer(bool deleteData = false) : DynamicBuffer(GL_ARRAY_BUFFER, deleteData){
+        MeshBuffer(bool deleteData = false) : DynamicBuffer(MESH_BUFFER, deleteData){
             BUFFER_PADDING = 20; // expressed in %
             CHUNK_PADDING = 10;
             BUFFER_EXPANSION_RATE = 20;

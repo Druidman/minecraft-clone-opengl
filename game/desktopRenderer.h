@@ -113,7 +113,7 @@ class DesktopRenderer : public Renderer
             
 
         };
-        virtual void fillBuffer(BufferType bufferToFill) override {
+        virtual void fillBuffer(ChunkBuffer bufferToFill) override {
             // std::cout << "\nFilling buffer " << bufferToFill << " with chunks\n";
 
 
@@ -184,7 +184,7 @@ class DesktopRenderer : public Renderer
             return true;
         }
         
-        virtual bool addChunk(Chunk *chunk, BufferType bufferToUpdate) override {
+        virtual bool addChunk(Chunk *chunk, ChunkBuffer bufferToUpdate) override {
             switch(bufferToUpdate){
                 case MESH_BUFFER:
                     if (!meshBuffer.insertChunkToBuffer(chunk)){
@@ -198,7 +198,7 @@ class DesktopRenderer : public Renderer
             return true;
         }
 
-        virtual bool updateChunk(Chunk *chunk, BufferType bufferToUpdate) override {
+        virtual bool updateChunk(Chunk *chunk, ChunkBuffer bufferToUpdate) override {
             switch(bufferToUpdate){
                 case MESH_BUFFER:
                     if (!meshBuffer.updateChunkBuffer(chunk)){
@@ -220,7 +220,7 @@ class DesktopRenderer : public Renderer
             return true;
         }
 
-        virtual bool deleteChunk(Chunk *chunk, BufferType bufferToUpdate, bool merge = false) override {
+        virtual bool deleteChunk(Chunk *chunk, ChunkBuffer bufferToUpdate, bool merge = false) override {
             switch(bufferToUpdate){
                 case MESH_BUFFER:
                     if (!meshBuffer.deleteChunkFromBuffer(chunk, merge)){

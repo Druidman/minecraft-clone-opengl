@@ -160,7 +160,7 @@ class WebRenderer : public Renderer
             };
 
         };
-        virtual void fillBuffer(BufferType bufferToFill) override {
+        virtual void fillBuffer(ChunkBuffer bufferToFill) override {
             BufferInt meshSize = world->getWorldMeshSize();
             switch(bufferToFill){
                 case MESH_BUFFER:
@@ -183,7 +183,7 @@ class WebRenderer : public Renderer
 
                     
                     break;
-                case INDIRECT_BUFFER:
+                case ID_BUFFER:
                     if (!this->chunkIdBuffer.fillBufferWithChunks(&this->world->chunkRenderRefs, this->meshBuffer.getBufferSize() / sizeof(CHUNK_MESH_DATATYPE))){
                         ExitError("WEB_RENDERER","Filling id buffer went wrong");
                     };
@@ -229,7 +229,7 @@ class WebRenderer : public Renderer
             return true;
         }
         
-        virtual bool addChunk(Chunk *chunk, BufferType bufferToUpdate) override {
+        virtual bool addChunk(Chunk *chunk, ChunkBuffer bufferToUpdate) override {
             switch(bufferToUpdate){
                 case MESH_BUFFER:
                     if (!meshBuffer.insertChunkToBuffer(chunk)){
@@ -243,7 +243,7 @@ class WebRenderer : public Renderer
             return true;
         }
 
-        virtual bool updateChunk(Chunk *chunk, BufferType bufferToUpdate) override {
+        virtual bool updateChunk(Chunk *chunk, ChunkBuffer bufferToUpdate) override {
             switch(bufferToUpdate){
                 case MESH_BUFFER:
                     if (!meshBuffer.updateChunkBuffer(chunk)){
@@ -257,7 +257,7 @@ class WebRenderer : public Renderer
             return true;
         }
 
-        virtual bool deleteChunk(Chunk *chunk, BufferType bufferToUpdate, bool merge = false) override {
+        virtual bool deleteChunk(Chunk *chunk, ChunkBuffer bufferToUpdate, bool merge = false) override {
             switch(bufferToUpdate){
                 case MESH_BUFFER:
                     if (!meshBuffer.deleteChunkFromBuffer(chunk, merge)){

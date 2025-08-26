@@ -25,6 +25,13 @@ typedef FaceData CHUNK_MESH_DATATYPE;
 const int CHUNK_WIDTH = 16;
 const int CHUNK_HEIGHT = 256;
 
+enum ChunkBuffer {
+    MESH_BUFFER = 0, 
+    ID_BUFFER = 1,
+    STORAGE_BUFFER = 2,
+
+    INDIRECT_BUFFER = 4
+};
 // block system works that first platform is bottom platform of blocks.
 // We will be indexing it in a way that platform index corresponds to block y coord
 // Block x coord will correspond to column
@@ -65,17 +72,17 @@ public:
 
     bool buffersSetUp = false;
     std::map<GLenum, bool> hasBufferSpace = {
-        {GL_ARRAY_BUFFER, false},
-        {GL_DRAW_INDIRECT_BUFFER, false},
-        {GL_SHADER_STORAGE_BUFFER, false},
-        {GL_UNIFORM_BUFFER, false}
+        {MESH_BUFFER,             false},
+        {INDIRECT_BUFFER,         false},
+        {STORAGE_BUFFER,          false},
+        {ID_BUFFER,               false}
     };
     // buffer zones
     std::map<GLenum, std::pair<BufferInt, BufferInt>> bufferZone = {
-        {GL_ARRAY_BUFFER, {0,0}},
-        {GL_DRAW_INDIRECT_BUFFER, {0,0}},
-        {GL_SHADER_STORAGE_BUFFER, {0,0}},
-        {GL_UNIFORM_BUFFER, {0,0}}
+        {MESH_BUFFER,             {0,0}},
+        {INDIRECT_BUFFER,         {0,0}},
+        {STORAGE_BUFFER,          {0,0}},
+        {ID_BUFFER,               {0,0}}
     };
     
 
