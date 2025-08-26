@@ -92,15 +92,15 @@ public:
     };
 
     virtual void fillBuffers() = 0;
-    virtual void fillBuffer(ChunkBuffer bufferToFill) = 0;
+    virtual void fillBuffer(BufferType bufferToFill) = 0;
 
     virtual bool updateChunk(Chunk* chunk) = 0;
     virtual bool addChunk(Chunk* chunk) = 0;
     virtual bool deleteChunk(Chunk* chunk, bool merge = false) = 0;
 
-    virtual bool updateChunk(Chunk* chunk, ChunkBuffer bufferToUpdate) = 0;
-    virtual bool addChunk(Chunk* chunk, ChunkBuffer bufferToUpdate) = 0;
-    virtual bool deleteChunk(Chunk* chunk, ChunkBuffer bufferToUpdate, bool merge = false) = 0;
+    virtual bool updateChunk(Chunk* chunk, BufferType bufferToUpdate) = 0;
+    virtual bool addChunk(Chunk* chunk, BufferType bufferToUpdate) = 0;
+    virtual bool deleteChunk(Chunk* chunk, BufferType bufferToUpdate, bool merge = false) = 0;
 
  
 };

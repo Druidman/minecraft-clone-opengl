@@ -99,6 +99,10 @@ int DynamicBuffer::getChunkBufferSpaceIndex(Chunk* chunk)
     return lowestDifferenceZoneIndex;
 }
 
+GLenum DynamicBuffer::getBufferType()
+{
+    return bufferType;
+}
 
 bool DynamicBuffer::allocateDynamicBuffer(BufferInt size)
 {

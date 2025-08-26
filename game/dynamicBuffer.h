@@ -59,7 +59,7 @@ class DynamicBuffer : protected Buffer {
         int assignChunkBufferZone(Chunk* chunk);
         int getChunkBufferSpaceIndex(Chunk* chunk);
         
-
+        GLenum getBufferType();
         void expandBuffer(BufferInt by);
 
         
@@ -67,8 +67,16 @@ class DynamicBuffer : protected Buffer {
         bool moveBufferPart(BufferInt from, BufferInt to); // moves all data from -> to 
 
     protected:
-        DynamicBuffer(ChunkBuffer bufferT, bool deleteData = false) : Buffer(getBufferType(bufferT)){
-            
+        DynamicBuffer(GLenum bufferT, bool deleteData = false) : Buffer(bufferT){
+            if (
+                bufferT != GL_ARRAY_BUFFER && 
+                bufferT != GL_DRAW_INDIRECT_BUFFER &&
+                bufferT != GL_SHADER_STORAGE_BUFFER &&
+                bufferT != GL_UNIFORM_BUFFER
+            ){
+                ExitError("DYNAMIC_BUFFER", "Invalid buffer type for DynamicBuffer ONLY MESH_BUFFER, INDIRECT_BUFFER and STORAGE_BUFFER are allowed");
+                return;
+            }
             this->deleteData = deleteData;
         };
     protected:
@@ -81,14 +89,6 @@ class DynamicBuffer : protected Buffer {
         
         
     public:
-        GLenum getBufferType(ChunkBuffer bufferT){
-            switch (bufferT)
-            {
-            case MESH_BUFFER: return GL_ARRAY_BUFFER;
-            case ID_BUFFER: return GL_ARRAY_BUFFER;
-            }
-            return GL_NONE;
-        };
         int getBufferCallsNum();
         void bind() { Buffer::bind(); };
         void getId() { Buffer::getId(); };
