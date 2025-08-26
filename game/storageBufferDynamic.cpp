@@ -46,9 +46,8 @@ bool StorageBufferDynamic::insertChunksToBuffer(std::vector<Chunk*> *chunks){
     }
     
     
-    
-    this->bufferContent.clear();
-    this->bufferContent.resize(chunks->size(), glm::vec4(0.0f,0.0f,0.0f, -1.0f));
+    this->bufferContent.assign(chunks->size(), glm::vec4(0.0f,0.0f,0.0f, -1.0f));
+
     
     
     
@@ -67,22 +66,14 @@ bool StorageBufferDynamic::insertChunksToBuffer(std::vector<Chunk*> *chunks){
         }
         
         this->bufferContent[chunk->bufferZone[bufferType].first / sizeof(StorageBufferType)]= glm::vec4(chunk->position - this->world->player->camera->position,1.0);
-    }
-
-    for (glm::vec4 element : this->bufferContent){
+        glm::vec4 element = this->bufferContent[chunk->bufferZone[bufferType].first / sizeof(StorageBufferType)];
         std::cout << "STORAGE_BUFFER_ELEMENT: " << \
         element.x << " " << \
         element.y << " " << \
-        element.z << " ";
-        if (element.w == 0.0){
-            std::cout << "PLACEHOLDER\n";
-        }
-        else {
-            std::cout << "\n";
-        }
+        element.z << " " << \
+        chunk->bufferZone[bufferType].first / sizeof(StorageBufferType) << "\n";
         
     }
-
   
     std::cout << "insert to buffers\n";
     

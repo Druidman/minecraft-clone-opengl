@@ -2,8 +2,7 @@
 
 bool IdBuffer::fillBufferWithChunks(std::vector<Chunk*> *chunks, size_t elements){
     // if (elements != this->bufferContent.size()){
-    this->bufferContent.clear();
-    this->bufferContent.resize(elements, -1);
+    this->bufferContent.assign(elements, -1);
     // } 
     for (Chunk* chunk : *chunks){
         
@@ -19,6 +18,7 @@ bool IdBuffer::fillBufferWithChunks(std::vector<Chunk*> *chunks, size_t elements
             ExitError("ID_BUFFER","filling already filled buffer zone");
         }
         std::cout << "NEW ID: " << id << "\n";
+        std::cout << "span: " << startInstance << " " << startInstance + instanceCount << "\n";
         for (int i = startInstance; i<startInstance + instanceCount; i++){
             
             bufferContent[i] = id;
