@@ -9,9 +9,10 @@
 class IdBuffer : public Buffer{
     private:
         // this is relatively small data so we keep it here for optimized buffer insertions
-        std::vector<int> bufferContent;
+        
         
     public:
+        std::vector<int> bufferContent;
         IdBuffer() : Buffer(GL_ARRAY_BUFFER){};
     
 

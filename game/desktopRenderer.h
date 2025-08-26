@@ -27,7 +27,7 @@ class DesktopRenderer : public Renderer
 
         MeshBuffer meshBuffer = MeshBuffer(false);
         IndirectBuffer chunkDrawBuffer = IndirectBuffer();
-        StorageBuffer chunkStorageBuffer = StorageBuffer(GL_SHADER_STORAGE_BUFFER); 
+        StorageBuffer chunkStorageBuffer = StorageBuffer(); 
         
         glm::vec3 lastCameraPosOnChunkPosChange = glm::vec3(0.0f);
 

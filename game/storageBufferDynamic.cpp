@@ -48,14 +48,14 @@ bool StorageBufferDynamic::insertChunksToBuffer(std::vector<Chunk*> *chunks){
     
     
     this->bufferContent.clear();
-    this->bufferContent.resize(chunks->size(), glm::vec4(0.0f,0.0f,0.0f, 0.0f));
+    this->bufferContent.resize(chunks->size(), glm::vec4(0.0f,0.0f,0.0f, -1.0f));
     
     
     
     for (Chunk* chunk : *chunks){
-        if (!chunk->hasBufferSpace[GL_ARRAY_BUFFER]){
-            continue;
-        }
+        // if (!chunk->hasBufferSpace[GL_ARRAY_BUFFER]){
+        //     continue;
+        // }
         if (!chunk->hasBufferSpace[bufferType]){
             std::cout << "storageBuffer assigning\n"; 
             int zone = assignChunkBufferZone(chunk);

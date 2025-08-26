@@ -22,7 +22,7 @@ class StorageBuffer : public Buffer {
         // this is relatively small data so we keep it here for optimized buffer insertions
         std::vector<StorageBufferType> bufferContent;
     public:
-        StorageBuffer(GLenum bufferType) : Buffer(bufferType){
+        StorageBuffer() : Buffer(GL_SHADER_STORAGE_BUFFER){
             if (bufferType != GL_SHADER_STORAGE_BUFFER){
                 ExitError("STORAGE_BUFFER","Can't create storage buffer different than shaderStorage buffer");
                 return ;

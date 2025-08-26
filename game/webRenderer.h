@@ -29,7 +29,7 @@ class WebRenderer : public Renderer
 
         IdBuffer chunkIdBuffer = IdBuffer();
         MeshBuffer meshBuffer = MeshBuffer(true);
-        StorageBufferDynamic chunkStorageBuffer = StorageBufferDynamic(GL_UNIFORM_BUFFER); 
+        StorageBufferDynamic chunkStorageBuffer = StorageBufferDynamic(); 
 
         
         glm::vec3 lastCameraPosOnChunkPosChange = glm::vec3(0.0f);
@@ -146,9 +146,7 @@ class WebRenderer : public Renderer
                 };
                 
             }  
-            
-            
-
+        
             lastCameraPosOnChunkPosChange = this->world->player->camera->position;
 
             if (!this->chunkStorageBuffer.insertChunksToBuffer(&this->world->chunkRenderRefs)){
@@ -158,6 +156,7 @@ class WebRenderer : public Renderer
             if (!this->chunkIdBuffer.fillBufferWithChunks(&this->world->chunkRenderRefs, this->meshBuffer.getBufferSize() / sizeof(CHUNK_MESH_DATATYPE))){
                 ExitError("WEB_RENDERER","Filling id buffer went wrong");
             };
+            
 
         };
         virtual void fillBuffer(BufferType bufferToFill) override {
@@ -203,6 +202,7 @@ class WebRenderer : public Renderer
                 ExitError("WEB_RENDERER","error inserting chunk to meshBuffer");
                 return false;
             };
+            
 
             chunk->buffersSetUp = true;
             return true;

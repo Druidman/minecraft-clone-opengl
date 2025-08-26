@@ -33,7 +33,7 @@ class StorageBufferDynamic : public DynamicBuffer {
         // this is relatively small data so we keep it here for optimized buffer insertions
         std::vector<StorageBufferType> bufferContent;
     public:
-        StorageBufferDynamic(GLenum bufferType) : DynamicBuffer(bufferType, false){
+        StorageBufferDynamic() : DynamicBuffer(GL_UNIFORM_BUFFER, false){
             if (bufferType != GL_UNIFORM_BUFFER ){
                 ExitError("STORAGE_BUFFER","Can't create storage buffer different than uniform buffer");
                 return ;

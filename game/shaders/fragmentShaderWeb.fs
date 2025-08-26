@@ -14,7 +14,7 @@ uniform int playerState;
 
 void main()
 {
-    if (Pos.y == -10000.0){
+    if (Pos.x == -10000.0){
         discard;
     }
     vec3 lightColor = vec3(1.0,1.0,0.88);
