@@ -3,7 +3,27 @@
 #include "world.h"
 #include "player.h"
 
-void StorageBufferDynamic::init(World* world){
+bool StorageBufferDynamic::markData(BufferInt markStart, BufferInt markEnd)
+{
+     // now lets mark elements as unactive
+    // to mark data as delete we need to change it to have -1.0 on w element
+ 
+    if (
+        markEnd < markStart ||
+        markStart > this->bufferSize ||
+        markEnd > this->bufferSize
+    ){
+        std::cout  << "FAIL MARK\n";
+        return false;
+    }
+    
+    std::vector<StorageBufferType> data((markEnd - markStart) / sizeof(StorageBufferType),UNACTIVE_MESH_ELEMENT);
+ 
+    return updateData<StorageBufferType>(&data,markStart, markEnd); 
+}
+
+void StorageBufferDynamic::init(World *world)
+{
     this->world = world;
     this->bufferContent.resize(UNIFORM_BUFFER_LENGTH);
 }

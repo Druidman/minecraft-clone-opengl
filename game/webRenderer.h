@@ -148,10 +148,6 @@ class WebRenderer : public Renderer
         
             lastCameraPosOnChunkPosChange = this->world->player->camera->position;
 
-            if (!this->chunkStorageBuffer.insertChunksToBuffer(&this->world->chunkRenderRefs)){
-                ExitError("WEB_RENDERER","Filling storage buffer went wrong");
-            };
-
             if (!this->chunkIdBuffer.fillBufferWithChunks(&this->world->chunkRenderRefs, this->meshBuffer.getBufferSize() / sizeof(CHUNK_MESH_DATATYPE))){
                 ExitError("WEB_RENDERER","Filling id buffer went wrong");
             };
