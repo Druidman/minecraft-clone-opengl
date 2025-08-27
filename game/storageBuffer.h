@@ -18,7 +18,7 @@ class StorageBuffer : public Buffer {
     private:
 
         World *world;
-
+        bool bufferRequiresRefill = false;
         // this is relatively small data so we keep it here for optimized buffer insertions
         std::vector<StorageBufferType> bufferContent;
     public:

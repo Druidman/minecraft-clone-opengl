@@ -5,6 +5,7 @@
 
 void StorageBuffer::init(World* world){
     this->world = world;
+    
 }
 
 void StorageBuffer::setBindingPoint(int port)

@@ -1,9 +1,10 @@
 #include "idBuffer.h"
 
 bool IdBuffer::fillBufferWithChunks(std::vector<Chunk*> *chunks, size_t elements){
-    // if (elements != this->bufferContent.size()){
-    this->bufferContent.assign(elements, -1);
-    // } 
+
+    if (elements != this->bufferContent.size()){
+        this->bufferContent.assign(elements, -1);
+    }
     for (Chunk* chunk : *chunks){
         
         if (!chunk->hasBufferSpace[GL_UNIFORM_BUFFER]){

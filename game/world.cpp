@@ -395,7 +395,7 @@ void World::updateThreads(WorldTickData *worldTickData){
                 continue;
             }
             this->chunks[row][col] = dataIterator->chunksToPrepare[chunkInd];
-            this->renderer->addChunk(&this->chunks[row][col],MESH_BUFFER);
+            this->renderer->addChunk(&this->chunks[row][col]);
 
        
             dataIterator->chunksDone[chunkInd] = false; // so that we won't insert it again
@@ -618,7 +618,6 @@ void World::removeChunk(Chunk *chunk, bool merge)
 {
     this->renderer->deleteChunk(chunk,MESH_BUFFER, merge);
     this->renderer->deleteChunk(chunk,STORAGE_BUFFER, false);
-    
 }
 
 
