@@ -43,6 +43,9 @@ const int CHUNK_HEIGHT = 256;
 
 // NOW we are gonna do a lot we will have buffer of faces
 
+enum ChunkBufferType {
+    MESH_BUFFER, ID_BUFFER, STORAGE_BUFFER, INDIRECT_BUFFER
+};
 
 
 class Chunk
@@ -64,18 +67,18 @@ public:
 
 
     bool buffersSetUp = false;
-    std::map<GLenum, bool> hasBufferSpace = {
-        {GL_ARRAY_BUFFER, false},
-        {GL_DRAW_INDIRECT_BUFFER, false},
-        {GL_SHADER_STORAGE_BUFFER, false},
-        {GL_UNIFORM_BUFFER, false}
+    std::map<ChunkBufferType, bool> hasBufferSpace = {
+        {MESH_BUFFER,     false},
+        {ID_BUFFER,       false},
+        {STORAGE_BUFFER,  false},
+        {INDIRECT_BUFFER, false}
     };
     // buffer zones
-    std::map<GLenum, std::pair<BufferInt, BufferInt>> bufferZone = {
-        {GL_ARRAY_BUFFER, {0,0}},
-        {GL_DRAW_INDIRECT_BUFFER, {0,0}},
-        {GL_SHADER_STORAGE_BUFFER, {0,0}},
-        {GL_UNIFORM_BUFFER, {0,0}}
+    std::map<ChunkBufferType, std::pair<BufferInt, BufferInt>> bufferZone = {
+        {MESH_BUFFER,     {0,0}},
+        {ID_BUFFER,       {0,0}},
+        {STORAGE_BUFFER,  {0,0}},
+        {INDIRECT_BUFFER, {0,0}}
     };
     
 

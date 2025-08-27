@@ -16,13 +16,13 @@
 
 typedef unsigned int uint;
 
-class IndirectBuffer : public Buffer {
+class IndirectBuffer : public GpuBuffer {
     private:
         // this is relatively small data so we keep it here for optimized buffer insertions
         std::vector<DrawArraysIndirectCommand> bufferContent;
         
     public:
-        IndirectBuffer() : Buffer(GL_DRAW_INDIRECT_BUFFER){};
+        IndirectBuffer() : GpuBuffer(GL_DRAW_INDIRECT_BUFFER){};
     
 
         bool fillBufferWithChunks(std::vector<Chunk*> *chunks);

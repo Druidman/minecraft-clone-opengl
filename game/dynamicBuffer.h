@@ -8,6 +8,8 @@
 #include "vendor/glm/glm.hpp"
 #include "vendor/glm/gtc/type_ptr.hpp"
 
+#include "cpuBuffer.h"
+#include "gpuBuffer.h"
 #include "buffer.h"
 #include "betterGL.h"
 #include "chunk.h"
@@ -32,7 +34,8 @@ be called at chunk destructor
 */
 
 // we inherit as private to district acces to the Buffer methods on MeshBuffer object
-class DynamicBuffer : protected Buffer {
+
+class DynamicBuffer{
     private:
         
         
@@ -49,34 +52,25 @@ class DynamicBuffer : protected Buffer {
         bool bufferRequiresMovingElements = false;
 
         int bufferCalls = 0;
-        
+
+        Buffer* bufferTarget;
+        ChunkBufferType chunkBufferType;
     protected:
         BufferInt getBufferPadding(BufferInt size);
         BufferInt getChunkPadding(BufferInt size);
         void mergeFreeZones();
-        void expandBufferByChunk(Chunk* chunk);
+        bool expandBufferByChunk(Chunk* chunk);
         
         int assignChunkBufferZone(Chunk* chunk);
         int getChunkBufferSpaceIndex(Chunk* chunk);
-        
-        GLenum getBufferType();
-        void expandBuffer(BufferInt by);
 
-        
-
+    
         bool moveBufferPart(BufferInt from, BufferInt to); // moves all data from -> to 
 
     protected:
-        DynamicBuffer(GLenum bufferT, bool deleteData = false) : Buffer(bufferT){
-            if (
-                bufferT != GL_ARRAY_BUFFER && 
-                bufferT != GL_DRAW_INDIRECT_BUFFER &&
-                bufferT != GL_SHADER_STORAGE_BUFFER &&
-                bufferT != GL_UNIFORM_BUFFER
-            ){
-                ExitError("DYNAMIC_BUFFER", "Invalid buffer type for DynamicBuffer ONLY MESH_BUFFER, INDIRECT_BUFFER and STORAGE_BUFFER are allowed");
-                return;
-            }
+        DynamicBuffer(Buffer *bufferTarget, ChunkBufferType bufferType, bool deleteData = false){
+            this->bufferTarget = bufferTarget;
+            this->chunkBufferType = bufferType;
             this->deleteData = deleteData;
         };
     protected:
@@ -89,10 +83,9 @@ class DynamicBuffer : protected Buffer {
         
         
     public:
+        
         int getBufferCallsNum();
-        void bind() { Buffer::bind(); };
-        void getId() { Buffer::getId(); };
-        BufferInt getBufferSize(){return Buffer::getBufferSize();};
+        BufferInt getBufferSize(){ return bufferTarget->bufferSize; };
         bool allocateDynamicBuffer(BufferInt meshSize);
 
         bool insertChunkToBuffer(Chunk* chunk);

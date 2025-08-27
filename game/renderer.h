@@ -5,6 +5,7 @@
 
 #include "shader.h"
 #include "vertexArray.h"
+#include "gpuBuffer.h"
 #include "buffer.h"
 #include "texture.h"
 
@@ -42,7 +43,7 @@ protected:
     };
 
     VertexArray crosshairVAO = VertexArray();
-    Buffer crosshairVBO = Buffer(GL_ARRAY_BUFFER);
+    GpuBuffer crosshairVBO = GpuBuffer(GL_ARRAY_BUFFER);
     
     World* world;
 
@@ -92,15 +93,15 @@ public:
     };
 
     virtual void fillBuffers() = 0;
-    virtual void fillBuffer(BufferType bufferToFill) = 0;
+    virtual void fillBuffer(ChunkBufferType bufferToFill) = 0;
 
     virtual bool updateChunk(Chunk* chunk) = 0;
     virtual bool addChunk(Chunk* chunk) = 0;
     virtual bool deleteChunk(Chunk* chunk, bool merge = false) = 0;
 
-    virtual bool updateChunk(Chunk* chunk, BufferType bufferToUpdate) = 0;
-    virtual bool addChunk(Chunk* chunk, BufferType bufferToUpdate) = 0;
-    virtual bool deleteChunk(Chunk* chunk, BufferType bufferToUpdate, bool merge = false) = 0;
+    virtual bool updateChunk(Chunk* chunk, ChunkBufferType bufferToUpdate) = 0;
+    virtual bool addChunk(Chunk* chunk, ChunkBufferType bufferToUpdate) = 0;
+    virtual bool deleteChunk(Chunk* chunk, ChunkBufferType bufferToUpdate, bool merge = false) = 0;
 
  
 };

@@ -8,8 +8,8 @@ bool MeshBuffer::markData(BufferInt markStart, BufferInt markEnd)
     // 393216 - masks face bits to be 6
     if (
         markEnd < markStart ||
-        markStart > this->bufferSize ||
-        markEnd > this->bufferSize
+        markStart > this->bufferTarget->bufferSize ||
+        markEnd > this->bufferTarget->bufferSize
     ){
         std::cout  << "FAIL MARK\n";
         return false;
@@ -17,7 +17,7 @@ bool MeshBuffer::markData(BufferInt markStart, BufferInt markEnd)
     
     std::vector<CHUNK_MESH_DATATYPE> data((markEnd - markStart) / sizeof(CHUNK_MESH_DATATYPE),UNACTIVE_MESH_ELEMENT);
  
-    return updateData<CHUNK_MESH_DATATYPE>(&data,markStart, markEnd); 
+    return this->bufferTarget->uploadData(data.data(),markEnd - markStart, markStart); 
 }
 
 BufferInt MeshBuffer::getChunkDataSize(Chunk *chunk)
@@ -38,12 +38,12 @@ std::string MeshBuffer::getBufferTypeString()
 
 bool MeshBuffer::updateChunkBuffer(Chunk *chunk)
 {
-    if (!chunk->hasBufferSpace[bufferType]){
+    if (!chunk->hasBufferSpace[this->chunkBufferType]){
         ExitError("MESH_BUFFER","Calling update on not inserted chunk");
         return false;
     }
     BufferInt meshSize = getChunkDataSize(chunk);
-    if (meshSize + chunk->bufferZone[bufferType].first > chunk->bufferZone[bufferType].second ){
+    if (meshSize + chunk->bufferZone[this->chunkBufferType].first > chunk->bufferZone[this->chunkBufferType].second ){
         // chunk is to big so we either find new free zone OR reallocate buffer
 
         // ! in all of these scenarios we need to remove chunk from its current location !
@@ -68,25 +68,25 @@ bool MeshBuffer::updateChunkBuffer(Chunk *chunk)
     BufferInt transMeshOffset = chunk->getOpaqueMesh()->size() * sizeof(CHUNK_MESH_DATATYPE);
 
 
-    if (chunk->bufferZone[bufferType].second < chunk->bufferZone[bufferType].first){
+    if (chunk->bufferZone[this->chunkBufferType].second < chunk->bufferZone[this->chunkBufferType].first){
         ExitError("DYNAMIC_BUFFER","smth wrong with chunk free zones second < first, UPDATECHUNKBUFFER(), UPDATING");
         return false;
     }
     if (chunk->getOpaqueMesh()->size() != 0){
-        if (!updateData<CHUNK_MESH_DATATYPE>(
-            chunk->getOpaqueMesh(), 
-            chunk->bufferZone[bufferType].first, 
-            chunk->bufferZone[bufferType].second
+        if (!this->bufferTarget->uploadData(
+            chunk->getOpaqueMesh()->data(), 
+            chunk->bufferZone[this->chunkBufferType].second - chunk->bufferZone[this->chunkBufferType].first, 
+            chunk->bufferZone[this->chunkBufferType].first
         )){
             return false;
         }
         this->bufferCalls++;
     }
     if (chunk->getTransparentMesh()->size() != 0){
-        if (!updateData<CHUNK_MESH_DATATYPE>(
-            chunk->getTransparentMesh(), 
-            chunk->bufferZone[bufferType].first + transMeshOffset, 
-            chunk->bufferZone[bufferType].second
+        if (!this->bufferTarget->uploadData(
+            chunk->getTransparentMesh()->data(), 
+            chunk->bufferZone[this->chunkBufferType].second - chunk->bufferZone[this->chunkBufferType].first, 
+            chunk->bufferZone[this->chunkBufferType].first + transMeshOffset
         )){
             return false;
         }

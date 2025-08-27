@@ -11,7 +11,7 @@
 #include "dynamicBuffer.h"
 #include "betterGL.h"
 #include "chunk.h"
-#include "buffer.h"
+#include "gpuBuffer.h"
 
 class MeshBuffer : public DynamicBuffer {
     private:
@@ -23,7 +23,9 @@ class MeshBuffer : public DynamicBuffer {
         
         virtual std::string getBufferTypeString() override;
     public:
-        MeshBuffer(bool deleteData = false) : DynamicBuffer(GL_ARRAY_BUFFER, deleteData){
+        GpuBuffer buffer = GpuBuffer(GL_ARRAY_BUFFER);
+    public:
+        MeshBuffer(bool deleteData = false) : DynamicBuffer(&buffer, MESH_BUFFER, deleteData){
             BUFFER_PADDING = 20; // expressed in %
             CHUNK_PADDING = 10;
             BUFFER_EXPANSION_RATE = 20;

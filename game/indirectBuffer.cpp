@@ -14,7 +14,7 @@ bool IndirectBuffer::fillBufferWithChunks(std::vector<Chunk *> *chunks)
             (unsigned int)BLOCK_FACE_VERTICES_COUNT,
             (unsigned int)chunk->opaqueMesh.size(),
             0,
-            (unsigned int)(chunk->bufferZone[GL_ARRAY_BUFFER].first / sizeof(CHUNK_MESH_DATATYPE))
+            (unsigned int)(chunk->bufferZone[MESH_BUFFER].first / sizeof(CHUNK_MESH_DATATYPE))
         };
         i++;
     }
@@ -24,7 +24,7 @@ bool IndirectBuffer::fillBufferWithChunks(std::vector<Chunk *> *chunks)
             (unsigned int)BLOCK_FACE_VERTICES_COUNT,
             (unsigned int)chunk->transparentMesh.size(),
             0,
-            (unsigned int)((chunk->bufferZone[GL_ARRAY_BUFFER].first / sizeof(CHUNK_MESH_DATATYPE) + chunk->opaqueMesh.size()))
+            (unsigned int)((chunk->bufferZone[MESH_BUFFER].first / sizeof(CHUNK_MESH_DATATYPE) + chunk->opaqueMesh.size()))
         };
         i++;
     }

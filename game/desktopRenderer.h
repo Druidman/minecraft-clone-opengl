@@ -9,7 +9,8 @@
 #include "world.h"
 #include "player.h"
 #include "betterGL.h"
-
+#include "gpuBuffer.h"
+#include "buffer.h"
 #include "meshBuffer.h"
 #include "indirectBuffer.h"
 #include "storageBuffer.h"
@@ -23,7 +24,7 @@ class DesktopRenderer : public Renderer
         Shader shader = Shader(vsPath, fsPath);
         
         VertexArray vao;
-        Buffer baseVbo = Buffer(GL_ARRAY_BUFFER);
+        GpuBuffer baseVbo = GpuBuffer(GL_ARRAY_BUFFER);
 
         MeshBuffer meshBuffer = MeshBuffer(false);
         IndirectBuffer chunkDrawBuffer = IndirectBuffer();
@@ -42,7 +43,7 @@ class DesktopRenderer : public Renderer
             vao.setAttr(0,3,GL_FLOAT,4 * sizeof(float),0);
             vao.setAttr(1,1,GL_FLOAT,4 * sizeof(float),3 * sizeof(float));
 
-            meshBuffer.bind();
+            meshBuffer.buffer.bind();
             vao.setAttr(2,1,GL_FLOAT,sizeof(CHUNK_MESH_DATATYPE),0);
             GLCall( glVertexAttribDivisor(2,1) );
 
@@ -113,7 +114,7 @@ class DesktopRenderer : public Renderer
             
 
         };
-        virtual void fillBuffer(BufferType bufferToFill) override {
+        virtual void fillBuffer(ChunkBufferType bufferToFill) override {
             // std::cout << "\nFilling buffer " << bufferToFill << " with chunks\n";
 
 
@@ -184,7 +185,7 @@ class DesktopRenderer : public Renderer
             return true;
         }
         
-        virtual bool addChunk(Chunk *chunk, BufferType bufferToUpdate) override {
+        virtual bool addChunk(Chunk *chunk, ChunkBufferType bufferToUpdate) override {
             switch(bufferToUpdate){
                 case MESH_BUFFER:
                     if (!meshBuffer.insertChunkToBuffer(chunk)){
@@ -198,7 +199,7 @@ class DesktopRenderer : public Renderer
             return true;
         }
 
-        virtual bool updateChunk(Chunk *chunk, BufferType bufferToUpdate) override {
+        virtual bool updateChunk(Chunk *chunk, ChunkBufferType bufferToUpdate) override {
             switch(bufferToUpdate){
                 case MESH_BUFFER:
                     if (!meshBuffer.updateChunkBuffer(chunk)){
@@ -220,7 +221,7 @@ class DesktopRenderer : public Renderer
             return true;
         }
 
-        virtual bool deleteChunk(Chunk *chunk, BufferType bufferToUpdate, bool merge = false) override {
+        virtual bool deleteChunk(Chunk *chunk, ChunkBufferType bufferToUpdate, bool merge = false) override {
             switch(bufferToUpdate){
                 case MESH_BUFFER:
                     if (!meshBuffer.deleteChunkFromBuffer(chunk, merge)){

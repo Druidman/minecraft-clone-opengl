@@ -3,48 +3,70 @@
 #include "world.h"
 #include "player.h"
 
-void StorageBuffer::init(World* world){
-    this->world = world;
+bool StorageBuffer::markData(BufferInt markStart, BufferInt markEnd)
+{
+     // now lets mark elements as unactive
+    // to mark data as delete we need to change it to have -1.0 on w element
+ 
+    if (
+        markEnd < markStart ||
+        markStart > this->bufferTarget->bufferSize ||
+        markEnd > this->bufferTarget->bufferSize
+    ){
+        std::cout  << "FAIL MARK\n";
+        return false;
+    }
     
+    std::vector<StorageBufferType> data((markEnd - markStart) / sizeof(StorageBufferType),UNACTIVE_MESH_ELEMENT);
+ 
+    return this->bufferTarget->uploadData(data.data(),data.size() * sizeof(StorageBufferType), markStart);
+}
+
+void StorageBuffer::init(World *world)
+{
+    this->world = world;
+    this->bufferTarget->allocateBuffer(UNIFORM_BUFFER_LENGTH * sizeof(StorageBufferType));
 }
 
 void StorageBuffer::setBindingPoint(int port)
 {
 
-    GLCall( glBindBufferBase(bufferType, port, m_bo) );
+    GLCall( glBindBufferBase(GL_UNIFORM_BUFFER, port, gpuBuffer.getId()) );
 }
 
+bool StorageBuffer::updateChunkBuffer(Chunk *chunk)
+{
+    if (!chunk->hasBufferSpace[this->chunkBufferType]){
+        ExitError("STORAGE_BUFFER","UPDATE CALLED ON UN INSERTED CHUNK");
+    }
+    glm::vec4 tmp = glm::vec4(chunk->position - this->world->player->camera->position, 0.0f);
 
-bool StorageBuffer::insertChunksToBuffer(std::vector<Chunk*> *chunks){
+    if (!this->bufferTarget->uploadData(
+            &tmp,
+            chunk->bufferZone[this->chunkBufferType].second - chunk->bufferZone[this->chunkBufferType].first,
+            chunk->bufferZone[this->chunkBufferType].second
+        )
+    ){
+        return false;
+    };
     
+    return true;
+}
 
-    
-    std::cout << "\nSTORAGE_BUFFER_UPDATE\n\n";
+bool StorageBuffer::insertChunksToBuffer(std::vector<Chunk *> *chunks)
+{
     if (chunks->size() == 0){
-        std::cout << "size = 0\n";
         return false;
     }
-    
-    
-    if (chunks->size() != this->bufferContent.size()){
-        this->bufferContent.clear();
-        this->bufferContent.resize(chunks->size(), glm::vec4(0.0f,0.0f,0.0f, 0.0f));
-    }
-    else {
-        this->bufferContent.clear();
-    }
-    
-    int ind = 0;
+
     for (Chunk* chunk : *chunks){
-        if (!chunk->hasBufferSpace[GL_ARRAY_BUFFER]){
-            continue;
+        if (!insertChunkToBuffer(chunk)){
+            return false;
         }
-        
-        this->bufferContent[ind]= glm::vec4(chunk->position - this->world->player->camera->position,0.0);
-        ind++;
     }
 
-    return fillData<StorageBufferType>(&this->bufferContent);
+
+    
+    gpuBuffer.allocateBuffer(this->bufferTarget->bufferSize);
+    return gpuBuffer.uploadData(this->bufferTarget->getBufferContent(), this->bufferTarget->bufferSize, 0);
 }
-
-

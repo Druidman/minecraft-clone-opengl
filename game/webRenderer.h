@@ -12,7 +12,8 @@
 #include "shader.h"
 #include "betterGL.h"
 #include "idBuffer.h"
-#include "storageBufferDynamic.h"
+#include "storageBuffer.h"
+#include "gpuBuffer.h"
 
 
 
@@ -25,11 +26,11 @@ class WebRenderer : public Renderer
         Shader shader = Shader(vsPath, fsPath);
         
         VertexArray vao;
-        Buffer baseVbo = Buffer(GL_ARRAY_BUFFER);
+        GpuBuffer baseVbo = GpuBuffer(GL_ARRAY_BUFFER);
 
         IdBuffer chunkIdBuffer = IdBuffer();
         MeshBuffer meshBuffer = MeshBuffer(true);
-        StorageBufferDynamic chunkStorageBuffer = StorageBufferDynamic(); 
+        StorageBuffer chunkStorageBuffer = StorageBuffer(); 
 
         
         glm::vec3 lastCameraPosOnChunkPosChange = glm::vec3(0.0f);
@@ -47,7 +48,7 @@ class WebRenderer : public Renderer
             vao.setAttr(0,3,GL_FLOAT,4 * sizeof(float),0);
             vao.setAttr(1,1,GL_FLOAT,4 * sizeof(float),3 * sizeof(float));
 
-            meshBuffer.bind();
+            meshBuffer.buffer.bind();
             vao.setAttr(2,1,GL_FLOAT,sizeof(CHUNK_MESH_DATATYPE),0);
             GLCall( glVertexAttribDivisor(2,1) );
 
@@ -91,7 +92,7 @@ class WebRenderer : public Renderer
 
             
 
-            this->meshBuffer.bind();
+            this->meshBuffer.buffer.bind();
             GLint64 meshData;
             GLCall( glGetBufferParameteri64v(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &meshData) );
 
@@ -154,7 +155,7 @@ class WebRenderer : public Renderer
             
 
         };
-        virtual void fillBuffer(BufferType bufferToFill) override {
+        virtual void fillBuffer(ChunkBufferType bufferToFill) override {
             BufferInt meshSize = world->getWorldMeshSize();
             switch(bufferToFill){
                 case MESH_BUFFER:
@@ -235,7 +236,7 @@ class WebRenderer : public Renderer
             return true;
         }
         
-        virtual bool addChunk(Chunk *chunk, BufferType bufferToUpdate) override {
+        virtual bool addChunk(Chunk *chunk, ChunkBufferType bufferToUpdate) override {
             switch(bufferToUpdate){
                 case MESH_BUFFER:
                     if (!meshBuffer.insertChunkToBuffer(chunk)){
@@ -255,7 +256,7 @@ class WebRenderer : public Renderer
             return true;
         }
 
-        virtual bool updateChunk(Chunk *chunk, BufferType bufferToUpdate) override {
+        virtual bool updateChunk(Chunk *chunk, ChunkBufferType bufferToUpdate) override {
             switch(bufferToUpdate){
                 case MESH_BUFFER:
                     if (!meshBuffer.updateChunkBuffer(chunk)){
@@ -269,7 +270,7 @@ class WebRenderer : public Renderer
             return true;
         }
 
-        virtual bool deleteChunk(Chunk *chunk, BufferType bufferToUpdate, bool merge = false) override {
+        virtual bool deleteChunk(Chunk *chunk, ChunkBufferType bufferToUpdate, bool merge = false) override {
             switch(bufferToUpdate){
                 case MESH_BUFFER:
                     if (!meshBuffer.deleteChunkFromBuffer(chunk, merge)){

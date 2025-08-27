@@ -8,30 +8,39 @@
 #include "vendor/glm/gtc/type_ptr.hpp"
 
 #include "betterGL.h"
+#include "dynamicBuffer.h"
 #include "chunk.h"
+#include "cpuBuffer.h"
+#include "gpuBuffer.h"
 #include "buffer.h"
 #include "world.h"
 
 
+const int UNIFORM_BUFFER_LENGTH = 1024;
+class StorageBuffer : public DynamicBuffer {
+    protected:
+        
+        virtual bool markData(BufferInt markStart, BufferInt markEnd) override;
+        virtual BufferInt getChunkDataSize(Chunk* chunk) override{return sizeof(StorageBufferType);};
+        virtual bool requiresContiguousMemoryLayout() override {return false;};
+        
+        virtual std::string getBufferTypeString() override {return "STORAGE_BUFFER";};
 
-class StorageBuffer : public Buffer {
     private:
-
+        GpuBuffer gpuBuffer = GpuBuffer(GL_UNIFORM_BUFFER);
+        CpuBuffer<StorageBufferType> cpuBuffer = CpuBuffer<StorageBufferType>();
+        StorageBufferType UNACTIVE_MESH_ELEMENT = glm::vec4(0.0,0.0,0.0,-1.0);
         World *world;
-        bool bufferRequiresRefill = false;
-        // this is relatively small data so we keep it here for optimized buffer insertions
-        std::vector<StorageBufferType> bufferContent;
+
     public:
-        StorageBuffer() : Buffer(GL_SHADER_STORAGE_BUFFER){
-            if (bufferType != GL_SHADER_STORAGE_BUFFER){
-                ExitError("STORAGE_BUFFER","Can't create storage buffer different than shaderStorage buffer");
-                return ;
-            }
+        StorageBuffer() : DynamicBuffer(&cpuBuffer, STORAGE_BUFFER, false){
+            
         };
         void init(World *world);
         void setBindingPoint(int port);
 
-        bool insertChunksToBuffer(std::vector<Chunk*> *chunks);
+        virtual bool updateChunkBuffer(Chunk* chunk) override;
+        virtual bool insertChunksToBuffer(std::vector<Chunk*> *chunks) override;
 
     
 };
