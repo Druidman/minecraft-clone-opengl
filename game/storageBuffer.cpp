@@ -26,6 +26,7 @@ void StorageBuffer::init(World *world)
 {
     this->world = world;
     this->bufferTarget->allocateBuffer(UNIFORM_BUFFER_LENGTH * sizeof(StorageBufferType));
+    this->setBindingPoint(0);
 }
 
 void StorageBuffer::setBindingPoint(int port)
@@ -44,7 +45,7 @@ bool StorageBuffer::updateChunkBuffer(Chunk *chunk)
     if (!this->bufferTarget->uploadData(
             &tmp,
             chunk->bufferZone[this->chunkBufferType].second - chunk->bufferZone[this->chunkBufferType].first,
-            chunk->bufferZone[this->chunkBufferType].second
+            chunk->bufferZone[this->chunkBufferType].first
         )
     ){
         return false;
@@ -64,9 +65,10 @@ bool StorageBuffer::insertChunksToBuffer(std::vector<Chunk *> *chunks)
             return false;
         }
     }
+    
 
 
     
-    gpuBuffer.allocateBuffer(this->bufferTarget->bufferSize);
+    gpuBuffer.allocateBuffer(UNIFORM_BUFFER_LENGTH * sizeof(StorageBufferType));
     return gpuBuffer.uploadData(this->bufferTarget->getBufferContent(), this->bufferTarget->bufferSize, 0);
 }

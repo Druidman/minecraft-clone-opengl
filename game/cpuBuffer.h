@@ -26,14 +26,14 @@ class CpuBuffer : public Buffer{
 };
 
 
-template <typename T>
-void* CpuBuffer<T>::getBufferContent(){
-    return &this->bufferContent;
+template <typename ELEMENT_TYPE>
+void* CpuBuffer<ELEMENT_TYPE>::getBufferContent(){
+    return this->bufferContent.data();
 };
 
 
-template <typename T>
-inline bool CpuBuffer<T>::uploadData(const void *data, BufferInt size, BufferInt start)
+template <typename ELEMENT_TYPE>
+inline bool CpuBuffer<ELEMENT_TYPE>::uploadData(const void *data, BufferInt size, BufferInt start)
 {
     if (
         size == 0 ||
@@ -42,29 +42,30 @@ inline bool CpuBuffer<T>::uploadData(const void *data, BufferInt size, BufferInt
     ){
         return false;
     }
-    std::memcpy(&this->bufferContent[start / sizeof(T)], data, size);
+    
+    std::memcpy(&this->bufferContent[start / sizeof(ELEMENT_TYPE)], data, size);
     
     return true;
 }
 
-template <typename T>
-inline bool CpuBuffer<T>::allocateBuffer(BufferInt size)
+template <typename ELEMENT_TYPE>
+inline bool CpuBuffer<ELEMENT_TYPE>::allocateBuffer(BufferInt size)
 {
     this->bufferContent.clear();
-    this->bufferContent.resize(size / sizeof(T));
+    this->bufferContent.resize(size / sizeof(ELEMENT_TYPE));
     this->bufferSize = size;
     return true;
 }
 
-template <typename T>
-inline bool CpuBuffer<T>::expandBuffer(BufferInt by)
+template <typename ELEMENT_TYPE>
+inline bool CpuBuffer<ELEMENT_TYPE>::expandBuffer(BufferInt by)
 {
-    this->bufferContent.resize((this->bufferSize + by) / sizeof(T));
+    this->bufferContent.resize((this->bufferSize + by) / sizeof(ELEMENT_TYPE));
     return true;
 }
 
-template <typename T>
-inline bool CpuBuffer<T>::moveBufferPart()
+template <typename ELEMENT_TYPE>
+inline bool CpuBuffer<ELEMENT_TYPE>::moveBufferPart()
 {
     return false;
 }

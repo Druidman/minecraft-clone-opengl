@@ -5,7 +5,6 @@ bool GpuBuffer::uploadData(const void *data, BufferInt size, BufferInt start)
 {
     if (
         size == 0 ||
-        start == start + size ||
         start + size > this->bufferSize
     ){
         return false;
@@ -57,6 +56,7 @@ bool GpuBuffer::expandBuffer(BufferInt by)
 
     tempBuffer.unBind();
     this->unBind();
+    std::cout << "End of expansion\n";
 }
 
 bool GpuBuffer::moveBufferPart()

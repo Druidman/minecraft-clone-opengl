@@ -75,7 +75,7 @@ bool MeshBuffer::updateChunkBuffer(Chunk *chunk)
     if (chunk->getOpaqueMesh()->size() != 0){
         if (!this->bufferTarget->uploadData(
             chunk->getOpaqueMesh()->data(), 
-            chunk->bufferZone[this->chunkBufferType].second - chunk->bufferZone[this->chunkBufferType].first, 
+            chunk->getOpaqueMesh()->size() * sizeof(CHUNK_MESH_DATATYPE), 
             chunk->bufferZone[this->chunkBufferType].first
         )){
             return false;
@@ -85,7 +85,7 @@ bool MeshBuffer::updateChunkBuffer(Chunk *chunk)
     if (chunk->getTransparentMesh()->size() != 0){
         if (!this->bufferTarget->uploadData(
             chunk->getTransparentMesh()->data(), 
-            chunk->bufferZone[this->chunkBufferType].second - chunk->bufferZone[this->chunkBufferType].first, 
+            chunk->getTransparentMesh()->size() * sizeof(CHUNK_MESH_DATATYPE), 
             chunk->bufferZone[this->chunkBufferType].first + transMeshOffset
         )){
             return false;
