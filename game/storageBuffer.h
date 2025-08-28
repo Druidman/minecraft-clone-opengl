@@ -27,6 +27,7 @@ class StorageBuffer : public DynamicBuffer {
         virtual std::string getBufferTypeString() override {return "STORAGE_BUFFER";};
 
     private:
+        bool gpuBufferRequiresRefill = false;
         GpuBuffer gpuBuffer = GpuBuffer(GL_UNIFORM_BUFFER);
         CpuBuffer<StorageBufferType> cpuBuffer = CpuBuffer<StorageBufferType>();
         StorageBufferType UNACTIVE_MESH_ELEMENT = glm::vec4(0.0,0.0,0.0,-1.0);
@@ -41,6 +42,8 @@ class StorageBuffer : public DynamicBuffer {
 
         virtual bool updateChunkBuffer(Chunk* chunk) override;
         virtual bool insertChunksToBuffer(std::vector<Chunk*> *chunks) override;
+
+        bool fillGpuBuffer();
 
     
 };

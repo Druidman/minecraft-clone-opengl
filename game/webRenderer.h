@@ -139,6 +139,7 @@ class WebRenderer : public Renderer
                 UNIFORM_BUFFER_LENGTH * sizeof(StorageBufferType)
             );
 
+            lastCameraPosOnChunkPosChange = this->world->player->camera->position;
             for (Chunk* chunk : this->world->chunkRenderRefs){
                 std::cout << chunk->getMeshSize() << "\n";
                 if (!addChunk(chunk)){
@@ -147,7 +148,9 @@ class WebRenderer : public Renderer
                 
             }  
         
-            lastCameraPosOnChunkPosChange = this->world->player->camera->position;
+            if (!this->chunkStorageBuffer.fillGpuBuffer()){
+                ExitError("WEB_RENDERER","Filling storage GPU buffer went wrong");
+            }
 
             if (!this->chunkIdBuffer.fillBufferWithChunks(&this->world->chunkRenderRefs, this->meshBuffer.getBufferSize() / sizeof(CHUNK_MESH_DATATYPE))){
                 ExitError("WEB_RENDERER","Filling id buffer went wrong");
@@ -175,6 +178,9 @@ class WebRenderer : public Renderer
                     if (!this->chunkStorageBuffer.insertChunksToBuffer(&this->world->chunkRenderRefs)){
                         ExitError("WEB_RENDERER","Filling storage Buffer went wrong");
                     };
+                    if (!this->chunkStorageBuffer.fillGpuBuffer()){
+                        ExitError("WEB_RENDERER","Filling storage GPU buffer went wrong");
+                    }
 
                     
                     break;

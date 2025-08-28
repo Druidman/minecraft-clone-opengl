@@ -50,6 +50,7 @@ bool StorageBuffer::updateChunkBuffer(Chunk *chunk)
     ){
         return false;
     };
+    gpuBufferRequiresRefill = true;
     
     return true;
 }
@@ -65,10 +66,21 @@ bool StorageBuffer::insertChunksToBuffer(std::vector<Chunk *> *chunks)
             return false;
         }
     }
-    
+    gpuBufferRequiresRefill = true;
+    return true;
+}
 
+bool StorageBuffer::fillGpuBuffer()
+{
+    if (!gpuBufferRequiresRefill){
+        return true;
+    }
 
-    
     gpuBuffer.allocateBuffer(UNIFORM_BUFFER_LENGTH * sizeof(StorageBufferType));
-    return gpuBuffer.uploadData(this->bufferTarget->getBufferContent(), this->bufferTarget->bufferSize, 0);
+    if (!gpuBuffer.uploadData(this->bufferTarget->getBufferContent(), this->bufferTarget->bufferSize, 0)){
+        return false;
+    };
+    gpuBufferRequiresRefill = false;
+    return true;
+
 }
