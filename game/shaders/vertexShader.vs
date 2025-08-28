@@ -4,8 +4,8 @@ layout (location = 0) in vec3 aBasePosition;
 layout (location = 1) in float vertexType;
 layout (location = 2) in float vertexData; 
 
-layout(std430, binding=0) buffer ssbo{
-    vec3 chunkPositions[];
+layout(std140) uniform ubo{
+    vec4 chunkPositions[1024];
 };
 
 
@@ -183,7 +183,7 @@ void main()
     else {
         index = gl_DrawID;
     }
-    vec3 chunkPos = chunkPositions[index];
+    vec3 chunkPos = vec3(chunkPositions[index]);
     vec3 worldPosition = rotatedBasePos + chunkPos + blockOffset - vec3(8.0,0.0,8.0) + CameraPos;
 
     gl_Position = projection * view * model * vec4(worldPosition, 1.0);

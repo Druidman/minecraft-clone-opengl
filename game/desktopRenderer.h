@@ -96,8 +96,11 @@ class DesktopRenderer : public Renderer
             this->meshBuffer.allocateDynamicBuffer(
                 meshSize
             );
+            this->chunkStorageBuffer.allocateDynamicBuffer(
+                UNIFORM_BUFFER_LENGTH * sizeof(StorageBufferType)
+            );
 
-           
+            lastCameraPosOnChunkPosChange = this->world->player->camera->position;
             for (std::vector< Chunk > &chunkRow : this->world->chunks){
                 for (Chunk &chunk : chunkRow){
                     addChunk(&chunk);
@@ -105,9 +108,14 @@ class DesktopRenderer : public Renderer
                
             };
 
-            lastCameraPosOnChunkPosChange = this->world->player->camera->position;
-            this->chunkDrawBuffer.fillBufferWithChunks(&this->world->chunkRenderRefs);
-            this->chunkStorageBuffer.insertChunksToBuffer(&this->world->chunkRenderRefs);
+            if (!this->chunkStorageBuffer.fillGpuBuffer()){
+                ExitError("DESKTOP_RENDERER", "Error filling storage GPU buffer");
+            };
+            if (!this->chunkDrawBuffer.fillBufferWithChunks(&this->world->chunkRenderRefs)){
+                ExitError("DESKTOP_RENDERER", "Error filling indirect buffer");
+            };
+            
+            
 
             
 
@@ -131,11 +139,19 @@ class DesktopRenderer : public Renderer
                     };
                     break;
                 case INDIRECT_BUFFER:
-                    this->chunkDrawBuffer.fillBufferWithChunks(&this->world->chunkRenderRefs);
+               
+                    if (!this->chunkDrawBuffer.fillBufferWithChunks(&this->world->chunkRenderRefs)){
+                        ExitError("DESKTOP_RENDERER", "Error filling indirect buffer");
+                    };
                     break;
                 case STORAGE_BUFFER:
                     lastCameraPosOnChunkPosChange = this->world->player->camera->position;
-                    this->chunkStorageBuffer.insertChunksToBuffer(&this->world->chunkRenderRefs);
+                    if (!this->chunkStorageBuffer.insertChunksToBuffer(&this->world->chunkRenderRefs)){
+                        ExitError("DESKTOP_RENDERER", "Error filling storage buffer");
+                    };
+                    if (!this->chunkStorageBuffer.fillGpuBuffer()){
+                        ExitError("DESKTOP_RENDERER", "Error filling storage GPU buffer");
+                    };
                     break;
             }
             
@@ -150,6 +166,11 @@ class DesktopRenderer : public Renderer
                 ExitError("DESKTOP_RENDERER","error inserting chunk to meshBuffer");
                 return false;
             };
+            if (!chunkStorageBuffer.insertChunkToBuffer(chunk)){
+                ExitError("DESKTOP_RENDERER","error inserting chunk to storageBuffer");
+                return false;
+            };
+            
             
 
             chunk->buffersSetUp = true;
@@ -161,14 +182,11 @@ class DesktopRenderer : public Renderer
                 ExitError("DESKTOP_RENDERER","error updating chunk to meshBuffer");
                 return false;
             };
-            // if (!chunkDrawBuffer.updateChunkBuffer(chunk)){
-            //     ExitError("DESKTOP_RENDERER","error updating chunk to indirectBuffer");
-            //     return false;
-            // };
-            // if (!chunkStorageBuffer.updateChunkBuffer(chunk)){
-            //     ExitError("DESKTOP_RENDERER","error updating chunk to storage Buffer");
-            //     return false;
-            // };
+            if (!chunkStorageBuffer.updateChunkBuffer(chunk)){
+                ExitError("DESKTOP_RENDERER","error updating chunk to storageBuffer");
+                return false;
+            };
+            
 
             chunk->buffersSetUp = true;
             return true;
@@ -177,6 +195,10 @@ class DesktopRenderer : public Renderer
         virtual bool deleteChunk(Chunk *chunk, bool merge = false) override {
             if (!meshBuffer.deleteChunkFromBuffer(chunk, merge)){
                 ExitError("DESKTOP_RENDERER","error deleting chunk from meshBuffer");
+                return false;
+            };
+            if (!chunkStorageBuffer.deleteChunkFromBuffer(chunk)){
+                ExitError("DESKTOP_RENDERER","error deleting chunk to storageBuffer");
                 return false;
             };
             
@@ -193,6 +215,11 @@ class DesktopRenderer : public Renderer
                         return false;
                     };
                     break;
+                case STORAGE_BUFFER:
+                    if (!chunkStorageBuffer.insertChunkToBuffer(chunk)){
+                        ExitError("DESKTOP_RENDERER","error inserting chunk to storageBuffer");
+                        return false;
+                    };
                 
             }
             chunk->buffersSetUp = true;
@@ -208,13 +235,15 @@ class DesktopRenderer : public Renderer
                     };
                     break;
                 case INDIRECT_BUFFER:
-                    std::cout << "Buffer update...\n";
-                    fillBuffer(bufferToUpdate);
+                    
 
                     break;
                 case STORAGE_BUFFER:
-                    std::cout << "Buffer update...\n";
-                    fillBuffer(bufferToUpdate);
+            
+                    if (!chunkStorageBuffer.updateChunkBuffer(chunk)){
+                        ExitError("DESKTOP_RENDERER","error updating chunk to storageBuffer");
+                        return false;
+                    };
                     break;
             }
             chunk->buffersSetUp = true;
@@ -229,6 +258,11 @@ class DesktopRenderer : public Renderer
                         return false;
                     };
                     break;
+                case STORAGE_BUFFER:
+                    if (!chunkStorageBuffer.deleteChunkFromBuffer(chunk)){
+                        ExitError("DESKTOP_RENDERER","error deleting chunk to storageBuffer");
+                        return false;
+                    };
     
             }
             chunk->buffersSetUp = false;
