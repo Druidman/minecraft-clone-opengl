@@ -123,7 +123,7 @@ class DesktopRenderer : public Renderer
 
         };
         virtual void fillBuffer(ChunkBufferType bufferToFill) override {
-            // std::cout << "\nFilling buffer " << bufferToFill << " with chunks\n";
+            std::cout << "\nFilling buffer " << bufferToFill << " with chunks\n";
 
 
             BufferInt meshSize = world->getWorldMeshSize();
@@ -134,7 +134,7 @@ class DesktopRenderer : public Renderer
                     );
                     for (std::vector< Chunk > &chunkRow : this->world->chunks){
                         for (Chunk &chunk : chunkRow){
-                            addChunk(&chunk);
+                            addChunk(&chunk, MESH_BUFFER);
                         }
                     };
                     break;

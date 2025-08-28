@@ -210,7 +210,7 @@ int main()
     #if defined(WEB_GL_INSTANCE)
         renderer = new WebRenderer();
     #elif defined(OPENGL_INSTANCE)
-        renderer = new DesktopRenderer();
+        renderer = new WebRenderer();
     #else
         #error Is this webGlInstance or desktopInstance? Why is it not defined??
     #endif

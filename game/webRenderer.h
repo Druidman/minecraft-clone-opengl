@@ -167,7 +167,7 @@ class WebRenderer : public Renderer
                     );
                     for (std::vector< Chunk > &chunkRow : this->world->chunks){
                         for (Chunk &chunk : chunkRow){
-                            addChunk(&chunk);
+                            addChunk(&chunk, MESH_BUFFER);
                         }
                     };
                     break;
