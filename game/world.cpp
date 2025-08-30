@@ -380,7 +380,7 @@ void World::updateThreads(WorldTickData *worldTickData){
     std::list<std::thread>::iterator threadIterator = threads.begin();
     while (dataIterator != threadsWorkingData.end() && threadIterator != threads.end()){
         
-        bool isReady = dataIterator->ready;
+        bool isReady = false;
         for (int chunkInd =0; chunkInd < CHUNK_COLUMNS; chunkInd++){
             if (!dataIterator->chunksDone[chunkInd]){
                 continue;
@@ -397,10 +397,16 @@ void World::updateThreads(WorldTickData *worldTickData){
             this->chunks[row][col] = dataIterator->chunksToPrepare[chunkInd];
             this->renderer->addChunk(&this->chunks[row][col]);
 
+
        
             dataIterator->chunksDone[chunkInd] = false; // so that we won't insert it again
             worldTickData->requiresRefsUpdate = true;
-            // break;
+
+            
+            if (chunkInd == CHUNK_COLUMNS - 1){
+                isReady = true;
+            }
+            
             
 
        
@@ -416,7 +422,7 @@ void World::updateThreads(WorldTickData *worldTickData){
             dataIterator++;
             threadIterator++;
         }
-        // break;
+        
 
 
       
@@ -445,8 +451,9 @@ void World::updateChunkRender(WorldTickData *worldTickData){
     this->renderer->fillBuffer(STORAGE_BUFFER);  
     double storageEnd = glfwGetTime();
 
+    double indirectStart = glfwGetTime();
     this->renderer->fillBuffer(INDIRECT_BUFFER);
-
+    double indirectEnd = glfwGetTime();
     
 
     
@@ -454,7 +461,8 @@ void World::updateChunkRender(WorldTickData *worldTickData){
     
     std::cout \
      << "STORAGE_BUFFER: " << (storageEnd - storageStart) * 1000 << "\n" 
-     << "REFS: " << (refsEnd - refsStart) * 1000 << "\n";
+     << "REFS: " << (refsEnd - refsStart) * 1000 << "\n"
+     << "INDIRECT: " << (indirectEnd - indirectStart) * 1000 << "\n";
 }
 
 void World::updateWorld(double delta)
