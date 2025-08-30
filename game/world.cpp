@@ -98,11 +98,6 @@ void World::genRenderChunkRefs(){
             
         }
     }
-    
-    // std::sort(chunkRenderRefs.begin(), chunkRenderRefs.end(), [this](Chunk* a, Chunk* b){
-       
-    //     return a->bufferZone[GL_ARRAY_BUFFER] < b->bufferZone[GL_ARRAY_BUFFER];
-    // });
 }
 
 int World::genBlockHeight(glm::vec2 positionXZ){

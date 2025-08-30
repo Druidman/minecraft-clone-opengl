@@ -73,6 +73,7 @@ bool MeshBuffer::updateChunkBuffer(Chunk *chunk)
         ExitError("DYNAMIC_BUFFER","smth wrong with chunk free zones second < first, UPDATECHUNKBUFFER(), UPDATING");
         return false;
     }
+    markData(chunk->bufferZone[this->chunkBufferType].first, chunk->bufferZone[this->chunkBufferType].second);
     if (chunk->getOpaqueMesh()->size() != 0){
         if (!this->bufferTarget->uploadData(
             chunk->getOpaqueMesh()->data(), 

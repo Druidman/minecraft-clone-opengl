@@ -46,6 +46,9 @@ const int CHUNK_HEIGHT = 256;
 enum ChunkBufferType {
     MESH_BUFFER, ID_BUFFER, STORAGE_BUFFER, INDIRECT_BUFFER
 };
+enum ChunkMeshType {
+    OPAQUE, TRANSPARENT
+};
 
 
 class Chunk

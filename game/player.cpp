@@ -177,9 +177,7 @@ void Player::destroy_block()
     chunk->removeBlock(hitPos);
     chunk->genChunkMesh();
     world->renderer->updateChunk(chunk, MESH_BUFFER);
-    #ifndef WEB_GL_INSTANCE
-        world->renderer->updateChunk(chunk, INDIRECT_BUFFER);
-    #endif
+    
     
     
 }
@@ -249,9 +247,7 @@ void Player::place_block()
     placeChunk->addBlock(blockToAdd);
     placeChunk->genChunkMesh();
     world->renderer->updateChunk(placeChunk, MESH_BUFFER);
-    #ifndef WEB_GL_INSTANCE
-        world->renderer->updateChunk(placeChunk, INDIRECT_BUFFER);
-    #endif
+    
    
 }
 
