@@ -197,7 +197,7 @@ int main()
         }
     #endif
     
-    // glfwSwapInterval( 0 );
+    glfwSwapInterval( 0 );
 
     stbi_set_flip_vertically_on_load(true);
     
@@ -215,7 +215,7 @@ int main()
         #error Is this webGlInstance or desktopInstance? Why is it not defined??
     #endif
 
-    int worldWidth = 336;
+    int worldWidth = 272;
     glm::vec3 worldMiddle = glm::vec3(3000,0,3000);
 
     std::cout << "initializing world\n";

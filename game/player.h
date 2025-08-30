@@ -17,7 +17,7 @@
 class World;
 
 const int PLAYER_RANGE = 100;
-const int PLAYER_SPEED = 10;
+const int PLAYER_SPEED = 100;
 
 enum PlayerState{
     IN_AIR, IN_WATER, ON_GROUND
