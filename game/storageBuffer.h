@@ -28,10 +28,12 @@ class StorageBuffer : public DynamicBuffer {
 
     private:
         bool gpuBufferRequiresRefill = false;
-        GpuBuffer gpuBuffer = GpuBuffer(GL_UNIFORM_BUFFER);
+        
         CpuBuffer<StorageBufferType> cpuBuffer = CpuBuffer<StorageBufferType>();
         StorageBufferType UNACTIVE_MESH_ELEMENT = glm::vec4(0.0,0.0,0.0,-1.0);
         World *world;
+    public:
+        GpuBuffer gpuBuffer = GpuBuffer(GL_UNIFORM_BUFFER);
 
     public:
         StorageBuffer() : DynamicBuffer(&cpuBuffer, STORAGE_BUFFER, false){

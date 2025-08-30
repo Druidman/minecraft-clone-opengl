@@ -61,6 +61,7 @@ template <typename ELEMENT_TYPE>
 inline bool CpuBuffer<ELEMENT_TYPE>::expandBuffer(BufferInt by)
 {
     this->bufferContent.resize((this->bufferSize + by) / sizeof(ELEMENT_TYPE));
+    this->bufferSize += by;
     return true;
 }
 

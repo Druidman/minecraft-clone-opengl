@@ -125,7 +125,7 @@ bool DynamicBuffer::insertChunkToBuffer(Chunk *chunk)
         std::cout << "assigning space\n";
         int assignRes = assignChunkBufferZone(chunk);
         if (assignRes == -2){
-            ExitError("DYNAMIC_BUFFER","buffer expansion... in " + static_cast<int>(chunkBufferType));
+            // ExitError("DYNAMIC_BUFFER","buffer expansion... in " + std::to_string(static_cast<int>(chunkBufferType)));
             // we need to expand buffer because we have no usable space left
             expandBufferByChunk(chunk);
 
@@ -316,6 +316,7 @@ bool DynamicBuffer::expandBufferByChunk(Chunk* chunk){
         return false;
     }
     if (this->deleteData){
+        std::cout << "marking after expansion...\n";
         if (!markData(oldBufferSize, this->bufferTarget->bufferSize)){
             ExitError("DYNAMIC_BUFFER","marking failed");
         };

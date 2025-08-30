@@ -100,11 +100,13 @@ class WebRenderer : public Renderer
             GLint64 idData;
             GLCall( glGetBufferParameteri64v(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &idData) );
 
-            std::cout << "BUFFER_SIZE_MESH: " << this->meshBuffer.getBufferSize() << "\n";
-            std::cout << "BUFFER_SIZE_ID: " << this->chunkIdBuffer.getBufferSize() << "\n";
+            this->chunkStorageBuffer.gpuBuffer.bind();
+            GLint64 storageData;
+            GLCall( glGetBufferParameteri64v(GL_UNIFORM_BUFFER, GL_BUFFER_SIZE, &storageData) );
 
             std::cout << "BUFFER_REAL_SIZE_MESH: " << meshData << "\n";
             std::cout << "BUFFER_REAL_SIZE_ID: " << idData << "\n";
+            std::cout << "BUFFER_REAL_SIZE_STORAGE: " << storageData << "\n";
 
 
 
