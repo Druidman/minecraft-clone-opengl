@@ -35,7 +35,9 @@ class StorageBuffer : public DynamicBuffer {
 
     public:
         StorageBuffer() : DynamicBuffer(&cpuBuffer, STORAGE_BUFFER, false){
-            
+            BUFFER_PADDING = 0; // expressed in %
+            CHUNK_PADDING = 0;
+            BUFFER_EXPANSION_RATE = 0;
         };
         void init(World *world);
         void setBindingPoint(int port);

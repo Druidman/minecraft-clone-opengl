@@ -102,7 +102,7 @@ int DynamicBuffer::getChunkBufferSpaceIndex(Chunk* chunk)
 
 bool DynamicBuffer::allocateDynamicBuffer(BufferInt size)
 {
-    std::cout << size << "\n";
+    std::cout << "dynamicAlloc: " << size << "\n";
     this->bufferTarget->allocateBuffer(size + getBufferPadding(size));
     this->bufferCalls++;
     if (this->deleteData){
@@ -125,6 +125,7 @@ bool DynamicBuffer::insertChunkToBuffer(Chunk *chunk)
         std::cout << "assigning space\n";
         int assignRes = assignChunkBufferZone(chunk);
         if (assignRes == -2){
+            ExitError("DYNAMIC_BUFFER","buffer expansion... in " + static_cast<int>(chunkBufferType));
             // we need to expand buffer because we have no usable space left
             expandBufferByChunk(chunk);
 
@@ -294,11 +295,11 @@ bool DynamicBuffer::expandBufferByChunk(Chunk* chunk){
     BufferInt dataSize = getChunkDataSize(chunk);
     BufferInt oldBufferSize = this->bufferTarget->bufferSize;
 
-    BufferInt minBufferSize = oldBufferSize + static_cast<BufferInt>(oldBufferSize * (BUFFER_EXPANSION_RATE / 100));
+    BufferInt minBufferSize = oldBufferSize + static_cast<BufferInt>(oldBufferSize * (BUFFER_EXPANSION_RATE / 100.0));
 
     // always expand by bigger one
-    if (dataSize + getBufferPadding(dataSize) < minBufferSize){
-        if (!this->bufferTarget->expandBuffer(minBufferSize)){
+    if (dataSize + getBufferPadding(dataSize) + oldBufferSize < minBufferSize){
+        if (!this->bufferTarget->expandBuffer(minBufferSize - oldBufferSize)){
             return false;
         };
     }

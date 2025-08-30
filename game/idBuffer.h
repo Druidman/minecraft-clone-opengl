@@ -2,22 +2,42 @@
 #define ID_BUFFER_H
 #include <vector>
 
+#include "dynamicBuffer.h"
 #include "gpuBuffer.h"
 #include "chunk.h"
 #include "buffer.h"
 
 
-class IdBuffer : public GpuBuffer{
-    private:
-        // this is relatively small data so we keep it here for optimized buffer insertions
+class IdBuffer : public DynamicBuffer{
+    protected:
         
+        virtual bool markData(BufferInt markStart, BufferInt markEnd) override;
+        virtual BufferInt getChunkDataSize(Chunk* chunk) override{return (chunk->getMeshSize() / sizeof(CHUNK_MESH_DATATYPE)) * sizeof(int);};
+        virtual bool requiresContiguousMemoryLayout() override {return false;};
         
-    public:
-        std::vector<int> bufferContent;
-        IdBuffer() : GpuBuffer(GL_ARRAY_BUFFER){};
-    
+        virtual std::string getBufferTypeString() override {return "ID_BUFFER";};
 
-        bool fillBufferWithChunks(std::vector<Chunk*> *chunks, size_t elements);
+    private:
+        bool gpuBufferRequiresRefill = false;
+        int UNACTIVE_MESH_ELEMENT = -1;
+    public:
+        GpuBuffer gpuBuffer = GpuBuffer(GL_ARRAY_BUFFER);
+        CpuBuffer<int> cpuBuffer = CpuBuffer<int>();
+        
+
+
+    public:
+        IdBuffer() : DynamicBuffer(&cpuBuffer, ID_BUFFER, true){
+            BUFFER_PADDING = 20; // expressed in %
+            CHUNK_PADDING = 10;
+            BUFFER_EXPANSION_RATE = 20;
+        };
+        
+
+        virtual bool updateChunkBuffer(Chunk* chunk) override;
+        virtual bool insertChunksToBuffer(std::vector<Chunk*> *chunks) override;
+
+        bool fillGpuBuffer();
 };
 
 #endif

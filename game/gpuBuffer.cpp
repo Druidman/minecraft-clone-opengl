@@ -20,7 +20,6 @@ bool GpuBuffer::allocateBuffer(BufferInt size)
     if (size == 0){
         return false;
     }
-    std::cout << "allocating: " << size << " in buffer: "<< m_bo << "\n";
     bind();
     GLCall( glBufferData(bufferType, size, nullptr, GL_DYNAMIC_DRAW) );
     this->bufferSize = size;
@@ -57,6 +56,7 @@ bool GpuBuffer::expandBuffer(BufferInt by)
     tempBuffer.unBind();
     this->unBind();
     std::cout << "End of expansion\n";
+    return true;
 }
 
 bool GpuBuffer::moveBufferPart()

@@ -75,11 +75,12 @@ bool StorageBuffer::fillGpuBuffer()
     if (!gpuBufferRequiresRefill){
         return true;
     }
-
+    
     gpuBuffer.allocateBuffer(UNIFORM_BUFFER_LENGTH * sizeof(StorageBufferType));
     if (!gpuBuffer.uploadData(this->bufferTarget->getBufferContent(), this->bufferTarget->bufferSize, 0)){
         return false;
     };
+    std::cout << "STORAGE_GPU_BUFFER_CALL\n";
     gpuBufferRequiresRefill = false;
     return true;
 

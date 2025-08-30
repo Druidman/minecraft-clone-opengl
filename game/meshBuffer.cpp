@@ -54,6 +54,7 @@ bool MeshBuffer::updateChunkBuffer(Chunk *chunk)
         int assignRes = assignChunkBufferZone(chunk);
         if (assignRes == -2){
             // we need to expand buffer because we have no usable space left
+            
             expandBufferByChunk(chunk);
         }
         else if (assignRes == -1){

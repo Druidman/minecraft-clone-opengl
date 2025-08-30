@@ -1,35 +1,103 @@
 #include "idBuffer.h"
 
-
-bool IdBuffer::fillBufferWithChunks(std::vector<Chunk*> *chunks, size_t elements){
-
-    if (elements != this->bufferContent.size()){
-        this->bufferContent.assign(elements, -1);
+bool IdBuffer::markData(BufferInt markStart, BufferInt markEnd)
+{
+     // now lets mark elements as unactive
+    // to mark data as delete we need to change it to have -1.0 on w element
+ 
+    if (
+        markEnd < markStart ||
+        markStart > this->bufferTarget->bufferSize ||
+        markEnd > this->bufferTarget->bufferSize ||
+        markEnd == 0 ||
+        markEnd - markStart == 0
+    ){
+        std::cout  << "FAIL MARK\n" << markStart << " " << markEnd << "\n";
+        
+        return false;
     }
-    for (Chunk* chunk : *chunks){
-        
-        if (!chunk->hasBufferSpace[STORAGE_BUFFER]){
-            ExitError("ID_BUFFER", "CHUNK NOT IN STORAGE BUFFER ADDED TO ID BUFFER");
-        }
-        BufferInt startInstance = chunk->bufferZone[MESH_BUFFER].first / sizeof(CHUNK_MESH_DATATYPE);
-        BufferInt instanceCount = (chunk->bufferZone[MESH_BUFFER].second - chunk->bufferZone[MESH_BUFFER].first) / sizeof(CHUNK_MESH_DATATYPE);
-        int id = chunk->bufferZone[STORAGE_BUFFER].first / sizeof(StorageBufferType);
-        if (id != bufferContent[startInstance]){
-            std::cout << "NEW ID: " << id << "\n";
-            for (int i = startInstance; i<startInstance + instanceCount; i++){
-                bufferContent[i] = id;
-            };
-        
+    
+    std::vector<int> data((markEnd - markStart) / sizeof(int),UNACTIVE_MESH_ELEMENT);
+ 
+    return this->bufferTarget->uploadData(data.data(),data.size() * sizeof(int), markStart);
+}
+
+bool IdBuffer::updateChunkBuffer(Chunk *chunk)
+{
+
+    if (!chunk->hasBufferSpace[this->chunkBufferType]){
+        ExitError("ID_BUFFER","UPDATE CALLED ON NOT INSERTED CHUNK");
+    }
+    BufferInt dataSize = (chunk->getMeshSize() / sizeof(CHUNK_MESH_DATATYPE)) * sizeof(int);
+    if (chunk->bufferZone[this->chunkBufferType].first + dataSize > chunk->bufferZone[this->chunkBufferType].second){
+        // chunk is to big so we either find new free zone OR reallocate buffer
+
+        // ! in all of these scenarios we need to remove chunk from its current location !
+        deleteChunkFromBuffer(chunk);
+
+        // lets try to find new freeZone
+        std::cout << "assigning new zone for a chunk in IDBUFFER\n";
+        int assignRes = assignChunkBufferZone(chunk);
+        if (assignRes == -2){
+            // we need to expand buffer because we have no usable space left
             
+            expandBufferByChunk(chunk);
         }
+        else if (assignRes == -1){
+            std::cout << "update -1\n";
+            return false;
+        }
+
         
-        
+        return updateChunkBuffer(chunk);
+    }
+    
+    std::vector<int> data(
+        (chunk->bufferZone[this->chunkBufferType].second - chunk->bufferZone[this->chunkBufferType].first) / sizeof(CHUNK_MESH_DATATYPE),
+        chunk->bufferZone[STORAGE_BUFFER].first / sizeof(StorageBufferType)
+    );
+    
+
+    if (!this->bufferTarget->uploadData(
+            data.data(),
+            chunk->bufferZone[this->chunkBufferType].second - chunk->bufferZone[this->chunkBufferType].first,
+            chunk->bufferZone[this->chunkBufferType].first
+        )
+    ){
+        return false;
+    };
+    gpuBufferRequiresRefill = true;
+    return true;
+    
+}
+
+bool IdBuffer::insertChunksToBuffer(std::vector<Chunk *> *chunks)
+{
+    if (chunks->size() == 0){
+        return false;
     }
 
-    fillData<int>(&bufferContent);
+    for (Chunk* chunk : *chunks){
+        if (!insertChunkToBuffer(chunk)){
+            return false;
+        }
+    }
+    gpuBufferRequiresRefill = true;
+    return true;
+}
 
+bool IdBuffer::fillGpuBuffer()
+{
+    if (!gpuBufferRequiresRefill){
+        return true;
+    }
+
+    gpuBuffer.allocateBuffer(this->cpuBuffer.bufferSize);
+    if (!gpuBuffer.uploadData(this->cpuBuffer.getBufferContent(), this->cpuBuffer.bufferSize, 0)){
+        return false;
+    };
+    std::cout << "ID_GPU_BUFFER_CALL\n";
+    gpuBufferRequiresRefill = false;
     return true;
 
-
-    
-}   
+}

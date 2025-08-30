@@ -445,14 +445,14 @@ void World::updateChunkRender(WorldTickData *worldTickData){
     this->renderer->fillBuffer(STORAGE_BUFFER);  
     double storageEnd = glfwGetTime();
 
-    double indirectStart = glfwGetTime();
-    this->renderer->fillBuffer(INDIRECT_BUFFER); 
-    double indirectEnd = glfwGetTime();
+    this->renderer->fillBuffer(INDIRECT_BUFFER);
 
     
 
+    
 
-    std::cout << "INDIRECT_BUFFER: " << (indirectEnd - indirectStart) * 1000 << "\n"
+    
+    std::cout \
      << "STORAGE_BUFFER: " << (storageEnd - storageStart) * 1000 << "\n" 
      << "REFS: " << (refsEnd - refsStart) * 1000 << "\n";
 }
@@ -616,8 +616,9 @@ std::optional<Block *> World::getBlockByPos(glm::vec3 pointPositionInWorld, bool
 
 void World::removeChunk(Chunk *chunk, bool merge)
 {
-    this->renderer->deleteChunk(chunk,MESH_BUFFER, merge);
-    this->renderer->deleteChunk(chunk,STORAGE_BUFFER, false);
+    this->renderer->deleteChunk(chunk,merge);
+    
+   
 }
 
 
