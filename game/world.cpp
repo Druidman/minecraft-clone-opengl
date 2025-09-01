@@ -376,17 +376,16 @@ void World::updateChunks(WorldTickData *worldTickData){
 void World::updateThreads(WorldTickData *worldTickData){
     std::list<ThreadWorkingData>::iterator dataIterator = threadsWorkingData.begin();
     std::list<std::thread>::iterator threadIterator = threads.begin();
+    bool added = false;
     while (dataIterator != threadsWorkingData.end() && threadIterator != threads.end()){
+       
         
-        bool isReady = true;
         for (int chunkInd =0; chunkInd < CHUNK_COLUMNS; chunkInd++){
-            if (!dataIterator->chunksDone[chunkInd]){
-                isReady = false;
+            if (!dataIterator->chunksDone[chunkInd] || dataIterator->chunksInserted[chunkInd]){
+        
                 continue;
             }
-            if (dataIterator->chunksInserted[chunkInd]){
-                continue;
-            }
+            
             
             int row = dataIterator->chunkPositions[chunkInd].row;
             int col = dataIterator->chunkPositions[chunkInd].col;
@@ -403,8 +402,19 @@ void World::updateThreads(WorldTickData *worldTickData){
        
             dataIterator->chunksInserted[chunkInd] = true; // so that we won't insert it again
             worldTickData->requiresRefsUpdate = true;
+            added = true;
+            // break;
 
         }
+
+        bool isReady = true;
+        for (int chunkInd =0; chunkInd < CHUNK_COLUMNS; chunkInd++){
+            if (!dataIterator->chunksInserted[chunkInd]){
+                isReady = false;
+                break;
+            }
+        }
+
 
         if (isReady){
             
@@ -412,11 +422,17 @@ void World::updateThreads(WorldTickData *worldTickData){
             dataIterator = threadsWorkingData.erase(dataIterator);
             threadIterator->join();
             threadIterator = threads.erase(threadIterator);
+            
         }
         else {
             dataIterator++;
             threadIterator++;
         }
+
+        if (added){
+            // break;
+        }
+        
        
         
 
