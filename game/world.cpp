@@ -150,70 +150,72 @@ void World::updateChunks(WorldTickData *worldTickData){
     worldTickData->playerChangedChunk = true;
     glm::vec3 positionChange = lastPlayerChunk->position - chunk->position;
 
+    int rowsChanged = std::abs(getChunkRow(lastPlayerChunk) - getChunkRow(chunk));
+    int colsChanged = std::abs(getChunkCol(lastPlayerChunk) - getChunkCol(chunk));
     lastPlayerChunk = chunk;
     int lastPlayerChunkRow = getChunkRow(lastPlayerChunk);
     int lastPlayerChunkCol = getChunkCol(lastPlayerChunk);
 
 
 
+    for (int changeI=0; changeI < colsChanged; changeI++){
+        if (positionChange.x > 0){ // that means we moved: -x
+            // we need to remove right chunks
+            // we need to add left chunks
 
-    if (positionChange.x > 0){ // that means we moved: -x
-        // we need to remove right chunks
-        // we need to add left chunks
-
-        bool merge = false;
-        int i = this->chunks.size();
-        for (std::vector<Chunk> &chunkRow : this->chunks){
-            i--;
-            if (i == 0){
-                merge = true; // we are removing last chunk row so we need to merge free zones
+            bool merge = false;
+            int i = this->chunks.size();
+            for (std::vector<Chunk> &chunkRow : this->chunks){
+                i--;
+                if (i == 0){
+                    merge = true; // we are removing last chunk row so we need to merge free zones
+                }
+    
+                removeChunk(&chunkRow[chunkRow.size() - 1], merge);
+                chunkRow.pop_back();
+        
+                
             }
- 
-            removeChunk(&chunkRow[chunkRow.size() - 1], merge);
-            chunkRow.pop_back();
-       
             
-        }
-        
-        std::vector<Chunk> column;
-        for (int row=0; row<CHUNK_ROWS; row++){
-            
-            glm::vec3 chunkPos = this->chunks[row].front().position - glm::vec3(CHUNK_WIDTH,0.0,0.0);
-            column.emplace_back(chunkPos,this);
-        }
-        int ind = 0;
+            std::vector<Chunk> column;
+            for (int row=0; row<CHUNK_ROWS; row++){
+                
+                glm::vec3 chunkPos = this->chunks[row].front().position - glm::vec3(CHUNK_WIDTH,0.0,0.0);
+                column.emplace_back(chunkPos,this);
+            }
+            int ind = 0;
 
-        for (std::vector<Chunk> &chunkRow : this->chunks){
-            chunkRow.insert(chunkRow.begin(), column[ind]);
-            ind++;
-        }
-        // after insertion we need to shift chunk positions for threads and lastPlayerChunk pointer
-   
-        lastPlayerChunk = &this->chunks[lastPlayerChunkRow][lastPlayerChunkCol + 1];
-        for (ThreadWorkingData &data : threadsWorkingData){
-            for (ChunkVecPos &pos : data.chunkPositions){
-                pos.col++;
+            for (std::vector<Chunk> &chunkRow : this->chunks){
+                chunkRow.insert(chunkRow.begin(), column[ind]);
+                ind++;
+            }
+            // after insertion we need to shift chunk positions for threads and lastPlayerChunk pointer
+    
+            lastPlayerChunk = &this->chunks[lastPlayerChunkRow][lastPlayerChunkCol + 1];
+            for (ThreadWorkingData &data : threadsWorkingData){
+                for (ChunkVecPos &pos : data.chunkPositions){
+                    pos.col++;
+                };
             };
-        };
 
-        worldMiddle.x -= CHUNK_WIDTH;
+            worldMiddle.x -= CHUNK_WIDTH;
 
 
-        // not safe chunk gen due to memory shifts
-        // ___
-        std::vector< ChunkVecPos > chunkPositions;
-        for (int row = 0; row<column.size(); row++){
-            chunkPositions.push_back({
-                row,0
-            });
-        };
-        std::vector< bool > chunksDone(column.size(),false);
+            // not safe chunk gen due to memory shifts
+            // ___
+            std::vector< ChunkVecPos > chunkPositions;
+            for (int row = 0; row<column.size(); row++){
+                chunkPositions.push_back({
+                    row,0
+                });
+            };
+            std::vector< bool > chunksDone(column.size(),false);
 
-        spawnChunkPrepareThread(column, chunksDone, chunkPositions);
-        
-        // ___
-    }
-    else if (positionChange.x < 0){ // that means we moved: +x
+            spawnChunkPrepareThread(column, chunksDone, chunkPositions);
+            
+            // ___
+        }
+        else if (positionChange.x < 0){ // that means we moved: +x
         // we need to add right chunks
         // we need to remove left chunks
 
@@ -270,58 +272,60 @@ void World::updateChunks(WorldTickData *worldTickData){
         // ___
         
     }
-    else if (positionChange.z > 0){ // that means we moved: -z
-        // we need to remove bottom chunks
-        // we need to add top chunks
-        bool merge = false;
-        int i = this->chunks.back().size();
-        for (Chunk &chunk : this->chunks.back()){
-            i--;
-            if (i == 0){
-                merge = true; // we are removing last chunk row so we need to merge free zones
+    }
+    for (int changeI=0; changeI < rowsChanged; changeI++){
+        if (positionChange.z > 0){ // that means we moved: -z
+            // we need to remove bottom chunks
+            // we need to add top chunks
+            bool merge = false;
+            int i = this->chunks.back().size();
+            for (Chunk &chunk : this->chunks.back()){
+                i--;
+                if (i == 0){
+                    merge = true; // we are removing last chunk row so we need to merge free zones
+                }
+
+                removeChunk(&chunk, merge);
+
+                
             }
 
-            removeChunk(&chunk, merge);
+            this->chunks.pop_back();
+
+            
+            std::vector<Chunk> row;
+            for (int col=0; col<CHUNK_COLUMNS; col++){
+                glm::vec3 chunkPos = this->chunks.front()[col].position - glm::vec3(0.0,0.0,CHUNK_WIDTH);
+                row.emplace_back(chunkPos,this);
+            }
+            this->chunks.insert(this->chunks.begin(),row);
+            worldMiddle.z -= CHUNK_WIDTH;
+
+            for (ThreadWorkingData &data : threadsWorkingData){
+                for (ChunkVecPos &pos : data.chunkPositions){
+                    pos.row++;
+                }
+            }
+            // not safe chunk gen due to memory shifts
+            // ___
+
+
+            std::vector< ChunkVecPos > chunkPositions;
+            for (int col = 0; col<CHUNK_COLUMNS; col++){
+                chunkPositions.push_back({
+                    0, col
+                });
+            };
+            std::vector< bool > chunksDone(CHUNK_COLUMNS,false);
+            
+        
+            spawnChunkPrepareThread(row, chunksDone, chunkPositions);
+            // ___
+
 
             
         }
-
-        this->chunks.pop_back();
-
-        
-        std::vector<Chunk> row;
-        for (int col=0; col<CHUNK_COLUMNS; col++){
-            glm::vec3 chunkPos = this->chunks.front()[col].position - glm::vec3(0.0,0.0,CHUNK_WIDTH);
-            row.emplace_back(chunkPos,this);
-        }
-        this->chunks.insert(this->chunks.begin(),row);
-        worldMiddle.z -= CHUNK_WIDTH;
-
-        for (ThreadWorkingData &data : threadsWorkingData){
-            for (ChunkVecPos &pos : data.chunkPositions){
-                pos.row++;
-            }
-        }
-        // not safe chunk gen due to memory shifts
-        // ___
-
-
-        std::vector< ChunkVecPos > chunkPositions;
-        for (int col = 0; col<CHUNK_COLUMNS; col++){
-            chunkPositions.push_back({
-                0, col
-            });
-        };
-        std::vector< bool > chunksDone(CHUNK_COLUMNS,false);
-        
-      
-        spawnChunkPrepareThread(row, chunksDone, chunkPositions);
-        // ___
-
-
-        
-    }
-    else if (positionChange.z < 0){ // that means we moved: +z
+        else if (positionChange.z < 0){ // that means we moved: +z
         // we need to remove top chunks
         // we need to add bottom chunks
         bool merge = false;
@@ -366,7 +370,7 @@ void World::updateChunks(WorldTickData *worldTickData){
         spawnChunkPrepareThread(row, chunksDone, chunkPositions);
         // ___
     }
-    
+    }
     
 }
 
@@ -375,40 +379,37 @@ void World::updateThreads(WorldTickData *worldTickData){
     std::list<std::thread>::iterator threadIterator = threads.begin();
     while (dataIterator != threadsWorkingData.end() && threadIterator != threads.end()){
         
-        bool isReady = false;
-        for (int chunkInd =0; chunkInd < CHUNK_COLUMNS; chunkInd++){
-            if (!dataIterator->chunksDone[chunkInd]){
-                continue;
-            }
-            
-            int row = dataIterator->chunkPositions[chunkInd].row;
-            int col = dataIterator->chunkPositions[chunkInd].col;
-            if (row < 0 || col < 0){
-                continue;
-            }
-            if (row >= CHUNK_ROWS || col >= CHUNK_COLUMNS){
-                continue;
-            }
-            this->chunks[row][col] = dataIterator->chunksToPrepare[chunkInd];
-            this->renderer->addChunk(&this->chunks[row][col]);
-
-
-       
-            dataIterator->chunksDone[chunkInd] = false; // so that we won't insert it again
-            worldTickData->requiresRefsUpdate = true;
-
-            
-            if (chunkInd == CHUNK_COLUMNS - 1){
-                isReady = true;
-            }
-            
-            
-            
-
-       
-        }
+        bool isReady = dataIterator->ready;
+        
 
         if (isReady){
+            for (int chunkInd =0; chunkInd < CHUNK_COLUMNS; chunkInd++){
+                if (!dataIterator->chunksDone[chunkInd]){
+                    isReady = false;
+                    continue;
+                }
+                
+                int row = dataIterator->chunkPositions[chunkInd].row;
+                int col = dataIterator->chunkPositions[chunkInd].col;
+                if (row < 0 || col < 0){
+                    continue;
+                }
+                if (row >= CHUNK_ROWS || col >= CHUNK_COLUMNS){
+                    continue;
+                }
+                this->chunks[row][col] = dataIterator->chunksToPrepare[chunkInd];
+                this->renderer->addChunk(&this->chunks[row][col]);
+    
+    
+           
+                dataIterator->chunksDone[chunkInd] = false; // so that we won't insert it again
+                worldTickData->requiresRefsUpdate = true;
+    
+                
+                if (chunkInd == CHUNK_COLUMNS - 1){
+                    isReady = true;
+                }
+            }
             
             dataIterator = threadsWorkingData.erase(dataIterator);
             threadIterator->join();

@@ -220,6 +220,7 @@ void Chunk::genChunk()
             float x = j + 0.5 + (position.x - (CHUNK_WIDTH / 2)); // j = column
             float z = i + 0.5 + (position.z - (CHUNK_WIDTH / 2)); // i = row
             float yCoord = world->genBlockHeight(glm::vec2(x,z)) + 0.5;
+            
             BlockType blockType = GRASS_DIRT;
             if (yCoord < SAND_LEVEL){
                 blockType = SAND;
@@ -229,6 +230,10 @@ void Chunk::genChunk()
             }
             else if (yCoord > STONE_LEVEL){
                 blockType = STONE;
+            }
+
+            if (yCoord >= 254){
+                yCoord = 254;
             }
             
             
