@@ -209,9 +209,9 @@ void World::updateChunks(WorldTickData *worldTickData){
                     row,0
                 });
             };
-            std::vector< bool > chunksDone(column.size(),false);
+            
 
-            spawnChunkPrepareThread(column, chunksDone, chunkPositions);
+            spawnChunkPrepareThread(column, chunkPositions);
             
             // ___
         }
@@ -266,9 +266,9 @@ void World::updateChunks(WorldTickData *worldTickData){
                 row,(int)chunks[row].size() - 1
             });
         };
-        std::vector< bool > chunksDone(column.size(),false);
+
  
-        spawnChunkPrepareThread(column, chunksDone, chunkPositions);
+        spawnChunkPrepareThread(column,  chunkPositions);
         // ___
         
     }
@@ -316,10 +316,10 @@ void World::updateChunks(WorldTickData *worldTickData){
                     0, col
                 });
             };
-            std::vector< bool > chunksDone(CHUNK_COLUMNS,false);
+ 
             
         
-            spawnChunkPrepareThread(row, chunksDone, chunkPositions);
+            spawnChunkPrepareThread(row, chunkPositions);
             // ___
 
 
@@ -365,9 +365,8 @@ void World::updateChunks(WorldTickData *worldTickData){
                 (int)chunks.size() - 1, col
             });
         };
-        std::vector< bool > chunksDone(row.size(),false);
  
-        spawnChunkPrepareThread(row, chunksDone, chunkPositions);
+        spawnChunkPrepareThread(row,  chunkPositions);
         // ___
     }
     }
@@ -379,37 +378,36 @@ void World::updateThreads(WorldTickData *worldTickData){
     std::list<std::thread>::iterator threadIterator = threads.begin();
     while (dataIterator != threadsWorkingData.end() && threadIterator != threads.end()){
         
-        bool isReady = dataIterator->ready;
-        
+        bool isReady = true;
+        for (int chunkInd =0; chunkInd < CHUNK_COLUMNS; chunkInd++){
+            if (!dataIterator->chunksDone[chunkInd]){
+                isReady = false;
+                continue;
+            }
+            if (dataIterator->chunksInserted[chunkInd]){
+                continue;
+            }
+            
+            int row = dataIterator->chunkPositions[chunkInd].row;
+            int col = dataIterator->chunkPositions[chunkInd].col;
+            if (row < 0 || col < 0){
+                continue;
+            }
+            if (row >= CHUNK_ROWS || col >= CHUNK_COLUMNS){
+                continue;
+            }
+            this->chunks[row][col] = dataIterator->chunksToPrepare[chunkInd];
+            this->renderer->addChunk(&this->chunks[row][col]);
+
+
+       
+            dataIterator->chunksInserted[chunkInd] = true; // so that we won't insert it again
+            worldTickData->requiresRefsUpdate = true;
+
+        }
 
         if (isReady){
-            for (int chunkInd =0; chunkInd < CHUNK_COLUMNS; chunkInd++){
-                if (!dataIterator->chunksDone[chunkInd]){
-                    isReady = false;
-                    continue;
-                }
-                
-                int row = dataIterator->chunkPositions[chunkInd].row;
-                int col = dataIterator->chunkPositions[chunkInd].col;
-                if (row < 0 || col < 0){
-                    continue;
-                }
-                if (row >= CHUNK_ROWS || col >= CHUNK_COLUMNS){
-                    continue;
-                }
-                this->chunks[row][col] = dataIterator->chunksToPrepare[chunkInd];
-                this->renderer->addChunk(&this->chunks[row][col]);
-    
-    
-           
-                dataIterator->chunksDone[chunkInd] = false; // so that we won't insert it again
-                worldTickData->requiresRefsUpdate = true;
-    
-                
-                if (chunkInd == CHUNK_COLUMNS - 1){
-                    isReady = true;
-                }
-            }
+            
             
             dataIterator = threadsWorkingData.erase(dataIterator);
             threadIterator->join();
@@ -650,10 +648,13 @@ void World::prepareChunks(ThreadWorkingData &data)
     data.ready = true;
 
 }
-void World::spawnChunkPrepareThread(std::vector<Chunk> chunksToPrepare, std::vector<bool> chunksDone, std::vector<ChunkVecPos> chunkPositions) {
+void World::spawnChunkPrepareThread(std::vector<Chunk> chunksToPrepare, std::vector<ChunkVecPos> chunkPositions) {
+    std::vector<bool> chunksDone(chunksToPrepare.size(), false);
+    std::vector<bool> chunksInserted(chunksToPrepare.size(), false);
     threadsWorkingData.push_back({
         chunksToPrepare,
         chunksDone,
+        chunksInserted,
         chunkPositions
     });
     threads.emplace_back(
