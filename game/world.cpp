@@ -403,7 +403,7 @@ void World::updateThreads(WorldTickData *worldTickData){
             dataIterator->chunksInserted[chunkInd] = true; // so that we won't insert it again
             worldTickData->requiresRefsUpdate = true;
             added = true;
-            // break;
+            break;
 
         }
 
@@ -430,7 +430,7 @@ void World::updateThreads(WorldTickData *worldTickData){
         }
 
         if (added){
-            // break;
+            break;
         }
         
        

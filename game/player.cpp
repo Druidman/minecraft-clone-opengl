@@ -113,13 +113,13 @@ void Player::process_input(double delta)
     glm::vec3 walkSideDir;
 
     if (this->fly){
-        speed *= 5;
+        speed = PLAYER_FLY_SPEED * delta;
         walkDir = camera->direction;
         walkSideDir = camRight;
     }
     else {
-        walkDir = glm::vec3(this->camera->direction.x,0.0,this->camera->direction.z);
-        walkSideDir = glm::vec3(camRight.x,0.0,camRight.z);
+        walkDir = glm::normalize(glm::vec3(this->camera->direction.x,0.0,this->camera->direction.z));
+        walkSideDir = glm::normalize(glm::vec3(camRight.x,0.0,camRight.z));
     }
     
 
@@ -258,16 +258,22 @@ void Player::update(double delta)
         updateState();
         if (action == FALLING){
             std::cout << "fallll\n";
-            move_by(glm::vec3(0.0,-5.0,0.0) * (float)delta);
+            move_by(glm::vec3(0.0,-20.0,0.0) * (float)delta);
             
         }
     }
+
+
+    
     
 
     
     
 
     process_input(delta);
+    
+    
+
     
 }
 
