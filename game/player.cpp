@@ -204,7 +204,7 @@ void Player::place_block()
     float minDistance = 100;
     int minDistanceInd = 0;
 
-    for (int i=0; i<distanceToFaces.size();i++){
+    for (int i=0; i<(int)distanceToFaces.size();i++){
         if (distanceToFaces[i] < minDistance){
             minDistance = distanceToFaces[i];
             minDistanceInd = i;

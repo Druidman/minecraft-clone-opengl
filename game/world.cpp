@@ -204,7 +204,7 @@ void World::updateChunks(WorldTickData *worldTickData){
             // not safe chunk gen due to memory shifts
             // ___
             std::vector< ChunkVecPos > chunkPositions;
-            for (int row = 0; row<column.size(); row++){
+            for (int row = 0; row<(int)column.size(); row++){
                 chunkPositions.push_back({
                     row,0
                 });
@@ -261,7 +261,7 @@ void World::updateChunks(WorldTickData *worldTickData){
         // not safe chunk gen due to memory shifts
         // ___
         std::vector< ChunkVecPos > chunkPositions;
-        for (int row = 0; row<column.size(); row++){
+        for (int row = 0; row<(int)column.size(); row++){
             chunkPositions.push_back({
                 row,(int)chunks[row].size() - 1
             });
@@ -360,7 +360,7 @@ void World::updateChunks(WorldTickData *worldTickData){
         // not safe chunk gen due to memory shifts
         // ___
         std::vector< ChunkVecPos > chunkPositions;
-        for (int col = 0; col<row.size(); col++){
+        for (int col = 0; col<(int)row.size(); col++){
             chunkPositions.push_back({
                 (int)chunks.size() - 1, col
             });
@@ -376,7 +376,7 @@ void World::updateChunks(WorldTickData *worldTickData){
 void World::updateThreads(WorldTickData *worldTickData){
     std::list<ThreadWorkingData>::iterator dataIterator = threadsWorkingData.begin();
     std::list<std::thread>::iterator threadIterator = threads.begin();
-    bool added = false;
+
     while (dataIterator != threadsWorkingData.end() && threadIterator != threads.end()){
        
         
@@ -396,14 +396,18 @@ void World::updateThreads(WorldTickData *worldTickData){
                 continue;
             }
             this->chunks[row][col] = dataIterator->chunksToPrepare[chunkInd];
+            if (this->chunks[row][col].hasBufferSpace[MESH_BUFFER]){
+                this->removeChunk(&this->chunks[row][col], false);
+                // ExitError("WORLD","Changing chunk without deleting");
+            }
             this->renderer->addChunk(&this->chunks[row][col]);
 
 
        
             dataIterator->chunksInserted[chunkInd] = true; // so that we won't insert it again
             worldTickData->requiresRefsUpdate = true;
-            added = true;
-            break;
+            
+            
 
         }
 
@@ -429,9 +433,7 @@ void World::updateThreads(WorldTickData *worldTickData){
             threadIterator++;
         }
 
-        if (added){
-            break;
-        }
+        
         
        
         

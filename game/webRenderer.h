@@ -108,7 +108,9 @@ class WebRenderer : public Renderer
             std::cout << "BUFFER_REAL_SIZE_ID: " << idData << "\n";
             std::cout << "BUFFER_REAL_SIZE_STORAGE: " << storageData << "\n";
 
+            
 
+            
 
 
             this->vao.bind();
@@ -167,6 +169,8 @@ class WebRenderer : public Renderer
                     };
                     break;
                 case STORAGE_BUFFER:
+                    std::cout << "CHUNKS SIZE: " << this->world->chunks.size() << " " << this->world->chunks[0].size() << "\n";
+                    std::cout << "CHUNKS SIZE: " << this->world->chunkRenderRefs.size() << "\n";
                     lastCameraPosOnChunkPosChange = this->world->player->camera->position;
                     if (!this->chunkStorageBuffer.insertChunksToBuffer(&this->world->chunkRenderRefs)){
                         ExitError("WEB_RENDERER","Filling storage buffer went wrong");
@@ -288,11 +292,13 @@ class WebRenderer : public Renderer
                         ExitError("WEB_RENDERER","error updating chunk to chunkIdBuffer");
                         return false;
                     };
+                    break;
                 case STORAGE_BUFFER:
                     if (!chunkStorageBuffer.updateChunkBuffer(chunk)){
                         ExitError("WEB_RENDERER","error updating chunk to chunkStorageBuffer");
                         return false;
                     };
+                    break;
                 
             }
             chunk->buffersSetUp = true;
