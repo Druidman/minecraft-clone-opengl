@@ -197,15 +197,18 @@ class WebRenderer : public Renderer
 
         virtual bool addChunk(Chunk *chunk) override { 
 
-            
+            std::cout << "Mesh buffer insertion...\n";
             if (!meshBuffer.insertChunkToBuffer(chunk)){
                 ExitError("WEB_RENDERER","error inserting chunk to meshBuffer");
                 return false;
             };
+            std::cout << "Storage buffer insertion...\n";
             if (!chunkStorageBuffer.insertChunkToBuffer(chunk)){
                 ExitError("WEB_RENDERER","error inserting chunk to chunkStorageBuffer");
                 return false;
             };
+
+            std::cout << "Id buffer insertion...\n";
             if (!chunkIdBuffer.insertChunkToBuffer(chunk)){
                 ExitError("WEB_RENDERER","error inserting chunk to chunkIdBuffer");
                 return false;

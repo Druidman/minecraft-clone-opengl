@@ -54,6 +54,7 @@ int DynamicBuffer::getChunkBufferSpaceIndex(Chunk* chunk)
 // -2 = buffer requires realloc
 {
     if (this->bufferFreeZones.size() == 0){
+        std::cout << "no free zones...\n";
         return -2;
     }
 
@@ -94,6 +95,7 @@ int DynamicBuffer::getChunkBufferSpaceIndex(Chunk* chunk)
         
     }
     if (!zoneFound){
+        std::cout << "no zone found...\n";
         return -2;
     }
     return lowestDifferenceZoneIndex;
