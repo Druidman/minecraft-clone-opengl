@@ -14,7 +14,7 @@ Chunk::Chunk(glm::vec3 chunkPosition, World *world)
 std::optional<Block *> Chunk::getBlock(int plat, int row, int col, bool noneBlock)
 {
     if (
-        plat >= blocks.size() ||
+        plat >= (int)blocks.size() ||
         plat < 0 ||
         row >= CHUNK_WIDTH ||
         row < 0 ||
@@ -23,10 +23,10 @@ std::optional<Block *> Chunk::getBlock(int plat, int row, int col, bool noneBloc
     ) return std::nullopt; 
     //those were boundaries checks
 
-    if (row >= blocks[plat].size()){
+    if (row >= (int)blocks[plat].size()){
         return std::nullopt;
     } // no blocks from here on
-    if (col >= blocks[plat][row].size()){
+    if (col >= (int)blocks[plat][row].size()){
         return std::nullopt;
     }// no blocks from here on too
 
@@ -220,6 +220,7 @@ void Chunk::genChunk()
             float x = j + 0.5 + (position.x - (CHUNK_WIDTH / 2)); // j = column
             float z = i + 0.5 + (position.z - (CHUNK_WIDTH / 2)); // i = row
             float yCoord = world->genBlockHeight(glm::vec2(x,z)) + 0.5;
+            
             BlockType blockType = GRASS_DIRT;
             if (yCoord < SAND_LEVEL){
                 blockType = SAND;
@@ -229,6 +230,10 @@ void Chunk::genChunk()
             }
             else if (yCoord > STONE_LEVEL){
                 blockType = STONE;
+            }
+
+            if (yCoord >= 254){
+                yCoord = 254;
             }
             
             
@@ -277,12 +282,12 @@ void Chunk::genChunkMesh()
     opaqueMesh.clear();
     transparentMesh.clear();
     
-    for (int platform = 0; platform < blocks.size(); platform++)
+    for (int platform = 0; platform < (int)blocks.size(); platform++)
     {
-        for (int row = 0; row < blocks[platform].size(); row++)
+        for (int row = 0; row < (int)blocks[platform].size(); row++)
         {
 
-            for (int col = 0; col < blocks[platform][row].size(); col++)
+            for (int col = 0; col < (int)blocks[platform][row].size(); col++)
             {
                 
                 meshBlock(platform,row,col);
@@ -348,23 +353,23 @@ bool Chunk::addBlock(Block &block)
         return false; //block already exists /or invalid row,col,platform
     }
 
-    if (platform > this->blocks.size() - 1)
+    if (platform > (int)this->blocks.size() - 1)
     {
-        int platformsToAdd = platform - this->blocks.size() + 1;
+        int platformsToAdd = platform - (int)this->blocks.size() + 1;
         for (int i = 0; i < platformsToAdd; i++)
         {
             addBlockPlatform();
         }
     }
-    if (row > this->blocks[platform].size()-1){
-        int rowsToAdd = row - this->blocks[platform].size() + 1;
+    if (row > (int)this->blocks[platform].size()-1){
+        int rowsToAdd = row - (int)this->blocks[platform].size() + 1;
         for (int i = 0; i < rowsToAdd; i++)
         {
             addBlockRow(platform);
         }
     }
-    if (column > this->blocks[platform][row].size()-1){
-        int blocksToAdd = column - this->blocks[platform][row].size() + 1;
+    if (column > (int)this->blocks[platform][row].size()-1){
+        int blocksToAdd = column - (int)this->blocks[platform][row].size() + 1;
         for (int i = 0; i < blocksToAdd; i++)
         {
             Block fillBlock = Block(NONE_BLOCK,getPositionInWorld(platform,row,column));
@@ -404,7 +409,7 @@ void Chunk::addBlockRow(int platform)
 bool Chunk::removeBlock(int platform, int row, int col)
 {
     if (
-        platform >= this->blocks.size() ||
+        platform >= (int)this->blocks.size() ||
         row >= CHUNK_WIDTH ||
         col >= CHUNK_WIDTH ||
         platform < 0 ||
@@ -432,13 +437,13 @@ void Chunk::fillWater()
 {
     for (int platform = 0; platform < 20; platform++)
     {
-        if (platform >= this->blocks.size())
+        if (platform >= (int)this->blocks.size())
         {
             addBlockPlatform();
         }
         for (int row = 0; row < CHUNK_WIDTH; row++)
         {
-            if (row >= this->blocks[platform].size())
+            if (row >= (int)this->blocks[platform].size())
             {
                 addBlockRow(platform);
             }

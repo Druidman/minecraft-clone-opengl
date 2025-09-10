@@ -27,6 +27,7 @@ struct ChunkVecPos{
 struct ThreadWorkingData {
     std::vector< Chunk > chunksToPrepare;
     std::vector< bool > chunksDone;
+    std::vector< bool > chunksInserted;
     std::vector< ChunkVecPos > chunkPositions;
     bool ready = false;
 };
@@ -115,6 +116,6 @@ class World{ //world class
     public:
         void prepareChunks(ThreadWorkingData &data);
 
-        void spawnChunkPrepareThread(std::vector< Chunk > chunksToPrepare, std::vector< bool > chunksDone, std::vector<ChunkVecPos> chunkPositions);
+        void spawnChunkPrepareThread(std::vector< Chunk > chunksToPrepare, std::vector<ChunkVecPos> chunkPositions);
 };
 #endif

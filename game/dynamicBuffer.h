@@ -50,6 +50,7 @@ class DynamicBuffer{
         BufferInt BUFFER_EXPANSION_RATE = 0;
         
         bool bufferRequiresMovingElements = false;
+        bool allowsExpansion = true;
 
         int bufferCalls = 0;
 

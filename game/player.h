@@ -18,6 +18,8 @@ class World;
 
 const int PLAYER_RANGE = 100;
 const int PLAYER_SPEED = 10;
+const int PLAYER_FLY_SPEED = 1000;
+
 
 enum PlayerState{
     IN_AIR, IN_WATER, ON_GROUND
@@ -31,6 +33,7 @@ enum PlayerAction{
 // postion is a its feet
 class Player{
     private:
+        
         const glm::vec3 CAMERA_OFFSET = glm::vec3(0.0,1.5,0.0);
         const int leftMouseButton = GLFW_MOUSE_BUTTON_LEFT;
         const int rightMouseButton = GLFW_MOUSE_BUTTON_RIGHT;

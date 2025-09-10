@@ -36,10 +36,11 @@ class StorageBuffer : public DynamicBuffer {
         GpuBuffer gpuBuffer = GpuBuffer(GL_UNIFORM_BUFFER);
 
     public:
-        StorageBuffer() : DynamicBuffer(&cpuBuffer, STORAGE_BUFFER, false){
+        StorageBuffer() : DynamicBuffer(&cpuBuffer, STORAGE_BUFFER, true){
             BUFFER_PADDING = 0; // expressed in %
             CHUNK_PADDING = 0;
             BUFFER_EXPANSION_RATE = 0;
+            this->allowsExpansion = false;
         };
         void init(World *world);
         void setBindingPoint(int port);

@@ -93,6 +93,7 @@ bool IdBuffer::fillGpuBuffer()
     }
 
     gpuBuffer.allocateBuffer(this->cpuBuffer.bufferSize);
+    
     if (!gpuBuffer.uploadData(this->cpuBuffer.getBufferContent(), this->cpuBuffer.bufferSize, 0)){
         return false;
     };

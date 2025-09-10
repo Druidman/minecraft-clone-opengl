@@ -197,7 +197,7 @@ int main()
         }
     #endif
     
-    // glfwSwapInterval( 0 );
+    glfwSwapInterval( 0 );
 
     stbi_set_flip_vertically_on_load(true);
     
@@ -215,14 +215,14 @@ int main()
         #error Is this webGlInstance or desktopInstance? Why is it not defined??
     #endif
 
-    int worldWidth = 336;
+    int worldWidth = 496;
     glm::vec3 worldMiddle = glm::vec3(3000,0,3000);
 
     std::cout << "initializing world\n";
     World world = World(worldWidth, worldMiddle, renderer);
 
     std::cout << "initializing player\n";
-    Player player = Player(worldMiddle + glm::vec3(0.0,400,0.0),&world,&camera,window);
+    Player player = Player(worldMiddle + glm::vec3(0.0,200.0,0.0),&world,&camera,window);
 
     std::cout << "Renderer init\n";
     renderer->init(&world);

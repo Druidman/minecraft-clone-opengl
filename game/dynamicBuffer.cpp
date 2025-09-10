@@ -31,7 +31,7 @@ void DynamicBuffer::mergeFreeZones()
     ){
         return ;
     }
-    for (int i=0; i < this->bufferFreeZones.size() - 1; i++){
+    for (int i=0; i < (int)this->bufferFreeZones.size() - 1; i++){
         // is is sorted so we can use >=
         if (this->bufferFreeZones[i].second == this->bufferFreeZones[i + 1].first){
             // merge
@@ -54,6 +54,7 @@ int DynamicBuffer::getChunkBufferSpaceIndex(Chunk* chunk)
 // -2 = buffer requires realloc
 {
     if (this->bufferFreeZones.size() == 0){
+        std::cout << "no free zones...\n";
         return -2;
     }
 
@@ -71,7 +72,7 @@ int DynamicBuffer::getChunkBufferSpaceIndex(Chunk* chunk)
     BufferInt minSpaceDifference = bufferTarget->bufferSize; // max difference
 
     
-    for (int i = 0; i < this->bufferFreeZones.size(); i++){
+    for (int i = 0; i < (int)this->bufferFreeZones.size(); i++){
         std::pair<BufferInt, BufferInt> &freeZone = bufferFreeZones[i];
         if (freeZone.second < freeZone.first){
             ExitError("DYNAMIC_BUFFER","smth wrong with free zones second < first, GETCHUNKBUFFERINDEX()");
@@ -94,6 +95,7 @@ int DynamicBuffer::getChunkBufferSpaceIndex(Chunk* chunk)
         
     }
     if (!zoneFound){
+        std::cout << "no zone found...\n";
         return -2;
     }
     return lowestDifferenceZoneIndex;
@@ -125,9 +127,14 @@ bool DynamicBuffer::insertChunkToBuffer(Chunk *chunk)
         std::cout << "assigning space\n";
         int assignRes = assignChunkBufferZone(chunk);
         if (assignRes == -2){
-            // ExitError("DYNAMIC_BUFFER","buffer expansion... in " + std::to_string(static_cast<int>(chunkBufferType)));
-            // we need to expand buffer because we have no usable space left
-            expandBufferByChunk(chunk);
+            if (allowsExpansion){
+                expandBufferByChunk(chunk);
+            }
+            else {
+                ExitError("DYNAMIC_BUFFER","Buffer expansion in not expandable buffer type");
+            }
+            
+            
 
         }
         else if (assignRes == -1){
@@ -167,7 +174,7 @@ bool DynamicBuffer::deleteChunkFromBuffer(Chunk *chunk, bool merge)
     }
     else {
         bool inserted = false;
-        for (int i =0; i<this->bufferFreeZones.size(); i++){
+        for (int i =0; i<(int)this->bufferFreeZones.size(); i++){
             std::pair<BufferInt, BufferInt> &freeZone = this->bufferFreeZones[i];
             if (freeZone.first == chunk->bufferZone[chunkBufferType].first){
                 ExitError("DYNAMIC_BUFFER","free zones starts at currently not deleted chunk");

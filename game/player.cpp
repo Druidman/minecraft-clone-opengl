@@ -113,13 +113,13 @@ void Player::process_input(double delta)
     glm::vec3 walkSideDir;
 
     if (this->fly){
-        speed *= 5;
+        speed = PLAYER_FLY_SPEED * delta;
         walkDir = camera->direction;
         walkSideDir = camRight;
     }
     else {
-        walkDir = glm::vec3(this->camera->direction.x,0.0,this->camera->direction.z);
-        walkSideDir = glm::vec3(camRight.x,0.0,camRight.z);
+        walkDir = glm::normalize(glm::vec3(this->camera->direction.x,0.0,this->camera->direction.z));
+        walkSideDir = glm::normalize(glm::vec3(camRight.x,0.0,camRight.z));
     }
     
 
@@ -177,9 +177,7 @@ void Player::destroy_block()
     chunk->removeBlock(hitPos);
     chunk->genChunkMesh();
     world->renderer->updateChunk(chunk, MESH_BUFFER);
-    #ifndef WEB_GL_INSTANCE
-        world->renderer->updateChunk(chunk, INDIRECT_BUFFER);
-    #endif
+    
     
     
 }
@@ -206,7 +204,7 @@ void Player::place_block()
     float minDistance = 100;
     int minDistanceInd = 0;
 
-    for (int i=0; i<distanceToFaces.size();i++){
+    for (int i=0; i<(int)distanceToFaces.size();i++){
         if (distanceToFaces[i] < minDistance){
             minDistance = distanceToFaces[i];
             minDistanceInd = i;
@@ -249,9 +247,7 @@ void Player::place_block()
     placeChunk->addBlock(blockToAdd);
     placeChunk->genChunkMesh();
     world->renderer->updateChunk(placeChunk, MESH_BUFFER);
-    #ifndef WEB_GL_INSTANCE
-        world->renderer->updateChunk(placeChunk, INDIRECT_BUFFER);
-    #endif
+    
    
 }
 
@@ -262,16 +258,22 @@ void Player::update(double delta)
         updateState();
         if (action == FALLING){
             std::cout << "fallll\n";
-            move_by(glm::vec3(0.0,-5.0,0.0) * (float)delta);
+            move_by(glm::vec3(0.0,-20.0,0.0) * (float)delta);
             
         }
     }
+
+
+    
     
 
     
     
 
     process_input(delta);
+    
+    
+
     
 }
 

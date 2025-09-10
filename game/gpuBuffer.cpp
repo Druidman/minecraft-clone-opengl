@@ -4,9 +4,17 @@
 bool GpuBuffer::uploadData(const void *data, BufferInt size, BufferInt start)
 {
     if (
-        size == 0 ||
+        size == 0 
+        
+    ){
+        std::cout << "size = 0\n";
+        return false;
+    }
+    if (
         start + size > this->bufferSize
     ){
+        std::cout << "too much data\n";
+        std::cout << "Data size: " << size << '\n';
         return false;
     }
     bind();
