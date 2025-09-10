@@ -3,7 +3,7 @@
 ![screenshot](game/gameImages/gameplay1.png)
  
 # How to play?
-1. Through website: [http://localhost:8080/]
+1. Through website: https://minecraftplus.vercel.app
 2. Run on your machine
 
 # How to run
