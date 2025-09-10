@@ -1,6 +1,6 @@
 # Minecraft opengl clone written in c++
 
-![screenshot](game/gameplay/gameplay1.png)
+![screenshot](game/gameImages/gameplay1.png)
  
 # How to play?
 1. Through website: [http://localhost:8080/]
