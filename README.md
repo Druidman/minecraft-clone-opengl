@@ -1,7 +1,11 @@
 # Minecraft opengl clone written in c++
-Reason? `Why not...`
-![screenshot](game/gameplay/forGithub.png)
+
+![screenshot](game/gameplay/gameplay1.png)
  
+# How to play?
+1. Through website: [http://localhost:8080/]
+2. Run on your machine
+
 # How to run
 1. Download latest release and run it
 2. Build from source:
