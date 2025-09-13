@@ -19,6 +19,7 @@ class Player;
 class Renderer;
 class Chunk;
 
+const double MAX_FRAME_TIME_MS = 16.6; // maps to 60fps
 
 struct ChunkVecPos{
     int row,col;
@@ -36,6 +37,8 @@ struct WorldTickData {
     bool playerChangedChunk = false;
     bool playerChangedPosition = false;
     bool requiresRefsUpdate = false;
+    double updateStartTime = 0;
+    double lastFrameTime = 0;
 };
 
 class World{ //world class
@@ -53,6 +56,7 @@ class World{ //world class
         void setChunkToFlat(Chunk* chunk);
         
     public:
+        WorldTickData lastFrameWorldTickData;
         bool flatWorld = false;
 
         

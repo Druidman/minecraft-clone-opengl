@@ -97,13 +97,13 @@ void World::genRenderChunkRefs()
             }
             
             
-            float dist = glm::distance(glm::vec2(chunk->position.x , chunk->position.z), glm::vec2(player->position.x , player->position.z));
-            if (dist / (float)CHUNK_WIDTH < RENDER_DISTANCE){
+            // float dist = glm::distance(glm::vec2(chunk->position.x , chunk->position.z), glm::vec2(player->position.x , player->position.z));
+            // if (dist / (float)CHUNK_WIDTH < RENDER_DISTANCE){
                 
-                this->chunkRenderRefs.push_back(chunk);
+            this->chunkRenderRefs.push_back(chunk);
                 
 
-            }
+            // }
             
         }
     }
@@ -386,16 +386,21 @@ void World::updateChunks(WorldTickData *worldTickData){
         }
     }
     
+    worldTickData->requiresRefsUpdate = true; // just needed 50%
 }
 
 void World::updateThreads(WorldTickData *worldTickData){
     std::list<ThreadWorkingData>::iterator dataIterator = threadsWorkingData.begin();
     std::list<std::thread>::iterator threadIterator = threads.begin();
 
+  
     while (dataIterator != threadsWorkingData.end() && threadIterator != threads.end()){
-       
+        
         
         for (int chunkInd =0; chunkInd < CHUNK_COLUMNS; chunkInd++){
+            if (glfwGetTime() - worldTickData->updateStartTime > MAX_FRAME_TIME_MS){
+                break;
+            }
             if (!dataIterator->chunksDone[chunkInd] || dataIterator->chunksInserted[chunkInd]){
         
                 continue;
@@ -418,7 +423,7 @@ void World::updateThreads(WorldTickData *worldTickData){
             std::cout << "adding chunk from thread...: " << row << " " << col << "\n";
             this->renderer->addChunk(&this->chunks[row][col]);
             std::cout << "End\n";
-
+          
        
             dataIterator->chunksInserted[chunkInd] = true; // so that we won't insert it again
             worldTickData->requiresRefsUpdate = true;
@@ -488,13 +493,15 @@ void World::updateChunkRender(WorldTickData *worldTickData){
     genRenderChunkRefs();
     double refsEnd = glfwGetTime();
 
+
+ 
     std::cout << "Storage Buffer update...\n";
     double storageStart = glfwGetTime();
     this->renderer->fillBuffer(STORAGE_BUFFER);  
     double storageEnd = glfwGetTime();
     std::cout << "End\n";
 
-
+    
     std::cout << "Indirect Buffer update...\n";
     double indirectStart = glfwGetTime();
     this->renderer->fillBuffer(INDIRECT_BUFFER);
@@ -515,9 +522,19 @@ void World::updateWorld(double delta)
 {
     WorldTickData worldTickData = {
         false, // playerChangedChunk
-        false  // playerChangedPosition
+        false,  // playerChangedPosition
+        false, // requires refs update
+        glfwGetTime() * 1000, // update start ms
+        delta * 1000, // last frame time ms
+
+
     };
-    
+    std::cout << "Chunk render update...\n";
+    double chunkRenderStart = glfwGetTime();
+    // generates render command
+    updateChunkRender(&lastFrameWorldTickData);
+    double chunkRenderEnd = glfwGetTime();
+    std::cout << "End\n";
     
     // make sun move
     updateSun(delta, &worldTickData);
@@ -536,16 +553,13 @@ void World::updateWorld(double delta)
     double threadsEnd = glfwGetTime();
     std::cout << "End\n";
 
-    std::cout << "Chunk render update...\n";
-    double chunkRenderStart = glfwGetTime();
-    // generates render command
-    updateChunkRender(&worldTickData);
-    double chunkRenderEnd = glfwGetTime();
-    std::cout << "End\n";
+    
 
     std::cout << "CHUNK UPDATE: " << (chunkEnd - chunkStart) * 1000 << "\n"
      << "THREADS: " << (threadsEnd - threadsStart) * 1000 << "\n" 
      << "CHUNK RENDER UPDATE: " << (chunkRenderEnd - chunkRenderStart) * 1000 << "\n";
+
+    this->lastFrameWorldTickData = worldTickData;
   
 
     

@@ -17,6 +17,7 @@ class CpuBuffer : public Buffer{
         virtual bool moveBufferPart() override;
 
         virtual void* getBufferContent() override;
+        
     
     public:
         CpuBuffer() : Buffer(){
