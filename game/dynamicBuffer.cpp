@@ -75,7 +75,7 @@ int DynamicBuffer::getChunkBufferSpaceIndex(Chunk* chunk)
     for (int i = 0; i < (int)this->bufferFreeZones.size(); i++){
         std::pair<BufferInt, BufferInt> &freeZone = bufferFreeZones[i];
         if (freeZone.second < freeZone.first){
-            ExitError("DYNAMIC_BUFFER","smth wrong with free zones second < first, GETCHUNKBUFFERINDEX()");
+            ExitError("DYNAMIC_BUFFER" + getBufferTypeString(),"smth wrong with free zones second < first, GETCHUNKBUFFERINDEX()");
             return -2;
         }
         BufferInt zoneSpace = freeZone.second - freeZone.first;
@@ -86,7 +86,7 @@ int DynamicBuffer::getChunkBufferSpaceIndex(Chunk* chunk)
         if (zoneSpace < minSpaceDifference + minSpaceSize){
             lowestDifferenceZoneIndex = i;
             if (minSpaceSize > zoneSpace){
-                ExitError("DYNAMIC_BUFFER","minSpaceSize > zoneSpace, smth went wrong..., GETCHUNKBUFFERSPACEINDEX");
+                ExitError("DYNAMIC_BUFFER" + getBufferTypeString(),"minSpaceSize > zoneSpace, smth went wrong..., GETCHUNKBUFFERSPACEINDEX");
                 return -2;
             }
             minSpaceDifference = zoneSpace - minSpaceSize;
@@ -105,11 +105,15 @@ int DynamicBuffer::getChunkBufferSpaceIndex(Chunk* chunk)
 bool DynamicBuffer::allocateDynamicBuffer(BufferInt size)
 {
     std::cout << "dynamicAlloc: " << size << "\n";
-    this->bufferTarget->allocateBuffer(size + getBufferPadding(size));
+    if (!this->bufferTarget->allocateBuffer(size + getBufferPadding(size))){
+        return false;
+    };
     this->bufferCalls++;
     if (this->deleteData){
     
-        markData(0,this->bufferTarget->bufferSize);
+        if (!markData(0,this->bufferTarget->bufferSize)){
+            ExitError("DYNAMIC_BUFFER" + getBufferTypeString(),"Error marking data");
+        };
         
     }
     
@@ -128,10 +132,12 @@ bool DynamicBuffer::insertChunkToBuffer(Chunk *chunk)
         int assignRes = assignChunkBufferZone(chunk);
         if (assignRes == -2){
             if (allowsExpansion){
-                expandBufferByChunk(chunk);
+                if (!expandBufferByChunk(chunk)){
+                    ExitError("DYNAMIC_BUFFER" + getBufferTypeString(),"buffer expansion went wrong");
+                };
             }
             else {
-                ExitError("DYNAMIC_BUFFER","Buffer expansion in not expandable buffer type");
+                ExitError("DYNAMIC_BUFFER" + getBufferTypeString(),"Buffer expansion in not expandable buffer type");
             }
             
             
@@ -139,7 +145,7 @@ bool DynamicBuffer::insertChunkToBuffer(Chunk *chunk)
         }
         else if (assignRes == -1){
             std::cout << "-1\n"; 
-            ExitError("DYNAMIC_BUFFER","Attempting to insert invalid chunk");
+            ExitError("DYNAMIC_BUFFER" + getBufferTypeString(),"Attempting to insert invalid chunk");
             return false;
         }
 
@@ -163,7 +169,7 @@ bool DynamicBuffer::deleteChunkFromBuffer(Chunk *chunk, bool merge)
     std::cout << "SIZE: " << this->bufferFreeZones.size() << "\n";
 
     if (chunk->bufferZone[chunkBufferType].second < chunk->bufferZone[chunkBufferType].first){
-        ExitError("DYNAMIC_BUFFER","smth wrong with chunk free zones second < first, DELETECHUNK()");
+        ExitError("DYNAMIC_BUFFER"  + getBufferTypeString(),"smth wrong with chunk free zones second < first, DELETECHUNK()");
         return false;
     }
     if (this->bufferFreeZones.size() == 0){
@@ -177,11 +183,11 @@ bool DynamicBuffer::deleteChunkFromBuffer(Chunk *chunk, bool merge)
         for (int i =0; i<(int)this->bufferFreeZones.size(); i++){
             std::pair<BufferInt, BufferInt> &freeZone = this->bufferFreeZones[i];
             if (freeZone.first == chunk->bufferZone[chunkBufferType].first){
-                ExitError("DYNAMIC_BUFFER","free zones starts at currently not deleted chunk");
+                ExitError("DYNAMIC_BUFFER"  + getBufferTypeString(),"free zones starts at currently not deleted chunk");
                 return false;
             }
             if (freeZone.second == chunk->bufferZone[chunkBufferType].second){
-                ExitError("DYNAMIC_BUFFER","free zones ends at currently not deleted chunk");
+                ExitError("DYNAMIC_BUFFER"  + getBufferTypeString(),"free zones ends at currently not deleted chunk");
                 return false;
             }
 
@@ -192,7 +198,7 @@ bool DynamicBuffer::deleteChunkFromBuffer(Chunk *chunk, bool merge)
                 ( freeZone.second > chunk->bufferZone[chunkBufferType].first && 
                   freeZone.second <= chunk->bufferZone[chunkBufferType].second)
             ){
-                ExitError("DYNAMIC_BUFFER","overlapping freeZone with currently occupied buffer space");
+                ExitError("DYNAMIC_BUFFER"  + getBufferTypeString(),"overlapping freeZone with currently occupied buffer space");
                 return false;
             }
 
@@ -221,7 +227,7 @@ bool DynamicBuffer::deleteChunkFromBuffer(Chunk *chunk, bool merge)
     if (this->deleteData){
         std::cout << "DATA: " << chunk->bufferZone[chunkBufferType].first << " " << chunk->bufferZone[chunkBufferType].second << " " << this->bufferTarget->bufferSize << "\n";
         if (!markData(chunk->bufferZone[chunkBufferType].first, chunk->bufferZone[chunkBufferType].second)){
-            ExitError("DYNAMIC_BUFFER","Marking data failed");
+            ExitError("DYNAMIC_BUFFER"  + getBufferTypeString(),"Marking data failed");
         };
         
     }
@@ -258,7 +264,7 @@ int DynamicBuffer::assignChunkBufferZone(Chunk* chunk){
     BufferInt maxSpaceSize = dataSize + getChunkPadding(dataSize);
 
     if (this->bufferFreeZones[zoneIndex].second < this->bufferFreeZones[zoneIndex].first){
-        ExitError("DYNAMIC_BUFFER","smth wrong with chunk free zones second < first, ASSIGNCHUNKZONE()");
+        ExitError("DYNAMIC_BUFFER"  + getBufferTypeString(),"smth wrong with chunk free zones second < first, ASSIGNCHUNKZONE()");
      
     }
 
@@ -268,7 +274,7 @@ int DynamicBuffer::assignChunkBufferZone(Chunk* chunk){
 
         // new zone
         if (this->bufferFreeZones[zoneIndex].first + maxSpaceSize > this->bufferFreeZones[zoneIndex].second){
-            ExitError("DYNAMIC_BUFFER","smth wrong with chunk free zones second < first, ASSIGNCHUNKZONE(), INSERTING FREE ZONE");
+            ExitError("DYNAMIC_BUFFER"  + getBufferTypeString(),"smth wrong with chunk free zones second < first, ASSIGNCHUNKZONE(), INSERTING FREE ZONE");
       
         }
         this->bufferFreeZones.insert(
@@ -297,7 +303,7 @@ int DynamicBuffer::assignChunkBufferZone(Chunk* chunk){
 }
 
 bool DynamicBuffer::expandBufferByChunk(Chunk* chunk){
-   
+    
     
     BufferInt dataSize = getChunkDataSize(chunk);
     BufferInt oldBufferSize = this->bufferTarget->bufferSize;
@@ -319,13 +325,13 @@ bool DynamicBuffer::expandBufferByChunk(Chunk* chunk){
    
 
     if (oldBufferSize > this->bufferTarget->bufferSize){
-        ExitError("DYNAMIC_BUFFER","smth wrong with buffer expansion first > second, EXPANDBUFFERBYCHUNK");
+        ExitError("DYNAMIC_BUFFER"  + getBufferTypeString(),"smth wrong with buffer expansion first > second, EXPANDBUFFERBYCHUNK");
         return false;
     }
     if (this->deleteData){
         std::cout << "marking after expansion...\n";
         if (!markData(oldBufferSize, this->bufferTarget->bufferSize)){
-            ExitError("DYNAMIC_BUFFER","marking failed");
+            ExitError("DYNAMIC_BUFFER"  + getBufferTypeString(),"marking failed");
         };
     }
 
@@ -336,7 +342,7 @@ bool DynamicBuffer::expandBufferByChunk(Chunk* chunk){
 bool DynamicBuffer::moveBufferPart(BufferInt from, BufferInt to)
 {
     
-    ExitError("DYNAMIC_BUFFER","NO SUPPORT OVER MOVING");
+    ExitError("DYNAMIC_BUFFER"  + getBufferTypeString(),"NO SUPPORT OVER MOVING");
     return false;
 
 }

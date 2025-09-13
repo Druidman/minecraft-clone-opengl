@@ -33,7 +33,9 @@ bool IdBuffer::updateChunkBuffer(Chunk *chunk)
         // chunk is to big so we either find new free zone OR reallocate buffer
 
         // ! in all of these scenarios we need to remove chunk from its current location !
-        deleteChunkFromBuffer(chunk);
+        if (!deleteChunkFromBuffer(chunk)){
+            ExitError("ID_BUFFER","Error deleting chunk in update func");
+        };
 
         // lets try to find new freeZone
         std::cout << "assigning new zone for a chunk in IDBUFFER\n";
@@ -41,7 +43,9 @@ bool IdBuffer::updateChunkBuffer(Chunk *chunk)
         if (assignRes == -2){
             // we need to expand buffer because we have no usable space left
             
-            expandBufferByChunk(chunk);
+            if (!expandBufferByChunk(chunk)){
+                ExitError("ID_BUFFER","Error expanding buffer in update func");
+            };
         }
         else if (assignRes == -1){
             std::cout << "update -1\n";
@@ -58,7 +62,7 @@ bool IdBuffer::updateChunkBuffer(Chunk *chunk)
     );
     
 
-    if (!this->bufferTarget->uploadData(
+    if (!this->cpuBuffer.uploadData(
             data.data(),
             chunk->bufferZone[this->chunkBufferType].second - chunk->bufferZone[this->chunkBufferType].first,
             chunk->bufferZone[this->chunkBufferType].first
@@ -92,7 +96,9 @@ bool IdBuffer::fillGpuBuffer()
         return true;
     }
 
-    gpuBuffer.allocateBuffer(this->cpuBuffer.bufferSize);
+    if (!gpuBuffer.allocateBuffer(this->cpuBuffer.bufferSize)){
+        return false;
+    };
     
     if (!gpuBuffer.uploadData(this->cpuBuffer.getBufferContent(), this->cpuBuffer.bufferSize, 0)){
         return false;

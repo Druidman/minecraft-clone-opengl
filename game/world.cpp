@@ -45,7 +45,11 @@ fnl_state World::genTreeNoiseFunc()
     noise.noise_type = FNL_NOISE_VALUE;
     return noise;
 }
-
+void World::setChunkToFlat(Chunk *chunk)
+{
+    chunk->terrainGenData.flat = true;
+    chunk->terrainGenData.blocksType = GRASS_DIRT;
+}
 void World::initChunks()
 {
 
@@ -59,6 +63,10 @@ void World::initChunks()
             glm::vec3 chunkPos = glm::vec3(startX + (CHUNK_WIDTH / 2), 0.0, startZ + (CHUNK_WIDTH / 2));
 
             Chunk chunk = Chunk(chunkPos, this);
+            if (this->flatWorld){
+                setChunkToFlat(&chunk);
+                
+            }
     
             row.push_back(chunk);
 
@@ -75,9 +83,10 @@ void World::initChunks()
     
 }
 
-void World::genRenderChunkRefs(){
-   
-    
+
+void World::genRenderChunkRefs()
+{
+
     this->chunkRenderRefs.clear();
     
     for (int row = 0; row < CHUNK_ROWS; row++){
@@ -171,7 +180,7 @@ void World::updateChunks(WorldTickData *worldTickData){
                     merge = true; // we are removing last chunk row so we need to merge free zones
                 }
     
-                removeChunk(&chunkRow[chunkRow.size() - 1], merge);
+                removeChunk(&chunkRow[chunkRow.size() - 1], true);
                 chunkRow.pop_back();
         
                 
@@ -229,7 +238,7 @@ void World::updateChunks(WorldTickData *worldTickData){
                     merge = true; // we are removing last chunk row so we need to merge free zones
                 }
     
-                removeChunk(&chunkRow[0], merge);
+                removeChunk(&chunkRow[0], true);
                 
     
                 chunkRow.erase(chunkRow.begin());
@@ -289,7 +298,7 @@ void World::updateChunks(WorldTickData *worldTickData){
                     merge = true; // we are removing last chunk row so we need to merge free zones
                 }
 
-                removeChunk(&chunk, merge);
+                removeChunk(&chunk, true);
 
                 
             }
@@ -341,7 +350,7 @@ void World::updateChunks(WorldTickData *worldTickData){
                     merge = true; // we are removing last chunk row so we need to merge free zones
                 }
                 
-                removeChunk(&chunk, merge);
+                removeChunk(&chunk, true);
                 
             
             }
@@ -396,17 +405,17 @@ void World::updateThreads(WorldTickData *worldTickData){
             int row = dataIterator->chunkPositions[chunkInd].row;
             int col = dataIterator->chunkPositions[chunkInd].col;
             if (row < 0 || col < 0){
+                dataIterator->chunksInserted[chunkInd] = true;
                 continue;
             }
             if (row >= CHUNK_ROWS || col >= CHUNK_COLUMNS){
+                dataIterator->chunksInserted[chunkInd] = true;
                 continue;
             }
             this->chunks[row][col] = dataIterator->chunksToPrepare[chunkInd];
-            if (this->chunks[row][col].hasBufferSpace[MESH_BUFFER]){
-                std::cout << "removing sus chunk at r/c: " << row << " " << col << "\n";
-                this->removeChunk(&this->chunks[row][col], false);
-                // ExitError("WORLD","Changing chunk without deleting");
-            }
+            
+            this->removeChunk(&this->chunks[row][col], true);
+            
             std::cout << "adding chunk from thread...: " << row << " " << col << "\n";
             this->renderer->addChunk(&this->chunks[row][col]);
             std::cout << "End\n";
@@ -667,7 +676,9 @@ void World::prepareChunks(ThreadWorkingData &data)
 {
     
     for (Chunk &chunk : data.chunksToPrepare){
-  
+        if (this->flatWorld){
+            World::setChunkToFlat(&chunk);
+        }
         chunk.genChunk();
 
        

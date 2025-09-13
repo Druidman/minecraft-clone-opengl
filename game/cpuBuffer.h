@@ -51,6 +51,9 @@ inline bool CpuBuffer<ELEMENT_TYPE>::uploadData(const void *data, BufferInt size
 template <typename ELEMENT_TYPE>
 inline bool CpuBuffer<ELEMENT_TYPE>::allocateBuffer(BufferInt size)
 {
+    if (size == 0){
+        return false;
+    }
     this->bufferContent.clear();
     this->bufferContent.resize(size / sizeof(ELEMENT_TYPE));
     this->bufferSize = size;
@@ -60,6 +63,9 @@ inline bool CpuBuffer<ELEMENT_TYPE>::allocateBuffer(BufferInt size)
 template <typename ELEMENT_TYPE>
 inline bool CpuBuffer<ELEMENT_TYPE>::expandBuffer(BufferInt by)
 {
+    if (by == 0){
+        return false;
+    }
     this->bufferContent.resize((this->bufferSize + by) / sizeof(ELEMENT_TYPE));
     this->bufferSize += by;
     return true;

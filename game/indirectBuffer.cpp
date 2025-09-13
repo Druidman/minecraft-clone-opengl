@@ -10,6 +10,10 @@ bool IndirectBuffer::fillBufferWithChunks(std::vector<Chunk *> *chunks)
     this->bufferContent.resize(chunks->size() * 2);
     int i = 0;
     for (Chunk* chunk : *chunks){
+        if (!chunk->hasBufferSpace[MESH_BUFFER]){
+            ExitError("Indirect Buffer", "Adding chunk without mesh buffer space allocated");
+            return false;
+        }
         this->bufferContent[i] = {
             (unsigned int)BLOCK_FACE_VERTICES_COUNT,
             (unsigned int)chunk->opaqueMesh.size(),

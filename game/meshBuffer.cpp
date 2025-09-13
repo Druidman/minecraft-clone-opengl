@@ -9,7 +9,8 @@ bool MeshBuffer::markData(BufferInt markStart, BufferInt markEnd)
     if (
         markEnd < markStart ||
         markStart > this->bufferTarget->bufferSize ||
-        markEnd > this->bufferTarget->bufferSize
+        markEnd > this->bufferTarget->bufferSize 
+
     ){
         std::cout  << "FAIL MARK\n";
         return false;
@@ -17,7 +18,7 @@ bool MeshBuffer::markData(BufferInt markStart, BufferInt markEnd)
     
     std::vector<CHUNK_MESH_DATATYPE> data((markEnd - markStart) / sizeof(CHUNK_MESH_DATATYPE),UNACTIVE_MESH_ELEMENT);
  
-    return this->bufferTarget->uploadData(data.data(),markEnd - markStart, markStart); 
+    return this->bufferTarget->uploadData(data.data(),data.size() * sizeof(CHUNK_MESH_DATATYPE), markStart); 
 }
 
 BufferInt MeshBuffer::getChunkDataSize(Chunk *chunk)
@@ -47,7 +48,9 @@ bool MeshBuffer::updateChunkBuffer(Chunk *chunk)
         // chunk is to big so we either find new free zone OR reallocate buffer
 
         // ! in all of these scenarios we need to remove chunk from its current location !
-        deleteChunkFromBuffer(chunk);
+        if (!deleteChunkFromBuffer(chunk)){
+            ExitError("MESH_BUFFER","Error deleting chunk in update func");
+        };
 
         // lets try to find new freeZone
 
@@ -55,7 +58,9 @@ bool MeshBuffer::updateChunkBuffer(Chunk *chunk)
         if (assignRes == -2){
             // we need to expand buffer because we have no usable space left
             
-            expandBufferByChunk(chunk);
+            if (!expandBufferByChunk(chunk)){
+                ExitError("MESH_BUFFER","Buffer expansion in update func");
+            };
         }
         else if (assignRes == -1){
             std::cout << "update -1\n";

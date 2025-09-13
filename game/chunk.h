@@ -24,6 +24,7 @@ class World;
 typedef FaceData CHUNK_MESH_DATATYPE;
 const int CHUNK_WIDTH = 16;
 const int CHUNK_HEIGHT = 256;
+const int FLAT_WORLD_Y_OFFSET = 3;
 
 // block system works that first platform is bottom platform of blocks.
 // We will be indexing it in a way that platform index corresponds to block y coord
@@ -50,12 +51,19 @@ enum ChunkMeshType {
     OPAQUE, TRANSPARENT
 };
 
+struct ChunkTerrainGenData {
+    bool flat = false;
+    BlockType blocksType = NONE_BLOCK;   // means blocks will be normaly generated
+
+};
+
 
 class Chunk
 {
 
 public:
-    
+
+    ChunkTerrainGenData terrainGenData;
 
     glm::vec3 position;
     World *world;

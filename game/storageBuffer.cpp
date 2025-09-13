@@ -12,6 +12,7 @@ bool StorageBuffer::markData(BufferInt markStart, BufferInt markEnd)
         markEnd < markStart ||
         markStart > this->bufferTarget->bufferSize ||
         markEnd > this->bufferTarget->bufferSize
+        
     ){
         std::cout  << "FAIL MARK\n";
         return false;

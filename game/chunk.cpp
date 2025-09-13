@@ -216,26 +216,37 @@ void Chunk::sortTransparentFaces()
 void Chunk::genChunk()
 {
     for (int i =0; i< CHUNK_WIDTH ; i++){
-        for (int j =0; j< CHUNK_WIDTH; j++){
+        for (int j =0; j< CHUNK_WIDTH; j++){ 
             float x = j + 0.5 + (position.x - (CHUNK_WIDTH / 2)); // j = column
             float z = i + 0.5 + (position.z - (CHUNK_WIDTH / 2)); // i = row
-            float yCoord = world->genBlockHeight(glm::vec2(x,z)) + 0.5;
-            
-            BlockType blockType = GRASS_DIRT;
-            if (yCoord < SAND_LEVEL){
-                blockType = SAND;
+            float yCoord;
+            if (this->terrainGenData.flat){
+                yCoord = this->position.y + FLAT_WORLD_Y_OFFSET;
             }
-            else if (yCoord > SNOW_LEVEL){
-                blockType = SNOW;
-            }
-            else if (yCoord > STONE_LEVEL){
-                blockType = STONE;
+            else {
+                yCoord = world->genBlockHeight(glm::vec2(x,z)) + 0.5;
             }
 
             if (yCoord >= 254){
                 yCoord = 254;
             }
-            
+
+            BlockType blockType = GRASS_DIRT;
+            if (this->terrainGenData.blocksType == NONE_BLOCK){
+                if (yCoord < SAND_LEVEL){
+                    blockType = SAND;
+                }
+                else if (yCoord > SNOW_LEVEL){
+                    blockType = SNOW;
+                }
+                else if (yCoord > STONE_LEVEL){
+                    blockType = STONE;
+                }
+            }
+            else {
+                blockType = this->terrainGenData.blocksType;
+            }
+
             
             Block block(blockType,glm::vec3(x, yCoord ,z));
             
@@ -245,8 +256,16 @@ void Chunk::genChunk()
             
         }
     }
+
+    
+    if (this->terrainGenData.flat){
+        this->chunkReady = true;
+        return ;
+    }
     
     fillWater();
+
+    
 
     for (int i =3; i< CHUNK_WIDTH - 3; i+= 6){
         for (int j =3; j< CHUNK_WIDTH - 3; j+=6){

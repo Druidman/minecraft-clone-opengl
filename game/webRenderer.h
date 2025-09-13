@@ -110,9 +110,6 @@ class WebRenderer : public Renderer
 
             
 
-            
-
-
             this->vao.bind();
         
             GLCall( 
@@ -318,7 +315,7 @@ class WebRenderer : public Renderer
                     break;
 
                 case STORAGE_BUFFER:
-                    if (!chunkStorageBuffer.deleteChunkFromBuffer(chunk, merge)){
+                    if (!chunkStorageBuffer.deleteChunkFromBuffer(chunk, false)){
                         ExitError("WEB_RENDERER", "deleting chunk from storageBuffer");
                         return false;
                     };

@@ -228,6 +228,7 @@ int main()
     renderer->init(&world);
 
     std::cout << "World init\n";
+    world.flatWorld = false;
     world.init(&player);
     
     std::cout << "generating world base\n";

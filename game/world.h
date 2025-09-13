@@ -49,8 +49,11 @@ class World{ //world class
         
 
         void initChunks();
+
+        void setChunkToFlat(Chunk* chunk);
         
     public:
+        bool flatWorld = false;
 
         
         int WIDTH;

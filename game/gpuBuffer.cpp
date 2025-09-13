@@ -37,6 +37,10 @@ bool GpuBuffer::allocateBuffer(BufferInt size)
 bool GpuBuffer::expandBuffer(BufferInt by)
 {
     std::cout << "\n\nBUFFER EXPANSION..\n\n";
+    if (by == 0){
+        return false;
+    }
+    
     std::cout << by << "\n" << this->bufferSize;
     BufferInt newBufferSize = this->bufferSize + by;
     newBufferSize -= newBufferSize % 4; // for fitting // TODO
