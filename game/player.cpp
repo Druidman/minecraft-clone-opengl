@@ -176,7 +176,7 @@ void Player::destroy_block()
 
     chunk->removeBlock(hitPos);
     chunk->genChunkMesh();
-    world->renderer->updateChunk(chunk, MESH_BUFFER);
+    world->renderer->updateChunk(chunk);
     
     
     
@@ -246,7 +246,8 @@ void Player::place_block()
     Block blockToAdd = Block(STONE,placePos);
     placeChunk->addBlock(blockToAdd);
     placeChunk->genChunkMesh();
-    world->renderer->updateChunk(placeChunk, MESH_BUFFER);
+    world->renderer->updateChunk(placeChunk);
+    
     
    
 }

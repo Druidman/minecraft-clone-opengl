@@ -369,7 +369,10 @@ bool Chunk::addBlock(Block &block)
     int row = block.position.z - 0.5 - (position.z - (CHUNK_WIDTH / 2));
 
     if (getBlock(platform,row,column).has_value()){
-        return false; //block already exists /or invalid row,col,platform
+        if (getBlock(platform,row,column).value()->type != WATER){
+            return false; //block already exists /or invalid row,col,platform
+        }
+        
     }
 
     if (platform > (int)this->blocks.size() - 1)
