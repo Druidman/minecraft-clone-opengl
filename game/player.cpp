@@ -121,6 +121,10 @@ void Player::process_input(double delta)
         walkDir = glm::normalize(glm::vec3(this->camera->direction.x,0.0,this->camera->direction.z));
         walkSideDir = glm::normalize(glm::vec3(camRight.x,0.0,camRight.z));
     }
+
+    if (glfwGetKey(window,GLFW_KEY_LEFT_SHIFT)){
+        speed *= SPRINT_FACTOR;
+    }
     
 
     glm::vec3 stepForward = speed * walkDir;

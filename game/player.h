@@ -16,10 +16,11 @@
 
 class World;
 
-const int PLAYER_RANGE = 100;
+const int PLAYER_RANGE = 10;
 const int PLAYER_SPEED = 10;
-const int PLAYER_FLY_SPEED = 1000;
+const int PLAYER_FLY_SPEED = 100;
 
+const int SPRINT_FACTOR = 2;
 
 enum PlayerState{
     IN_AIR, IN_WATER, ON_GROUND
