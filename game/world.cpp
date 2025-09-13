@@ -405,17 +405,16 @@ void World::updateThreads(WorldTickData *worldTickData){
             int row = dataIterator->chunkPositions[chunkInd].row;
             int col = dataIterator->chunkPositions[chunkInd].col;
             if (row < 0 || col < 0){
-                dataIterator->chunksInserted[chunkInd] = true;
                 continue;
             }
             if (row >= CHUNK_ROWS || col >= CHUNK_COLUMNS){
-                dataIterator->chunksInserted[chunkInd] = true;
                 continue;
             }
-            this->chunks[row][col] = dataIterator->chunksToPrepare[chunkInd];
+            
             
             this->removeChunk(&this->chunks[row][col], true);
-            
+
+            this->chunks[row][col] = dataIterator->chunksToPrepare[chunkInd];
             std::cout << "adding chunk from thread...: " << row << " " << col << "\n";
             this->renderer->addChunk(&this->chunks[row][col]);
             std::cout << "End\n";
@@ -430,7 +429,17 @@ void World::updateThreads(WorldTickData *worldTickData){
 
         bool isReady = true;
         for (int chunkInd =0; chunkInd < CHUNK_COLUMNS; chunkInd++){
-            if (!dataIterator->chunksInserted[chunkInd]){
+            
+            if (
+                !dataIterator->chunksInserted[chunkInd] && 
+                
+                dataIterator->chunkPositions[chunkInd].row < CHUNK_ROWS &&
+                dataIterator->chunkPositions[chunkInd].col < CHUNK_COLUMNS &&
+                dataIterator->chunkPositions[chunkInd].row >= 0 &&
+                dataIterator->chunkPositions[chunkInd].col >= 0
+                
+                
+            ){
                 isReady = false;
                 break;
             }
@@ -440,9 +449,10 @@ void World::updateThreads(WorldTickData *worldTickData){
         if (isReady){
             
             
-            dataIterator = threadsWorkingData.erase(dataIterator);
+            
             threadIterator->join();
             threadIterator = threads.erase(threadIterator);
+            dataIterator = threadsWorkingData.erase(dataIterator);
             
         }
         else {

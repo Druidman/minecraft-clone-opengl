@@ -108,6 +108,8 @@ class WebRenderer : public Renderer
             std::cout << "BUFFER_REAL_SIZE_ID: " << idData << "\n";
             std::cout << "BUFFER_REAL_SIZE_STORAGE: " << storageData << "\n";
 
+            std::cout << "THREADS: " << this->world->threads.size() << "\n";
+
             
 
             this->vao.bind();
