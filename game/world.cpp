@@ -529,11 +529,7 @@ void World::updateWorld(double delta)
 
 
     };
-    std::cout << "Chunk render update...\n";
-    double chunkRenderStart = glfwGetTime();
-    // generates render command
-    updateChunkRender(&lastFrameWorldTickData);
-    double chunkRenderEnd = glfwGetTime();
+    
     std::cout << "End\n";
     
     // make sun move
@@ -552,6 +548,12 @@ void World::updateWorld(double delta)
     updateThreads(&worldTickData);
     double threadsEnd = glfwGetTime();
     std::cout << "End\n";
+
+    std::cout << "Chunk render update...\n";
+    double chunkRenderStart = glfwGetTime();
+    // generates render command
+    updateChunkRender(&worldTickData);
+    double chunkRenderEnd = glfwGetTime();
 
     
 
