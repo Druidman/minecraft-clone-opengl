@@ -15,9 +15,6 @@
 #include "storageBuffer.h"
 #include "gpuBuffer.h"
 
-#include "opaqueMeshBuffer.h"
-#include "transparentMeshBuffer.h"
-
 
 
 class WebRenderer : public Renderer
@@ -32,7 +29,7 @@ class WebRenderer : public Renderer
         GpuBuffer baseVbo = GpuBuffer(GL_ARRAY_BUFFER);
 
         IdBuffer chunkIdBuffer = IdBuffer();
-        MeshBuffer meshOpaqueBuffer = MeshBuffer(true);
+        MeshBuffer meshBuffer = MeshBuffer(true);
         StorageBuffer chunkStorageBuffer = StorageBuffer(); 
 
         
