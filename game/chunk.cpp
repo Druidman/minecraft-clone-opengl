@@ -325,6 +325,19 @@ unsigned long long Chunk::getMeshSize()
     return size;
 }
 
+unsigned long long Chunk::getOpaqueMeshSize()
+{
+    unsigned long long size = (unsigned long long)sizeof(CHUNK_MESH_DATATYPE) * (opaqueMesh.size());
+    return size;
+
+}
+
+unsigned long long Chunk::getTransparentMeshSize()
+{
+    unsigned long long size = (unsigned long long)sizeof(CHUNK_MESH_DATATYPE) * (transparentMesh.size());
+    return size;
+
+}
 
 glm::vec3 Chunk::getPositionInWorld(int platform, int row, int column){
     float y = platform + 0.5 + this->position.y;
