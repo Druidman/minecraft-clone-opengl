@@ -85,11 +85,11 @@ public:
         {INDIRECT_BUFFER, false}
     };
     // buffer zones
-    std::map<ChunkBufferType, std::pair<BufferInt, BufferInt>> bufferZone = {
-        {MESH_BUFFER,     {0,0}},
-        {ID_BUFFER,       {0,0}},
-        {STORAGE_BUFFER,  {0,0}},
-        {INDIRECT_BUFFER, {0,0}}
+    std::map<ChunkBufferType, std::vector<std::pair<BufferInt, BufferInt>>> bufferZone = {
+        {MESH_BUFFER,     { {0,0} , {0,0} } },
+        {ID_BUFFER,       { {0,0} , {0,0} } },
+        {STORAGE_BUFFER,  { {0,0} } },
+        {INDIRECT_BUFFER, { {0,0} } }
     };
     
 
