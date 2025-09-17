@@ -346,10 +346,3 @@ bool DynamicBuffer::moveBufferPart(BufferInt from, BufferInt to)
     return false;
 
 }
-
-int DynamicBuffer::getBufferCallsNum()
-{   
-    int calls = this->bufferCalls;
-    this->bufferCalls = 0;
-    return calls;
-}

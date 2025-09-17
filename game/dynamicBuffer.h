@@ -85,7 +85,6 @@ class DynamicBuffer{
         
     public:
         
-        int getBufferCallsNum();
         BufferInt getBufferSize(){ return bufferTarget->bufferSize; };
         bool allocateDynamicBuffer(BufferInt meshSize);
 

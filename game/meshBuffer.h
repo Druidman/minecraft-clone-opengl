@@ -13,26 +13,26 @@
 #include "chunk.h"
 #include "gpuBuffer.h"
 
-class MeshBuffer : public DynamicBuffer {
-    private:
-        CHUNK_MESH_DATATYPE UNACTIVE_MESH_ELEMENT = 393216; // masks face bits to be 6
-    protected:
-        virtual bool markData(BufferInt markStart, BufferInt markEnd) override;
-        virtual BufferInt getChunkDataSize(Chunk* chunk) override;
-        virtual bool requiresContiguousMemoryLayout() override;
+#include "opaqueMeshBuffer.h"
+#include "transparentMeshBuffer.h"
+
+class MeshBuffer{
+    
         
-        virtual std::string getBufferTypeString() override;
     public:
         GpuBuffer buffer = GpuBuffer(GL_ARRAY_BUFFER);
+        OpaqueMeshBuffer opaqueMeshBuffer = OpaqueMeshBuffer(&buffer, true); 
+        TransparentMeshBuffer transparentMeshBuffer = TransparentMeshBuffer(&buffer, true);
+
     public:
-        MeshBuffer(bool deleteData = false) : DynamicBuffer(&buffer, MESH_BUFFER, deleteData){
-            BUFFER_PADDING = 20; // expressed in %
-            CHUNK_PADDING = 10;
-            BUFFER_EXPANSION_RATE = 20;
-        };
-    
-        virtual bool updateChunkBuffer(Chunk* chunk) override;
-        virtual bool insertChunksToBuffer(std::vector<Chunk*> *chunks) override;
+        MeshBuffer(){};
+        BufferInt getBufferSize(){ return buffer.bufferSize; };
+
+        bool insertChunkToBuffer(Chunk* chunk);
+        bool deleteChunkFromBuffer(Chunk* chunk, bool merge = false);
+           
+        bool updateChunkBuffer(Chunk* chunk);
+        bool insertChunksToBuffer(std::vector<Chunk*> *chunks);
         
 };
 #endif

@@ -15,6 +15,8 @@
 #include "storageBuffer.h"
 #include "gpuBuffer.h"
 
+#include "meshBuffer.h"
+
 
 
 class WebRenderer : public Renderer
@@ -29,7 +31,7 @@ class WebRenderer : public Renderer
         GpuBuffer baseVbo = GpuBuffer(GL_ARRAY_BUFFER);
 
         IdBuffer chunkIdBuffer = IdBuffer();
-        MeshBuffer meshBuffer = MeshBuffer(true);
+        MeshBuffer meshBuffer = MeshBuffer();
         StorageBuffer chunkStorageBuffer = StorageBuffer(); 
 
         
@@ -73,9 +75,6 @@ class WebRenderer : public Renderer
     public:
         virtual void updateLogs() override{
             std::cout << "\n\nDESKTOP_RENDERER_BUFFER_LOGS\n\n";
-
-            std::cout << "BUFFER_CALLS\n";
-            std::cout << "MeshBuffer: " << this->meshBuffer.getBufferCallsNum() << "\n";
             
             
         };
@@ -131,8 +130,8 @@ class WebRenderer : public Renderer
 
       
             
-            this->meshBuffer.allocateDynamicBuffer(
-                world->getWorldMeshSize()
+            this->meshBuffer.buffer.allocateBuffer(
+                world->getWorldMeshSize() * 1.2
             );
             this->chunkIdBuffer.allocateDynamicBuffer(
                 (world->getWorldMeshSize() / sizeof(CHUNK_MESH_DATATYPE)) * sizeof(int)
@@ -158,8 +157,8 @@ class WebRenderer : public Renderer
             BufferInt meshSize = world->getWorldMeshSize();
             switch(bufferToFill){
                 case MESH_BUFFER:
-                    this->meshBuffer.allocateDynamicBuffer(
-                        meshSize
+                    this->meshBuffer.buffer.allocateBuffer(
+                        meshSize * 1.2
                     );
                     for (std::vector< Chunk > &chunkRow : this->world->chunks){
                         for (Chunk &chunk : chunkRow){
