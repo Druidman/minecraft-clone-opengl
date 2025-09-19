@@ -110,6 +110,8 @@ class World{ //world class
 
         
         unsigned long long getWorldMeshSize();
+        unsigned long long getWorldOpaqueMeshSize();
+        unsigned long long getWorldTransparentMeshSize();
 
         int getChunkRow(Chunk* chunk);
         int getChunkCol(Chunk* chunk);

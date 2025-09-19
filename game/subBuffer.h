@@ -10,14 +10,14 @@
 // ! buffer zone can't grow !
 // ! subBuffer isn't dynamic in any way !
 
-template <typename T>
-class SubBuffer : Buffer{
+
+class SubBuffer : public Buffer{
     private:
-        T *buffer;
+        Buffer *buffer;
         BufferInt bufferStart;
         BufferInt bufferEnd;
     public:
-        SubBuffer(BufferInt bufferStart, BufferInt bufferEnd, T *buffer) : buffer(buffer){
+        SubBuffer(BufferInt bufferStart, BufferInt bufferEnd, Buffer *buffer) : Buffer(){
             if (
                 bufferEnd < bufferStart ||
                 bufferStart > buffer->bufferSize ||
@@ -29,17 +29,19 @@ class SubBuffer : Buffer{
             this->bufferSize = bufferEnd - bufferStart;
             this->bufferStart = bufferStart;
             this->bufferEnd = bufferEnd;
+            this->buffer = buffer;
         }
         virtual bool uploadData(const void* data, BufferInt size, BufferInt start){
             if (
-                start > bufferEnd ||
-                start + size > bufferEnd ||
-                start < bufferStart
+                start + bufferStart > bufferEnd ||
+                start + bufferStart + size > bufferEnd 
             ){
-                std::cout << "Forbidden subBuffer action in uploading data\n";
+                std::cout << "Forbidden subBuffer action in uploading data: " \
+                << start << " " << size << " " << bufferSize << \
+                " " << bufferStart << " " << bufferEnd << "\n";
                 return false;
             }
-            return buffer->uploadData(data, size, start);
+            return buffer->uploadData(data, size, start + this->bufferStart);
         };
 
         virtual bool allocateBuffer(BufferInt size){ 

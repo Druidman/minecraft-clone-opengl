@@ -130,8 +130,8 @@ class WebRenderer : public Renderer
 
       
             
-            this->meshBuffer.buffer.allocateBuffer(
-                world->getWorldMeshSize() * 1.2
+            this->meshBuffer.allocateBuffer(
+                world->getWorldOpaqueMeshSize(), world->getWorldTransparentMeshSize()
             );
             this->chunkIdBuffer.allocateDynamicBuffer(
                 (world->getWorldMeshSize() / sizeof(CHUNK_MESH_DATATYPE)) * sizeof(int)

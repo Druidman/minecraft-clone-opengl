@@ -639,6 +639,32 @@ unsigned long long World::getWorldMeshSize()
     return sizeToAlloc;
 }
 
+unsigned long long World::getWorldOpaqueMeshSize()
+{
+    unsigned long long sizeToAlloc = 0;
+    for (std::vector< Chunk > &chunkRow : this->chunks){
+        for (Chunk &chunk : chunkRow){
+            sizeToAlloc += chunk.getOpaqueMeshSize();
+        }
+       
+    };
+    
+    return sizeToAlloc;
+}
+
+unsigned long long World::getWorldTransparentMeshSize()
+{
+    unsigned long long sizeToAlloc = 0;
+    for (std::vector< Chunk > &chunkRow : this->chunks){
+        for (Chunk &chunk : chunkRow){
+            sizeToAlloc += chunk.getTransparentMeshSize();
+        }
+       
+    };
+    
+    return sizeToAlloc;
+}
+
 int World::getChunkCol(Chunk *chunk)
 {
     int chunkCol = (int)(std::floor((chunk->position.x - this->worldMiddle.x + (float)(this->WIDTH / 2)) / (float)CHUNK_WIDTH));

@@ -12,6 +12,8 @@
 #include "betterGL.h"
 #include "chunk.h"
 #include "gpuBuffer.h"
+#include "subBuffer.h"
+#include "buffer.h"
 
 #include "opaqueMeshBuffer.h"
 #include "transparentMeshBuffer.h"
@@ -21,12 +23,19 @@ class MeshBuffer{
         
     public:
         GpuBuffer buffer = GpuBuffer(GL_ARRAY_BUFFER);
-        OpaqueMeshBuffer opaqueMeshBuffer = OpaqueMeshBuffer(&buffer, true); 
-        TransparentMeshBuffer transparentMeshBuffer = TransparentMeshBuffer(&buffer, true);
+
+        SubBuffer opaqueMeshSubBuffer = SubBuffer(0,0,&buffer);
+        SubBuffer transparentMeshSubBuffer = SubBuffer(0,0,&buffer);
+
+        OpaqueMeshBuffer opaqueMeshBuffer = OpaqueMeshBuffer(&opaqueMeshSubBuffer, true); 
+        TransparentMeshBuffer transparentMeshBuffer = TransparentMeshBuffer(&transparentMeshSubBuffer, true);
 
     public:
         MeshBuffer(){};
         BufferInt getBufferSize(){ return buffer.bufferSize; };
+
+
+        bool allocateBuffer(BufferInt opaqueSize, BufferInt transparentSize);
 
         bool insertChunkToBuffer(Chunk* chunk);
         bool deleteChunkFromBuffer(Chunk* chunk, bool merge = false);
