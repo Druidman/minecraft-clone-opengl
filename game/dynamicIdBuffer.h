@@ -4,16 +4,17 @@
 #include "dynamicBuffer.h"
 
 
-class DynamicIdBuffer : DynamicBuffer{
+class DynamicIdBuffer : public DynamicBuffer{
     private:
         int UNACTIVE_ELEMENT = -1; // masks face bits to be 6
     protected:
         virtual bool markData(BufferInt markStart, BufferInt markEnd) override;
-        virtual BufferInt getChunkDataSize(Chunk* chunk) override;
         virtual bool requiresContiguousMemoryLayout() override;
         
 
         virtual std::string getBufferTypeString() override;
+
+        virtual void postChunkUpdateFunction(){};
     public:
         DynamicIdBuffer(Buffer* buffer, ChunkBufferType idBufferType, bool deleteData = false) : DynamicBuffer(buffer, idBufferType, deleteData){
             if (idBufferType != OPAQUE_ID_BUFFER && idBufferType != TRANSPARENT_ID_BUFFER){

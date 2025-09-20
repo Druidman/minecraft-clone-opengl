@@ -17,7 +17,7 @@
 
 
 template<typename T>
-concept FullBufferConcept = std::is_same_v<T, GpuBuffer> || std::is_same_v<T, CpuBuffer<float>>;
+concept FullBufferConcept = std::is_same_v<T, GpuBuffer> || std::is_same_v<T, CpuBuffer<float>> || std::is_same_v<T, CpuBuffer<int>>;
 
 template<typename T>
 concept DynamicBufferConcept = std::is_base_of_v<DynamicBuffer, T>;
@@ -26,6 +26,8 @@ concept DynamicBufferConcept = std::is_base_of_v<DynamicBuffer, T>;
 
 MDM_TEMPLATE
 class MultiDynamicBuffer{
+    protected:
+        virtual void postChunkUpdateFunction(){};
     protected:
         FullBufferType* fullBuffer;
 
@@ -68,6 +70,7 @@ inline bool MDM_CLASS::allocateBuffer(BufferInt firstBufferSize, BufferInt secon
     if (!this->fullBuffer->allocateBuffer(realfirstSize + realSecondSize)){
         ExitError("MESH_BUFFER", "SMTH WRONG WITH alloc");
     };
+    
 
     this->firstSubBuffer = SubBuffer(
         0,
@@ -95,6 +98,7 @@ inline bool MDM_CLASS::insertChunkToBuffer(Chunk *chunk)
     bool res = true;
     res &= this->firstDynamicSubBuffer.insertChunkToBuffer(chunk);
     res &= this->secondDynamicSubBuffer.insertChunkToBuffer(chunk);
+    postChunkUpdateFunction();
     return res;
 }
 
@@ -104,6 +108,7 @@ inline bool MDM_CLASS::deleteChunkFromBuffer(Chunk *chunk, bool merge)
     bool res = true;
     res &= this->firstDynamicSubBuffer.deleteChunkFromBuffer(chunk, merge);
     res &= this->secondDynamicSubBuffer.deleteChunkFromBuffer(chunk, merge);
+    postChunkUpdateFunction();
     return res;
 }
 
@@ -113,6 +118,7 @@ inline bool MDM_CLASS::updateChunkBuffer(Chunk *chunk)
     bool res = true;
     res &= this->firstDynamicSubBuffer.updateChunkBuffer(chunk);
     res &= this->secondDynamicSubBuffer.updateChunkBuffer(chunk);
+    postChunkUpdateFunction();
     return res;
 }
 
@@ -122,6 +128,7 @@ inline bool MDM_CLASS::insertChunksToBuffer(std::vector<Chunk *> *chunks)
     bool res = true;
     res &= this->firstDynamicSubBuffer.insertChunksToBuffer(chunks);
     res &= this->secondDynamicSubBuffer.insertChunksToBuffer(chunks);
+    postChunkUpdateFunction();
 
     return res;
 }

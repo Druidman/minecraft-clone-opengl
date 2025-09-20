@@ -118,7 +118,7 @@ class WebRenderer : public Renderer
                     GL_TRIANGLES,
                     0,
                     BLOCK_FACE_VERTICES_COUNT,
-                    this->chunkIdBuffer.getBufferSize() / sizeof(CHUNK_MESH_DATATYPE)
+                    this->meshBuffer.getBufferSize() / sizeof(CHUNK_MESH_DATATYPE)
                 ) 
             );
             
@@ -133,8 +133,9 @@ class WebRenderer : public Renderer
             this->meshBuffer.allocateBuffer(
                 world->getWorldOpaqueMeshSize(), world->getWorldTransparentMeshSize()
             );
-            this->chunkIdBuffer.allocateDynamicBuffer(
-                (world->getWorldMeshSize() / sizeof(CHUNK_MESH_DATATYPE)) * sizeof(int)
+            this->chunkIdBuffer.allocateBuffer(
+                world->getWorldOpaqueMeshSize(), world->getWorldTransparentMeshSize()
+                
             );
 
             this->chunkStorageBuffer.allocateDynamicBuffer(

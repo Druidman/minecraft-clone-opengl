@@ -17,10 +17,7 @@ bool DynamicIdBuffer::markData(BufferInt markStart, BufferInt markEnd)
     return this->bufferTarget->uploadData(data.data(),data.size() * sizeof(int), markStart); 
 }
 
-BufferInt DynamicIdBuffer::getChunkDataSize(Chunk *chunk)
-{
-    return sizeof(int);
-}
+
 
 bool DynamicIdBuffer::requiresContiguousMemoryLayout()
 {
@@ -37,7 +34,7 @@ bool DynamicIdBuffer::updateChunkBuffer(Chunk *chunk)
     if (!chunk->hasBufferSpace[this->chunkBufferType]){
         ExitError(getBufferTypeString(),"UPDATE CALLED ON NOT INSERTED CHUNK");
     }
-    BufferInt dataSize = (chunk->getMeshSize() / sizeof(CHUNK_MESH_DATATYPE)) * sizeof(int);
+    BufferInt dataSize = getChunkDataSize(chunk);
     if (chunk->bufferZone[this->chunkBufferType].first + dataSize > chunk->bufferZone[this->chunkBufferType].second){
         // chunk is to big so we either find new free zone OR reallocate buffer
 
@@ -66,7 +63,7 @@ bool DynamicIdBuffer::updateChunkBuffer(Chunk *chunk)
     }
     
     std::vector<int> data(
-        (chunk->bufferZone[this->chunkBufferType].second - chunk->bufferZone[this->chunkBufferType].first) / sizeof(CHUNK_MESH_DATATYPE),
+        (chunk->bufferZone[this->chunkBufferType].second - chunk->bufferZone[this->chunkBufferType].first) / sizeof(int),
         chunk->bufferZone[STORAGE_BUFFER].first / sizeof(StorageBufferType)
     );
     
@@ -79,6 +76,7 @@ bool DynamicIdBuffer::updateChunkBuffer(Chunk *chunk)
     ){
         return false;
     };
+    postChunkUpdateFunction();
     return true;
 }
 
