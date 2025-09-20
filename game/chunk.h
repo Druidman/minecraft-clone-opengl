@@ -45,7 +45,14 @@ const int FLAT_WORLD_Y_OFFSET = 3;
 // NOW we are gonna do a lot we will have buffer of faces
 
 enum ChunkBufferType {
-    OPAQUE_MESH_BUFFER, TRANSPARENT_MESH_BUFFER, ID_BUFFER, STORAGE_BUFFER, INDIRECT_BUFFER, MESH_BUFFER
+    
+    
+    OPAQUE_MESH_BUFFER, TRANSPARENT_MESH_BUFFER, MESH_BUFFER,
+    OPAQUE_ID_BUFFER, TRANSPARENT_ID_BUFFER, ID_BUFFER,
+    
+    STORAGE_BUFFER, 
+    INDIRECT_BUFFER, 
+    
 };
 enum ChunkMeshType {
     OPAQUE, TRANSPARENT
@@ -81,7 +88,10 @@ public:
     std::map<ChunkBufferType, bool> hasBufferSpace = {
         {OPAQUE_MESH_BUFFER,     false},
         {TRANSPARENT_MESH_BUFFER,     false},
-        {ID_BUFFER,       false},
+
+        {OPAQUE_ID_BUFFER,       false},
+        {TRANSPARENT_ID_BUFFER,       false},
+
         {STORAGE_BUFFER,  false},
         {INDIRECT_BUFFER, false}
     };
@@ -89,7 +99,10 @@ public:
     std::map<ChunkBufferType, std::pair<BufferInt, BufferInt>> bufferZone = {
         {OPAQUE_MESH_BUFFER,     {0,0}},
         {TRANSPARENT_MESH_BUFFER,     {0,0}},
-        {ID_BUFFER,       {0,0}},
+
+        {OPAQUE_ID_BUFFER,       {0,0}},
+        {TRANSPARENT_ID_BUFFER,       {0,0}},
+
         {STORAGE_BUFFER,  {0,0}},
         {INDIRECT_BUFFER, {0,0}}
     };
