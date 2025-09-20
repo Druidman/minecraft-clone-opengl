@@ -18,30 +18,17 @@
 #include "opaqueMeshBuffer.h"
 #include "transparentMeshBuffer.h"
 
-class MeshBuffer{
+#include "multiDynamicBuffer.h"
+
+class MeshBuffer : public MultiDynamicBuffer<GpuBuffer, OpaqueMeshBuffer, TransparentMeshBuffer>{
     
         
     public:
         GpuBuffer buffer = GpuBuffer(GL_ARRAY_BUFFER);
-
-        SubBuffer opaqueMeshSubBuffer = SubBuffer(0,0,&buffer);
-        SubBuffer transparentMeshSubBuffer = SubBuffer(0,0,&buffer);
-
-        OpaqueMeshBuffer opaqueMeshBuffer = OpaqueMeshBuffer(&opaqueMeshSubBuffer, true); 
-        TransparentMeshBuffer transparentMeshBuffer = TransparentMeshBuffer(&transparentMeshSubBuffer, true);
-
     public:
-        MeshBuffer(){};
-        BufferInt getBufferSize(){ return buffer.bufferSize; };
+        MeshBuffer() : MultiDynamicBuffer(&buffer){
 
-
-        bool allocateBuffer(BufferInt opaqueSize, BufferInt transparentSize);
-
-        bool insertChunkToBuffer(Chunk* chunk);
-        bool deleteChunkFromBuffer(Chunk* chunk, bool merge = false);
-           
-        bool updateChunkBuffer(Chunk* chunk);
-        bool insertChunksToBuffer(std::vector<Chunk*> *chunks);
+        };
         
 };
 #endif
