@@ -19,6 +19,7 @@ class OpaqueMeshBuffer : public DynamicBuffer{
             BUFFER_PADDING = 20; // expressed in %
             CHUNK_PADDING = 10;
             BUFFER_EXPANSION_RATE = 20;
+            
         };
     
         virtual bool updateChunkBuffer(Chunk* chunk) override;

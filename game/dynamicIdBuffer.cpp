@@ -32,7 +32,8 @@ std::string DynamicIdBuffer::getBufferTypeString()
 bool DynamicIdBuffer::updateChunkBuffer(Chunk *chunk)
 {
     if (!chunk->hasBufferSpace[this->chunkBufferType]){
-        ExitError(getBufferTypeString(),"UPDATE CALLED ON NOT INSERTED CHUNK");
+       
+        return true;
     }
     BufferInt dataSize = getChunkDataSize(chunk);
     if (chunk->bufferZone[this->chunkBufferType].first + dataSize > chunk->bufferZone[this->chunkBufferType].second){

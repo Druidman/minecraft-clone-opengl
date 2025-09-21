@@ -61,8 +61,8 @@ class MultiDynamicBuffer{
 MDM_TEMPLATE
 inline bool MDM_CLASS::allocateBuffer(BufferInt firstBufferSize, BufferInt secondBufferSize)
 {
-    BufferInt realfirstSize = (firstBufferSize * 1.2);
-    BufferInt realSecondSize = (secondBufferSize * 1.2);
+    BufferInt realfirstSize = (firstBufferSize * 1.5);
+    BufferInt realSecondSize = (secondBufferSize * 1.5);
 
     realfirstSize -= realfirstSize % 2;
     realSecondSize -= realSecondSize % 2;
@@ -78,7 +78,7 @@ inline bool MDM_CLASS::allocateBuffer(BufferInt firstBufferSize, BufferInt secon
         this->fullBuffer
     );
     this->secondSubBuffer = SubBuffer(
-        realSecondSize, 
+        realfirstSize, 
         this->fullBuffer->bufferSize, 
         this->fullBuffer
     );
@@ -106,8 +106,12 @@ MDM_TEMPLATE
 inline bool MDM_CLASS::deleteChunkFromBuffer(Chunk *chunk, bool merge)
 {
     bool res = true;
-    res &= this->firstDynamicSubBuffer.deleteChunkFromBuffer(chunk, merge);
-    res &= this->secondDynamicSubBuffer.deleteChunkFromBuffer(chunk, merge);
+    if (chunk->hasBufferSpace[this->firstDynamicSubBuffer.chunkBufferType]){
+        res &= this->firstDynamicSubBuffer.deleteChunkFromBuffer(chunk, merge);
+    }
+    if (chunk->hasBufferSpace[this->secondDynamicSubBuffer.chunkBufferType]){
+        res &= this->secondDynamicSubBuffer.deleteChunkFromBuffer(chunk, merge);
+    }
     postChunkUpdateFunction();
     return res;
 }
@@ -116,8 +120,12 @@ MDM_TEMPLATE
 inline bool MDM_CLASS::updateChunkBuffer(Chunk *chunk)
 {
     bool res = true;
-    res &= this->firstDynamicSubBuffer.updateChunkBuffer(chunk);
-    res &= this->secondDynamicSubBuffer.updateChunkBuffer(chunk);
+    if (chunk->hasBufferSpace[this->firstDynamicSubBuffer.chunkBufferType]){
+        res &= this->firstDynamicSubBuffer.updateChunkBuffer(chunk);
+    }
+    if (chunk->hasBufferSpace[this->secondDynamicSubBuffer.chunkBufferType]){
+        res &= this->secondDynamicSubBuffer.updateChunkBuffer(chunk);
+    }
     postChunkUpdateFunction();
     return res;
 }

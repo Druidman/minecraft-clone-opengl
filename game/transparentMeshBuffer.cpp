@@ -33,6 +33,7 @@ bool TransparentMeshBuffer::requiresContiguousMemoryLayout()
 
 std::string TransparentMeshBuffer::getBufferTypeString()
 {
+    
     return std::string("TRANSPARENT_MESH_BUFFER");
 }
 
@@ -40,8 +41,8 @@ std::string TransparentMeshBuffer::getBufferTypeString()
 bool TransparentMeshBuffer::updateChunkBuffer(Chunk *chunk)
 {
     if (!chunk->hasBufferSpace[this->chunkBufferType]){
-        ExitError(getBufferTypeString(),"Calling update on not inserted chunk");
-        return false;
+       
+        return true;
     }
     BufferInt meshSize = getChunkDataSize(chunk);
     if (meshSize + chunk->bufferZone[this->chunkBufferType].first > chunk->bufferZone[this->chunkBufferType].second ){

@@ -36,6 +36,7 @@ class SubBuffer : public Buffer{
                 start + bufferStart > bufferEnd ||
                 start + bufferStart + size > bufferEnd 
             ){
+                ExitError("SDDS","ss");
                 std::cout << "Forbidden subBuffer action in uploading data: " \
                 << start << " " << size << " " << bufferSize << \
                 " " << bufferStart << " " << bufferEnd << "\n";

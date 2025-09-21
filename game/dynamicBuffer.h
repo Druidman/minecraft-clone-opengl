@@ -55,7 +55,9 @@ class DynamicBuffer{
         int bufferCalls = 0;
 
         Buffer* bufferTarget;
+    public:
         ChunkBufferType chunkBufferType;
+        
     protected:
         BufferInt getBufferPadding(BufferInt size);
         BufferInt getChunkPadding(BufferInt size);

@@ -39,7 +39,8 @@ void StorageBuffer::setBindingPoint(int port)
 bool StorageBuffer::updateChunkBuffer(Chunk *chunk)
 {
     if (!chunk->hasBufferSpace[this->chunkBufferType]){
-        ExitError("STORAGE_BUFFER","UPDATE CALLED ON UN INSERTED CHUNK");
+       
+        return true;
     }
     glm::vec4 tmp = glm::vec4(chunk->position - this->world->player->camera->position, 0.0f);
 

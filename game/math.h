@@ -30,7 +30,7 @@ inline std::optional<BlockIntersection> shootRay(
 
     const float stepSize = 1 / 50.0f;
     glm::vec3 target = startPos;
-    bool targetFound = false;
+    
 
     for (int i=0; i< range / stepSize; i++){
     

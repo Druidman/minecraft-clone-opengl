@@ -28,6 +28,7 @@ BufferInt OpaqueMeshBuffer::getChunkDataSize(Chunk *chunk)
 
 bool OpaqueMeshBuffer::requiresContiguousMemoryLayout()
 {
+    
     return false;
 }
 
@@ -40,8 +41,8 @@ std::string OpaqueMeshBuffer::getBufferTypeString()
 bool OpaqueMeshBuffer::updateChunkBuffer(Chunk *chunk)
 {
     if (!chunk->hasBufferSpace[this->chunkBufferType]){
-        ExitError(getBufferTypeString(),"Calling update on not inserted chunk");
-        return false;
+       
+        return true;
     }
     BufferInt meshSize = getChunkDataSize(chunk);
     if (meshSize + chunk->bufferZone[this->chunkBufferType].first > chunk->bufferZone[this->chunkBufferType].second ){
