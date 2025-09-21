@@ -105,7 +105,7 @@ public:
 
         {STORAGE_BUFFER,  {0,0}},
         {INDIRECT_BUFFER, {0,0}}
-
+    };
     
 
 public:
