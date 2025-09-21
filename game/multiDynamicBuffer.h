@@ -62,7 +62,7 @@ MDM_TEMPLATE
 inline bool MDM_CLASS::allocateBuffer(BufferInt firstBufferSize, BufferInt secondBufferSize)
 {
     BufferInt realfirstSize = (firstBufferSize * 1.5);
-    BufferInt realSecondSize = (secondBufferSize * 1.5);
+    BufferInt realSecondSize = (secondBufferSize * 3);
 
     realfirstSize -= realfirstSize % 2;
     realSecondSize -= realSecondSize % 2;

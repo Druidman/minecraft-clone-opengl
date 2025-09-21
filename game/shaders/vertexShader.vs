@@ -17,7 +17,7 @@ uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
 
-uniform vec3 CameraPos;
+uniform vec3 CameraChangePos;
 uniform int chunkIndexCount;
     
 vec3 rotateVertexPosition(vec3 pos, int face) {
@@ -184,7 +184,7 @@ void main()
         index = gl_DrawID;
     }
     vec3 chunkPos = vec3(chunkPositions[index]);
-    vec3 worldPosition = rotatedBasePos + chunkPos + blockOffset - vec3(8.0,0.0,8.0) + CameraPos;
+    vec3 worldPosition = rotatedBasePos + chunkPos + blockOffset - vec3(8.0,0.0,8.0) + CameraChangePos;
 
     gl_Position = projection * view * model * vec4(worldPosition, 1.0);
     Pos = vec3(model * vec4(worldPosition, 1.0));

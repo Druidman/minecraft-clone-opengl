@@ -87,7 +87,8 @@ class WebRenderer : public Renderer
             this->shader.setMatrixFloat("model",GL_FALSE,*(gameState->model));
 
             this->shader.setVec3Float("LightPos",world->sunPosition - world->player->camera->position);
-            this->shader.setVec3Float("CameraPos",lastCameraPosOnChunkPosChange - world->player->camera->position);
+            this->shader.setVec3Float("CameraChangePos",lastCameraPosOnChunkPosChange - world->player->camera->position);
+            this->shader.setVec3Float("CameraPos",world->player->camera->position);
 
             
 
