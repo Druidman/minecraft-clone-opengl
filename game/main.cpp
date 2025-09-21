@@ -216,7 +216,7 @@ int main()
     glm::vec3 worldMiddle = glm::vec3(3000,0,3000);
 
     std::cout << "initializing world\n";
-    World world = World(worldWidth, worldMiddle, renderer, 1, 1);
+    World world = World(worldWidth, worldMiddle, renderer);
 
     std::cout << "initializing player\n";
     Player player = Player(worldMiddle + glm::vec3(0.0,200.0,0.0),&world,&camera,window);

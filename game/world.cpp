@@ -121,8 +121,16 @@ void World::setSeeds(int blockSeed, int treeSeed)
     else {
         this->treeSeed = treeSeed;
     }
+    generateNoises();
+    
     WriteToLogFile("BLOCK_SEED",std::to_string(this->blockSeed));
     WriteToLogFile("TREE_SEED",std::to_string(this->treeSeed));
+}
+
+void World::generateNoises()
+{
+    this->blockNoise = genBlockNoiseFunc();
+    this->treeNoise = genTreeNoiseFunc();
 }
 
 void World::genRenderChunkRefs()

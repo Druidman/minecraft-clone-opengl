@@ -13,7 +13,7 @@ enum BlockType{
 enum Face {
     TOP_FACE, BOTTOM_FACE, FRONT_FACE, BACK_FACE, LEFT_FACE, RIGHT_FACE
 };
-const std::vector<bool> transparentBlocks = {0,0,0,1,0,1,1};
+const std::vector<bool> transparentBlocks = {0,0,0,1,0,0,0,0,1};
 
 const int SNOW_LEVEL = 100;
 const int STONE_LEVEL = 60;

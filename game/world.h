@@ -61,7 +61,9 @@ class World{ //world class
         void generateTreeSeed();
         void setSeeds(int blockSeed, int treeSeed);
 
-        
+        void generateNoises();
+
+
         void setChunkToFlat(Chunk* chunk);
         
     public:

@@ -35,7 +35,7 @@ void main()
         discard;
     }
     if (playerState == 1){
-        Color = vec4(result + vec3(0.0,0.069,0.247),objectColor[3]);
+        Color = vec4(result + vec3(0.0,0.069,0.247),objectColor[3]); // vec3(0.0,0.069,0.247)
     }
     else {
         Color = vec4(result,objectColor[3]);

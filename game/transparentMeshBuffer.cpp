@@ -6,6 +6,8 @@ bool TransparentMeshBuffer::markData(BufferInt markStart, BufferInt markEnd)
      // now lets mark elements as unactive
     // to mark data as delete we need to change it to have face == 6
     // 393216 - masks face bits to be 6
+    
+    std::cout << "markStart: " << markStart << " markEnd: " << markEnd << "\n";
     if (
         markEnd < markStart ||
         markStart > this->bufferTarget->bufferSize ||
@@ -17,7 +19,8 @@ bool TransparentMeshBuffer::markData(BufferInt markStart, BufferInt markEnd)
     }
     
     std::vector<CHUNK_MESH_DATATYPE> data((markEnd - markStart) / sizeof(CHUNK_MESH_DATATYPE),UNACTIVE_MESH_ELEMENT);
- 
+    
+    
     return this->bufferTarget->uploadData(data.data(),data.size() * sizeof(CHUNK_MESH_DATATYPE), markStart); 
 }
 

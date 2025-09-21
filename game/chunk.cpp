@@ -277,7 +277,7 @@ void Chunk::genChunk()
             }
             float yCoord = world->genBlockHeight(glm::vec2(x,z)) + 0.5;
             
-            glm::vec3 treePos = glm::vec3(x + (rand() % 6), yCoord ,z + (rand() % 6));
+            glm::vec3 treePos = glm::vec3(x + 3, yCoord ,z + 3); // rand() % 6
             auto blockRes = getBlock(treePos);
             if (!blockRes.has_value()){ // cause that means smth went really wrong 
                 continue ;
