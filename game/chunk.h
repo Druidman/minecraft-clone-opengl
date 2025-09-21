@@ -45,7 +45,14 @@ const int FLAT_WORLD_Y_OFFSET = 3;
 // NOW we are gonna do a lot we will have buffer of faces
 
 enum ChunkBufferType {
-    MESH_BUFFER, ID_BUFFER, STORAGE_BUFFER, INDIRECT_BUFFER
+    
+    
+    OPAQUE_MESH_BUFFER, TRANSPARENT_MESH_BUFFER, MESH_BUFFER,
+    OPAQUE_ID_BUFFER, TRANSPARENT_ID_BUFFER, ID_BUFFER,
+    
+    STORAGE_BUFFER, 
+    INDIRECT_BUFFER, 
+    
 };
 enum ChunkMeshType {
     OPAQUE, TRANSPARENT
@@ -79,18 +86,26 @@ public:
 
     bool buffersSetUp = false;
     std::map<ChunkBufferType, bool> hasBufferSpace = {
-        {MESH_BUFFER,     false},
-        {ID_BUFFER,       false},
+        {OPAQUE_MESH_BUFFER,     false},
+        {TRANSPARENT_MESH_BUFFER,     false},
+
+        {OPAQUE_ID_BUFFER,       false},
+        {TRANSPARENT_ID_BUFFER,       false},
+
         {STORAGE_BUFFER,  false},
         {INDIRECT_BUFFER, false}
     };
     // buffer zones
-    std::map<ChunkBufferType, std::vector<std::pair<BufferInt, BufferInt>>> bufferZone = {
-        {MESH_BUFFER,     { {0,0} , {0,0} } },
-        {ID_BUFFER,       { {0,0} , {0,0} } },
-        {STORAGE_BUFFER,  { {0,0} } },
-        {INDIRECT_BUFFER, { {0,0} } }
-    };
+    std::map<ChunkBufferType, std::pair<BufferInt, BufferInt>> bufferZone = {
+        {OPAQUE_MESH_BUFFER,     {0,0}},
+        {TRANSPARENT_MESH_BUFFER,     {0,0}},
+
+        {OPAQUE_ID_BUFFER,       {0,0}},
+        {TRANSPARENT_ID_BUFFER,       {0,0}},
+
+        {STORAGE_BUFFER,  {0,0}},
+        {INDIRECT_BUFFER, {0,0}}
+
     
 
 public:
@@ -111,6 +126,8 @@ public:
     void genChunkMesh();
     inline void meshBlock(int platform, int row, int col);
     unsigned long long getMeshSize();
+    unsigned long long getOpaqueMeshSize();
+    unsigned long long getTransparentMeshSize();
     std::vector<CHUNK_MESH_DATATYPE>* getOpaqueMesh(){return &opaqueMesh;};
     std::vector<CHUNK_MESH_DATATYPE>* getTransparentMesh(){return &transparentMesh;};
 

@@ -55,7 +55,9 @@ class DynamicBuffer{
         int bufferCalls = 0;
 
         Buffer* bufferTarget;
+    public:
         ChunkBufferType chunkBufferType;
+        
     protected:
         BufferInt getBufferPadding(BufferInt size);
         BufferInt getChunkPadding(BufferInt size);
@@ -84,8 +86,9 @@ class DynamicBuffer{
         
         
     public:
+
+        void clearBuffer();
         
-        int getBufferCallsNum();
         BufferInt getBufferSize(){ return bufferTarget->bufferSize; };
         bool allocateDynamicBuffer(BufferInt meshSize);
 

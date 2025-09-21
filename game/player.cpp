@@ -174,7 +174,7 @@ void Player::destroy_block()
     }
     BlockIntersection intersection = result.value();
 
-    Block *currentBlock = intersection.block;
+    
     Chunk *chunk = intersection.chunk;
     glm::vec3 hitPos = intersection.hitPos;
 

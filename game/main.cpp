@@ -37,7 +37,6 @@ typedef unsigned int uint;
 #include "world.h"
 
 #include "renderer.h"
-#include "desktopRenderer.h"
 #include "webRenderer.h"
 
 
@@ -90,11 +89,6 @@ void input_callback(GLFWwindow *window, int key, int scancode, int action, int m
     if (action == GLFW_RELEASE){
         process_key_release(window,key);
     }
-    
-}
-
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
-{
     
 }
 
@@ -161,6 +155,9 @@ void setWindowHints(){
 
 int main()
 {
+    ClearLogs();
+
+
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
     if (!glfwInit())
         return -1;
@@ -180,7 +177,7 @@ int main()
     glfwSetWindowSizeCallback(window,resize_callback);
     glfwSetKeyCallback(window,input_callback);
     glfwSetCursorPosCallback(window,cursor_pos_callback);
-    glfwSetMouseButtonCallback(window, mouse_button_callback);
+
 
     
     #ifdef WEB_GL_INSTANCE
@@ -240,9 +237,8 @@ int main()
     renderer->fillBuffers();
     
 
-    double last = glfwGetTime();
-    double avgFPS = 0;
-    std::vector<double> fpsS;
+    
+
     GameState cState = {
         window,
         &model,

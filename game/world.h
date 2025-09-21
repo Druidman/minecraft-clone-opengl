@@ -43,6 +43,8 @@ struct WorldTickData {
 
 class World{ //world class
     private:
+        int blockSeed = 0;
+        int treeSeed = 0;
         fnl_state blockNoise = genBlockNoiseFunc();
         fnl_state treeNoise = genTreeNoiseFunc();
     private:
@@ -52,6 +54,15 @@ class World{ //world class
         
 
         void initChunks();
+
+
+        void generateSeeds();
+        void generateBlockSeed();
+        void generateTreeSeed();
+        void setSeeds(int blockSeed, int treeSeed);
+
+        void generateNoises();
+
 
         void setChunkToFlat(Chunk* chunk);
         
@@ -85,7 +96,7 @@ class World{ //world class
 
         float sunAngle = 0.0;
     public:
-        World(int width, glm::vec3 worldMiddle, Renderer* renderer);
+        World(int width, glm::vec3 worldMiddle, Renderer* renderer, int blockSeed = 0, int treeSeed = 0);
         ~World();
         
         void init(Player *player);
@@ -110,6 +121,8 @@ class World{ //world class
 
         
         unsigned long long getWorldMeshSize();
+        unsigned long long getWorldOpaqueMeshSize();
+        unsigned long long getWorldTransparentMeshSize();
 
         int getChunkRow(Chunk* chunk);
         int getChunkCol(Chunk* chunk);

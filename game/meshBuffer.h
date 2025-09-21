@@ -12,27 +12,23 @@
 #include "betterGL.h"
 #include "chunk.h"
 #include "gpuBuffer.h"
+#include "subBuffer.h"
+#include "buffer.h"
 
-class MeshBuffer : public DynamicBuffer {
-    private:
-        CHUNK_MESH_DATATYPE UNACTIVE_MESH_ELEMENT = 393216; // masks face bits to be 6
-    protected:
-        virtual bool markData(BufferInt markStart, BufferInt markEnd) override;
-        virtual BufferInt getChunkDataSize(Chunk* chunk) override;
-        virtual bool requiresContiguousMemoryLayout() override;
+#include "opaqueMeshBuffer.h"
+#include "transparentMeshBuffer.h"
+
+#include "multiDynamicBuffer.h"
+
+class MeshBuffer : public MultiDynamicBuffer<GpuBuffer, OpaqueMeshBuffer, TransparentMeshBuffer>{
+    
         
-        virtual std::string getBufferTypeString() override;
     public:
         GpuBuffer buffer = GpuBuffer(GL_ARRAY_BUFFER);
     public:
-        MeshBuffer(bool deleteData = false) : DynamicBuffer(&buffer, MESH_BUFFER, deleteData){
-            BUFFER_PADDING = 20; // expressed in %
-            CHUNK_PADDING = 10;
-            BUFFER_EXPANSION_RATE = 20;
+        MeshBuffer() : MultiDynamicBuffer(&buffer){
+
         };
-    
-        virtual bool updateChunkBuffer(Chunk* chunk) override;
-        virtual bool insertChunksToBuffer(std::vector<Chunk*> *chunks) override;
         
 };
 #endif

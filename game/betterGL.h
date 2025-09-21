@@ -6,6 +6,7 @@
 
 
 #include <iostream>
+#include <fstream>
 #include <string>
 
 #define GLCall(x) \
@@ -22,6 +23,19 @@
 inline void ExitError(std::string errorType, std::string msg){
     std::cout << "[ " << errorType << " ]\n" << "Error message: " << msg << " " << __FILE__ << " " << __LINE__ <<"\n";
     std::exit(EXIT_FAILURE);
+}
+inline void WriteToLogFile(std::string messageType, std::string msg){
+    std::ofstream file;
+    file.open("logs", std::ios::app);
+    file << "\n\n[ " << messageType <<" ]:{ " << __TIME__ << " }\n" << "Message: \n" << msg << ".\n";
+    file.close(); 
+}
+
+inline void ClearLogs(){
+    std::ofstream file;
+    file.open("logs");
+    file << "";
+    file.close();
 }
 
 #endif

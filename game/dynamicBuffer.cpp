@@ -108,20 +108,21 @@ bool DynamicBuffer::allocateDynamicBuffer(BufferInt size)
     if (!this->bufferTarget->allocateBuffer(size + getBufferPadding(size))){
         return false;
     };
-    this->bufferCalls++;
-    if (this->deleteData){
     
+    clearBuffer();
+    return true;
+}
+
+void DynamicBuffer::clearBuffer(){
+    if (this->deleteData){
         if (!markData(0,this->bufferTarget->bufferSize)){
             ExitError("DYNAMIC_BUFFER" + getBufferTypeString(),"Error marking data");
         };
-        
     }
-    
-    
 
+    assert(this->bufferTarget != nullptr);
     this->bufferFreeZones.clear();
     this->bufferFreeZones.push_back(std::pair<BufferInt, BufferInt>(0, this->bufferTarget->bufferSize));
-    return true;
 }
 
 bool DynamicBuffer::insertChunkToBuffer(Chunk *chunk)
@@ -144,9 +145,9 @@ bool DynamicBuffer::insertChunkToBuffer(Chunk *chunk)
 
         }
         else if (assignRes == -1){
-            std::cout << "-1\n"; 
-            ExitError("DYNAMIC_BUFFER" + getBufferTypeString(),"Attempting to insert invalid chunk");
-            return false;
+            std::cout << "-1\n";
+            // ExitError("DYNAMIC_BUFFER" + getBufferTypeString(),"Attempting to insert invalid chunk");
+            return true;
         }
 
         return insertChunkToBuffer(chunk);
@@ -345,11 +346,4 @@ bool DynamicBuffer::moveBufferPart(BufferInt from, BufferInt to)
     ExitError("DYNAMIC_BUFFER"  + getBufferTypeString(),"NO SUPPORT OVER MOVING");
     return false;
 
-}
-
-int DynamicBuffer::getBufferCallsNum()
-{   
-    int calls = this->bufferCalls;
-    this->bufferCalls = 0;
-    return calls;
 }

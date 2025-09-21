@@ -7,37 +7,28 @@
 #include "chunk.h"
 #include "buffer.h"
 
+#include "opaqueIdBuffer.h"
+#include "transparentIdBuffer.h"
+#include "multiDynamicBuffer.h"
 
-class IdBuffer : public DynamicBuffer{
+class IdBuffer : public MultiDynamicBuffer<CpuBuffer<int>, OpaqueIdBuffer, TransparentIdBuffer>{
     protected:
-        
-        virtual bool markData(BufferInt markStart, BufferInt markEnd) override;
-        virtual BufferInt getChunkDataSize(Chunk* chunk) override{return (chunk->getMeshSize() / sizeof(CHUNK_MESH_DATATYPE)) * sizeof(int);};
-        virtual bool requiresContiguousMemoryLayout() override {return false;};
-        
-        virtual std::string getBufferTypeString() override {return "ID_BUFFER";};
-
-    private:
         bool gpuBufferRequiresRefill = false;
-        int UNACTIVE_MESH_ELEMENT = -1;
+    protected:
+        virtual void postChunkUpdateFunction() override;
+
+        
     public:
         GpuBuffer gpuBuffer = GpuBuffer(GL_ARRAY_BUFFER);
         CpuBuffer<int> cpuBuffer = CpuBuffer<int>();
         
-
-
     public:
-        IdBuffer() : DynamicBuffer(&cpuBuffer, ID_BUFFER, true){
-            BUFFER_PADDING = 20; // expressed in %
-            CHUNK_PADDING = 10;
-            BUFFER_EXPANSION_RATE = 20;
-        };
-        
-
-        virtual bool updateChunkBuffer(Chunk* chunk) override;
-        virtual bool insertChunksToBuffer(std::vector<Chunk*> *chunks) override;
+        IdBuffer() : MultiDynamicBuffer(&cpuBuffer){};
 
         bool fillGpuBuffer();
 };
 
 #endif
+
+
+

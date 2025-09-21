@@ -15,6 +15,8 @@
 #include "storageBuffer.h"
 #include "gpuBuffer.h"
 
+#include "meshBuffer.h"
+
 
 
 class WebRenderer : public Renderer
@@ -29,7 +31,7 @@ class WebRenderer : public Renderer
         GpuBuffer baseVbo = GpuBuffer(GL_ARRAY_BUFFER);
 
         IdBuffer chunkIdBuffer = IdBuffer();
-        MeshBuffer meshBuffer = MeshBuffer(true);
+        MeshBuffer meshBuffer = MeshBuffer();
         StorageBuffer chunkStorageBuffer = StorageBuffer(); 
 
         
@@ -73,9 +75,6 @@ class WebRenderer : public Renderer
     public:
         virtual void updateLogs() override{
             std::cout << "\n\nDESKTOP_RENDERER_BUFFER_LOGS\n\n";
-
-            std::cout << "BUFFER_CALLS\n";
-            std::cout << "MeshBuffer: " << this->meshBuffer.getBufferCallsNum() << "\n";
             
             
         };
@@ -88,7 +87,8 @@ class WebRenderer : public Renderer
             this->shader.setMatrixFloat("model",GL_FALSE,*(gameState->model));
 
             this->shader.setVec3Float("LightPos",world->sunPosition - world->player->camera->position);
-            this->shader.setVec3Float("CameraPos",lastCameraPosOnChunkPosChange - world->player->camera->position);
+            this->shader.setVec3Float("CameraChangePos",lastCameraPosOnChunkPosChange - world->player->camera->position);
+            this->shader.setVec3Float("CameraPos",world->player->camera->position);
 
             
 
@@ -119,7 +119,7 @@ class WebRenderer : public Renderer
                     GL_TRIANGLES,
                     0,
                     BLOCK_FACE_VERTICES_COUNT,
-                    this->chunkIdBuffer.getBufferSize() / sizeof(CHUNK_MESH_DATATYPE)
+                    this->meshBuffer.getBufferSize() / sizeof(CHUNK_MESH_DATATYPE)
                 ) 
             );
             
@@ -131,12 +131,20 @@ class WebRenderer : public Renderer
 
       
             
-            this->meshBuffer.allocateDynamicBuffer(
-                world->getWorldMeshSize()
+            this->meshBuffer.allocateBuffer(
+                world->getWorldOpaqueMeshSize(), world->getWorldTransparentMeshSize()
             );
-            this->chunkIdBuffer.allocateDynamicBuffer(
-                (world->getWorldMeshSize() / sizeof(CHUNK_MESH_DATATYPE)) * sizeof(int)
+            this->chunkIdBuffer.allocateBuffer(
+                world->getWorldOpaqueMeshSize(), world->getWorldTransparentMeshSize()
+                
             );
+
+
+            WriteToLogFile("BUFFER_SIZE_INFO_IN_FILLING",
+                "OpaqueSize: " + std::to_string(world->getWorldOpaqueMeshSize()) + "\n"
+                "TransparentSize: " + std::to_string(world->getWorldTransparentMeshSize())
+            );
+
 
             this->chunkStorageBuffer.allocateDynamicBuffer(
                 UNIFORM_BUFFER_LENGTH * sizeof(StorageBufferType)
@@ -158,8 +166,8 @@ class WebRenderer : public Renderer
             BufferInt meshSize = world->getWorldMeshSize();
             switch(bufferToFill){
                 case MESH_BUFFER:
-                    this->meshBuffer.allocateDynamicBuffer(
-                        meshSize
+                    this->meshBuffer.buffer.allocateBuffer(
+                        meshSize * 1.2
                     );
                     for (std::vector< Chunk > &chunkRow : this->world->chunks){
                         for (Chunk &chunk : chunkRow){
@@ -185,6 +193,16 @@ class WebRenderer : public Renderer
                     if (!this->chunkIdBuffer.fillGpuBuffer()){
                         ExitError("WEB_RENDERER","Filling id GPU buffer went wrong");
                     }
+                    break;
+
+                case OPAQUE_ID_BUFFER:
+                case TRANSPARENT_ID_BUFFER:
+                case OPAQUE_MESH_BUFFER:
+                case TRANSPARENT_MESH_BUFFER:
+                    ExitError("WEB_RENDERER","Can't fill single part of multi buffer");
+                    break;
+                default:
+                    ExitError("WEB_RENDERER","Unknown buffer type to fill");
                     
                     
                     
@@ -275,6 +293,16 @@ class WebRenderer : public Renderer
                         ExitError("WEB_RENDERER","error inserting chunk to chunkIdBuffer");
                         return false;
                     };
+                    break;
+                case OPAQUE_ID_BUFFER:
+                case TRANSPARENT_ID_BUFFER:
+                case OPAQUE_MESH_BUFFER:
+                case TRANSPARENT_MESH_BUFFER:
+                    ExitError("WEB_RENDERER","Can't add single part of multi buffer");
+                    break;
+                default:
+                    ExitError("WEB_RENDERER","Unknown buffer type to fill");
+                    return false;
                 
             }
             chunk->buffersSetUp = true;
@@ -301,6 +329,15 @@ class WebRenderer : public Renderer
                         return false;
                     };
                     break;
+                case OPAQUE_ID_BUFFER:
+                case TRANSPARENT_ID_BUFFER:
+                case OPAQUE_MESH_BUFFER:
+                case TRANSPARENT_MESH_BUFFER:
+                        ExitError("WEB_RENDERER","Can't update single part of multi buffer");
+                        break;
+                    default:
+                        ExitError("WEB_RENDERER","Unknown buffer type to update");
+                        return false;
                 
             }
             chunk->buffersSetUp = true;
@@ -328,6 +365,15 @@ class WebRenderer : public Renderer
                         return false;
                     };
                     break;
+                case OPAQUE_ID_BUFFER:
+                case TRANSPARENT_ID_BUFFER:
+                case OPAQUE_MESH_BUFFER:
+                case TRANSPARENT_MESH_BUFFER:
+                    ExitError("WEB_RENDERER","Can't delete single part of multi buffer");
+                    break;
+                default:
+                    ExitError("WEB_RENDERER","Unknown buffer type to delete");
+                    return false;
                 
             }
             chunk->buffersSetUp = false;

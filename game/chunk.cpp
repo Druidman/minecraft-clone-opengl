@@ -277,7 +277,7 @@ void Chunk::genChunk()
             }
             float yCoord = world->genBlockHeight(glm::vec2(x,z)) + 0.5;
             
-            glm::vec3 treePos = glm::vec3(x + (rand() % 6), yCoord ,z + (rand() % 6));
+            glm::vec3 treePos = glm::vec3(x + 3, yCoord ,z + 3); // rand() % 6
             auto blockRes = getBlock(treePos);
             if (!blockRes.has_value()){ // cause that means smth went really wrong 
                 continue ;
@@ -325,6 +325,17 @@ unsigned long long Chunk::getMeshSize()
     return size;
 }
 
+unsigned long long Chunk::getOpaqueMeshSize()
+{
+    unsigned long long size = (unsigned long long)sizeof(CHUNK_MESH_DATATYPE) * (opaqueMesh.size());
+    return size;
+}
+
+unsigned long long Chunk::getTransparentMeshSize()
+{
+    unsigned long long size = (unsigned long long)sizeof(CHUNK_MESH_DATATYPE) * (transparentMesh.size());
+    return size;
+}
 
 glm::vec3 Chunk::getPositionInWorld(int platform, int row, int column){
     float y = platform + 0.5 + this->position.y;
@@ -489,8 +500,7 @@ void Chunk::fillUnderBlock(Block &block)
 {
     glm::vec3 underBlockPos = block.position;
     underBlockPos.y -= 1;
-    int col = floor(underBlockPos.x) - (position.x - (CHUNK_WIDTH / 2));
-    int row = floor(underBlockPos.z) - (position.z - (CHUNK_WIDTH / 2));
+    
     while (underBlockPos.y >= 0.5){
         int platform = floor(underBlockPos.y) - position.y;
         
