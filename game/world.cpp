@@ -28,7 +28,8 @@ fnl_state World::genBlockNoiseFunc()
     noise.fractal_type = FNL_FRACTAL_FBM;
     noise.frequency = 0.005;
     noise.octaves = 4;
-    noise.seed = std::rand() % 10000;
+    noise.seed = blockSeed;
+    
 
     noise.noise_type = FNL_NOISE_PERLIN;
     return noise;
@@ -40,7 +41,9 @@ fnl_state World::genTreeNoiseFunc()
     noise.fractal_type = FNL_FRACTAL_NONE;
     noise.frequency = 0.005;
     noise.octaves = 4;
-    noise.seed = std::rand() % 10000;
+    noise.seed = treeSeed;
+
+    
 
     noise.noise_type = FNL_NOISE_VALUE;
     return noise;
@@ -83,6 +86,44 @@ void World::initChunks()
     
 }
 
+void World::generateSeeds()
+{
+    
+    generateBlockSeed();
+    generateTreeSeed();
+    
+}
+
+void World::generateBlockSeed()
+{
+    this->blockSeed = std::rand() % 10000;
+    
+}
+
+void World::generateTreeSeed()
+{
+    this->treeSeed = std::rand() % 10000;
+    
+}
+
+void World::setSeeds(int blockSeed, int treeSeed)
+{
+    if (blockSeed == 0){
+        generateBlockSeed();
+    }
+    else {
+        this->blockSeed = blockSeed;
+    }
+
+    if (treeSeed == 0){
+        generateTreeSeed();
+    }
+    else {
+        this->treeSeed = treeSeed;
+    }
+    WriteToLogFile("BLOCK_SEED",std::to_string(this->blockSeed));
+    WriteToLogFile("TREE_SEED",std::to_string(this->treeSeed));
+}
 
 void World::genRenderChunkRefs()
 {
@@ -568,7 +609,7 @@ void World::updateWorld(double delta)
     
 }
 
-World::World(int width, glm::vec3 worldMiddle, Renderer *renderer)
+World::World(int width, glm::vec3 worldMiddle, Renderer *renderer, int blockSeed, int treeSeed)
 { 
     this->WIDTH = width;
     this->CHUNK_ROWS = this->WIDTH / CHUNK_WIDTH;
@@ -577,7 +618,11 @@ World::World(int width, glm::vec3 worldMiddle, Renderer *renderer)
     this->renderer = renderer;
     this->worldMiddle = worldMiddle;
 
+    setSeeds(blockSeed,treeSeed);
+
 }
+
+
 
 World::~World()
 {

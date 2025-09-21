@@ -138,6 +138,13 @@ class WebRenderer : public Renderer
                 
             );
 
+
+            WriteToLogFile("BUFFER_SIZE_INFO_IN_FILLING",
+                "OpaqueSize: " + std::to_string(world->getWorldOpaqueMeshSize()) + "\n"
+                "TransparentSize: " + std::to_string(world->getWorldTransparentMeshSize())
+            );
+
+
             this->chunkStorageBuffer.allocateDynamicBuffer(
                 UNIFORM_BUFFER_LENGTH * sizeof(StorageBufferType)
             );
