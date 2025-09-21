@@ -92,11 +92,6 @@ void input_callback(GLFWwindow *window, int key, int scancode, int action, int m
     
 }
 
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
-{
-    
-}
-
 void cursor_pos_callback(GLFWwindow *window, double xpos, double ypos){
     camera.process_cursor_position_change(xpos,ypos);
 }
@@ -179,7 +174,7 @@ int main()
     glfwSetWindowSizeCallback(window,resize_callback);
     glfwSetKeyCallback(window,input_callback);
     glfwSetCursorPosCallback(window,cursor_pos_callback);
-    glfwSetMouseButtonCallback(window, mouse_button_callback);
+
 
     
     #ifdef WEB_GL_INSTANCE
@@ -239,9 +234,8 @@ int main()
     renderer->fillBuffers();
     
 
-    double last = glfwGetTime();
-    double avgFPS = 0;
-    std::vector<double> fpsS;
+    
+
     GameState cState = {
         window,
         &model,

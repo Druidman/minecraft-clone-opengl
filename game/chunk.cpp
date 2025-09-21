@@ -500,8 +500,7 @@ void Chunk::fillUnderBlock(Block &block)
 {
     glm::vec3 underBlockPos = block.position;
     underBlockPos.y -= 1;
-    int col = floor(underBlockPos.x) - (position.x - (CHUNK_WIDTH / 2));
-    int row = floor(underBlockPos.z) - (position.z - (CHUNK_WIDTH / 2));
+    
     while (underBlockPos.y >= 0.5){
         int platform = floor(underBlockPos.y) - position.y;
         

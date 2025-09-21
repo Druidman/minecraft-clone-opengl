@@ -185,6 +185,16 @@ class WebRenderer : public Renderer
                     if (!this->chunkIdBuffer.fillGpuBuffer()){
                         ExitError("WEB_RENDERER","Filling id GPU buffer went wrong");
                     }
+                    break;
+
+                case OPAQUE_ID_BUFFER:
+                case TRANSPARENT_ID_BUFFER:
+                case OPAQUE_MESH_BUFFER:
+                case TRANSPARENT_MESH_BUFFER:
+                    ExitError("WEB_RENDERER","Can't fill single part of multi buffer");
+                    break;
+                default:
+                    ExitError("WEB_RENDERER","Unknown buffer type to fill");
                     
                     
                     
@@ -275,6 +285,16 @@ class WebRenderer : public Renderer
                         ExitError("WEB_RENDERER","error inserting chunk to chunkIdBuffer");
                         return false;
                     };
+                    break;
+                case OPAQUE_ID_BUFFER:
+                case TRANSPARENT_ID_BUFFER:
+                case OPAQUE_MESH_BUFFER:
+                case TRANSPARENT_MESH_BUFFER:
+                    ExitError("WEB_RENDERER","Can't add single part of multi buffer");
+                    break;
+                default:
+                    ExitError("WEB_RENDERER","Unknown buffer type to fill");
+                    return false;
                 
             }
             chunk->buffersSetUp = true;
@@ -301,6 +321,15 @@ class WebRenderer : public Renderer
                         return false;
                     };
                     break;
+                case OPAQUE_ID_BUFFER:
+                case TRANSPARENT_ID_BUFFER:
+                case OPAQUE_MESH_BUFFER:
+                case TRANSPARENT_MESH_BUFFER:
+                        ExitError("WEB_RENDERER","Can't update single part of multi buffer");
+                        break;
+                    default:
+                        ExitError("WEB_RENDERER","Unknown buffer type to update");
+                        return false;
                 
             }
             chunk->buffersSetUp = true;
@@ -328,6 +357,15 @@ class WebRenderer : public Renderer
                         return false;
                     };
                     break;
+                case OPAQUE_ID_BUFFER:
+                case TRANSPARENT_ID_BUFFER:
+                case OPAQUE_MESH_BUFFER:
+                case TRANSPARENT_MESH_BUFFER:
+                    ExitError("WEB_RENDERER","Can't delete single part of multi buffer");
+                    break;
+                default:
+                    ExitError("WEB_RENDERER","Unknown buffer type to delete");
+                    return false;
                 
             }
             chunk->buffersSetUp = false;

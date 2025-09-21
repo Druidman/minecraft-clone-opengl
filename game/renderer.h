@@ -54,6 +54,8 @@ protected:
 
     }
     virtual void initBuffers() = 0;
+public:
+    virtual ~Renderer() = default;
 
 public:
     void init(World* world){

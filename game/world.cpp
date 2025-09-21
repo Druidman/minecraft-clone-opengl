@@ -180,7 +180,7 @@ void World::updateChunks(WorldTickData *worldTickData){
                     merge = true; // we are removing last chunk row so we need to merge free zones
                 }
     
-                removeChunk(&chunkRow[chunkRow.size() - 1], true);
+                removeChunk(&chunkRow[chunkRow.size() - 1], merge);
                 chunkRow.pop_back();
         
                 
@@ -238,7 +238,7 @@ void World::updateChunks(WorldTickData *worldTickData){
                     merge = true; // we are removing last chunk row so we need to merge free zones
                 }
     
-                removeChunk(&chunkRow[0], true);
+                removeChunk(&chunkRow[0], merge);
                 
     
                 chunkRow.erase(chunkRow.begin());
@@ -298,7 +298,7 @@ void World::updateChunks(WorldTickData *worldTickData){
                     merge = true; // we are removing last chunk row so we need to merge free zones
                 }
 
-                removeChunk(&chunk, true);
+                removeChunk(&chunk, merge);
 
                 
             }
@@ -350,7 +350,7 @@ void World::updateChunks(WorldTickData *worldTickData){
                     merge = true; // we are removing last chunk row so we need to merge free zones
                 }
                 
-                removeChunk(&chunk, true);
+                removeChunk(&chunk, merge);
                 
             
             }
