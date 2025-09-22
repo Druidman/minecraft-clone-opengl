@@ -232,16 +232,45 @@ void Chunk::genChunk()
             }
 
             BlockType blockType = GRASS_DIRT;
+            bool blockTypeAssigned = false;
             if (this->terrainGenData.blocksType == NONE_BLOCK){
-                if (yCoord < SAND_LEVEL){
-                    blockType = SAND;
-                }
-                else if (yCoord > SNOW_LEVEL){
+                if (yCoord > SNOW_LEVEL && !blockTypeAssigned){
                     blockType = SNOW;
+                    blockTypeAssigned = true;
                 }
-                else if (yCoord > STONE_LEVEL){
+                if (yCoord > SNOW_LEVEL - 2 && !blockTypeAssigned){
+                    if (rand() % 2 == 1){
+                        blockType = SNOW;
+                        blockTypeAssigned = true;
+                    }
+                }
+                if (yCoord > SNOW_LEVEL - 4 && !blockTypeAssigned){
+                    if (rand() % 3 == 1){
+                        blockType = SNOW;
+                        blockTypeAssigned = true;
+                    }
+                }
+                if (yCoord > SNOW_LEVEL - 10 && !blockTypeAssigned){
+                    if (rand() % 4 == 1){
+                        blockType = SNOW;
+                        blockTypeAssigned = true;
+                    }
+                }
+                if (yCoord > STONE_LEVEL && !blockTypeAssigned){
                     blockType = STONE;
+                    blockTypeAssigned = true;
                 }
+                if (yCoord > STONE_LEVEL - 10 && !blockTypeAssigned){
+                    if (rand() % 6 == 1){
+                        blockType = STONE;
+                        blockTypeAssigned = true;
+                    }
+                }
+                if (yCoord < SAND_LEVEL && !blockTypeAssigned){
+                    blockType = SAND;
+                    blockTypeAssigned = true;
+                }
+                
             }
             else {
                 blockType = this->terrainGenData.blocksType;
