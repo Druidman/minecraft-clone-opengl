@@ -30,7 +30,7 @@ class StorageBuffer : public DynamicBuffer {
         bool gpuBufferRequiresRefill = false;
         
         CpuBuffer<StorageBufferType> cpuBuffer = CpuBuffer<StorageBufferType>();
-        StorageBufferType UNACTIVE_MESH_ELEMENT = glm::vec4(0.0,0.0,0.0,-1.0);
+        StorageBufferType UNACTIVE_MESH_ELEMENT = StorageBufferType(-10000.0,-10000.0,-10000.0, -10000.0);
         World *world;
     public:
         GpuBuffer gpuBuffer = GpuBuffer(GL_UNIFORM_BUFFER);
@@ -41,6 +41,7 @@ class StorageBuffer : public DynamicBuffer {
             CHUNK_PADDING = 0;
             BUFFER_EXPANSION_RATE = 0;
             this->allowsExpansion = false;
+            cpuBuffer.PLACE_HOLDER_ELEMENT = StorageBufferType(-10000.0,-10000.0,-10000.0, -10000.0);
         };
         void init(World *world);
         void setBindingPoint(int port);
