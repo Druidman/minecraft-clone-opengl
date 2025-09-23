@@ -447,7 +447,7 @@ void World::updateThreads(WorldTickData *worldTickData){
         
         
         for (int chunkInd =0; chunkInd < CHUNK_COLUMNS; chunkInd++){
-            if (glfwGetTime() - worldTickData->updateStartTime > MAX_FRAME_TIME_MS){
+            if ((glfwGetTime() * 1000) - worldTickData->updateStartTime > MAX_FRAME_TIME_MS){
                 break;
             }
             if (!dataIterator->chunksDone[chunkInd] || dataIterator->chunksInserted[chunkInd]){
@@ -507,6 +507,7 @@ void World::updateThreads(WorldTickData *worldTickData){
             threadIterator->join();
             threadIterator = threads.erase(threadIterator);
             dataIterator = threadsWorkingData.erase(dataIterator);
+            worldTickData->requiresIdBufferUpdate = true;
             
         }
         else {
@@ -550,7 +551,9 @@ void World::updateChunkRender(WorldTickData *worldTickData){
     double storageEnd = glfwGetTime();
     std::cout << "End\n";
 
-    
+    if (!worldTickData->requiresIdBufferUpdate){
+        return ;
+    }
     std::cout << "Indirect Buffer update...\n";
     double indirectStart = glfwGetTime();
     this->renderer->fillBuffer(INDIRECT_BUFFER);

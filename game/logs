@@ -1,16 +1,16 @@
 
 
-[ BLOCK_SEED ]:{ 22:03:32 }
+[ BLOCK_SEED ]:{ 21:37:06 }
 Message: 
-1211.
+505.
 
 
-[ TREE_SEED ]:{ 22:03:32 }
+[ TREE_SEED ]:{ 21:37:06 }
 Message: 
-5261.
+8219.
 
 
-[ BUFFER_SIZE_INFO_IN_FILLING ]:{ 22:03:12 }
+[ BUFFER_SIZE_INFO_IN_FILLING ]:{ 21:36:47 }
 Message: 
-OpaqueSize: 14502760
-TransparentSize: 158624.
+OpaqueSize: 12798392
+TransparentSize: 248916.

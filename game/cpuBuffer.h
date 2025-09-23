@@ -9,6 +9,8 @@ template <typename ELEMENT_TYPE>
 class CpuBuffer : public Buffer{
     protected:
         std::vector<ELEMENT_TYPE> bufferContent;
+    public:
+        ELEMENT_TYPE PLACE_HOLDER_ELEMENT;
 
     public:
         virtual bool uploadData(const void* data, BufferInt size, BufferInt start) override;
@@ -56,7 +58,7 @@ inline bool CpuBuffer<ELEMENT_TYPE>::allocateBuffer(BufferInt size)
         return false;
     }
     this->bufferContent.clear();
-    this->bufferContent.resize(size / sizeof(ELEMENT_TYPE));
+    this->bufferContent.resize(size / sizeof(ELEMENT_TYPE), PLACE_HOLDER_ELEMENT);
     this->bufferSize = size;
     return true;
 }
@@ -67,7 +69,7 @@ inline bool CpuBuffer<ELEMENT_TYPE>::expandBuffer(BufferInt by)
     if (by == 0){
         return false;
     }
-    this->bufferContent.resize((this->bufferSize + by) / sizeof(ELEMENT_TYPE));
+    this->bufferContent.resize((this->bufferSize + by) / sizeof(ELEMENT_TYPE), PLACE_HOLDER_ELEMENT);
     this->bufferSize += by;
     return true;
 }

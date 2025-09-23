@@ -39,6 +39,8 @@ struct WorldTickData {
     bool requiresRefsUpdate = false;
     double updateStartTime = 0;
     double lastFrameTime = 0;
+
+    bool requiresIdBufferUpdate = false;
 };
 
 class World{ //world class

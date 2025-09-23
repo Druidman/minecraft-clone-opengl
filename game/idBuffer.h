@@ -23,7 +23,9 @@ class IdBuffer : public MultiDynamicBuffer<CpuBuffer<int>, OpaqueIdBuffer, Trans
         CpuBuffer<int> cpuBuffer = CpuBuffer<int>();
         
     public:
-        IdBuffer() : MultiDynamicBuffer(&cpuBuffer){};
+        IdBuffer() : MultiDynamicBuffer(&cpuBuffer){
+            cpuBuffer.PLACE_HOLDER_ELEMENT = -1;
+        };
 
         bool fillGpuBuffer();
 };
