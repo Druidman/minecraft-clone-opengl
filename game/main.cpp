@@ -42,19 +42,17 @@ typedef unsigned int uint;
 
 
 #ifdef __EMSCRIPTEN__
+
     void shutdown_game() {
    
         emscripten_cancel_main_loop();
         glfwTerminate();
     }
 
-    EMSCRIPTEN_BINDINGS(my_module) {
-        emscripten::function("shutdown_game", &shutdown_game);
-    }
 #endif
 
-int WINDOW_WIDTH = 800;
-int WINDOW_HEIGHT = 600;
+int WINDOW_WIDTH = 1920;
+int WINDOW_HEIGHT = 1080;
 int RENDER_DISTANCE = 16;
 
 
@@ -70,12 +68,23 @@ double lastDeltaTime = 0;
 std::vector<double> renderFpsS;
 bool exitApp = false;
 
-void resize_callback(GLFWwindow *window, int width, int height){
-    glViewport(0,0,width,height);
-    projection = glm::perspective(glm::radians(45.0),(double)width/height,0.45,1000.0);
-    WINDOW_WIDTH = width;
-    WINDOW_HEIGHT = height;
+void framebuffer_size_callback(GLFWwindow *window, int fbWidth, int fbHeight){
+    glViewport(0,0,fbWidth,fbHeight);
+    projection = glm::perspective(glm::radians(45.0),(double)fbWidth/fbHeight,0.45,1000.0);
+    WINDOW_WIDTH = fbWidth;
+    WINDOW_HEIGHT = fbHeight;
 }
+#ifdef __EMSCRIPTEN__
+    void resize_game(int fbWidth, int fbHeight){
+        glViewport(0,0,fbWidth,fbHeight);
+        projection = glm::perspective(glm::radians(45.0),(double)fbWidth/fbHeight,0.45,1000.0);
+        WINDOW_WIDTH = fbWidth;
+        WINDOW_HEIGHT = fbHeight;
+    }
+    
+#endif
+
+
 
 void process_key_release(GLFWwindow *window, int key){
     if (key ==GLFW_KEY_ESCAPE){
@@ -153,6 +162,17 @@ void setWindowHints(){
     #endif
 }
 
+#ifdef __EMSCRIPTEN__
+    
+    EMSCRIPTEN_BINDINGS(my_module) {
+        emscripten::function("shutdown_game", &shutdown_game);
+        emscripten::function("resize_game", &resize_game);
+    };
+   
+   
+
+    
+#endif
 int main()
 {
     ClearLogs();
@@ -174,7 +194,7 @@ int main()
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
-    glfwSetWindowSizeCallback(window,resize_callback);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetKeyCallback(window,input_callback);
     glfwSetCursorPosCallback(window,cursor_pos_callback);
 
