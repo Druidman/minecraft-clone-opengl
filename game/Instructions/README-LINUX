@@ -5,6 +5,7 @@ To run app
     - in game directory run: chmod +x main
 - in game directory run: ./main
 - wait for world to generate
+- play
 
 How to play:
 - classic wasd movement
@@ -15,6 +16,7 @@ How to play:
 - enter: trap mouse in window
 - f: toggle fly mode
 - esc: exit game
+- shift: sprint
 
 ! THANKS FOR DOWNLOAD !
 enjoy

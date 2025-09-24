@@ -173,6 +173,8 @@ void setWindowHints(){
 
     
 #endif
+
+
 int main()
 {
     ClearLogs();
