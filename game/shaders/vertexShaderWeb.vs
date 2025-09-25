@@ -171,8 +171,7 @@ void main()
 
     int face = (intBits >> 16) & 0x7;
     if (face == 6 || chunkIndex == -1){ // this face does not exist
-        TexCoords = vec2(0.0);
-        Normal = vec3(0.0, 1.0, 0.0); 
+        
         Pos = vec3(-10000.0);
         gl_Position = vec4(-10000.0); // degenerate position
         return ;
