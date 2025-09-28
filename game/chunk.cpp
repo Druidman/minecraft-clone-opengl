@@ -287,13 +287,13 @@ void Chunk::genChunk()
     }
 
     
+    
+    
+    fillWater();
     if (this->terrainGenData.flat){
         this->chunkReady = true;
         return ;
     }
-    
-    fillWater();
-
     
 
     for (int i =3; i< CHUNK_WIDTH - 3; i+= 6){
