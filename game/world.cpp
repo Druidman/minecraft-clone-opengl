@@ -51,7 +51,7 @@ fnl_state World::genTreeNoiseFunc()
 void World::setChunkToFlat(Chunk *chunk)
 {
     chunk->terrainGenData.flat = true;
-    chunk->terrainGenData.blocksType = WATER;
+    chunk->terrainGenData.blocksType = GRASS_DIRT;
 }
 bool World::loadWorldFromFile(std::string fileName)
 {

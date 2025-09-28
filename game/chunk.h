@@ -24,7 +24,7 @@ class World;
 typedef FaceData CHUNK_MESH_DATATYPE;
 const int CHUNK_WIDTH = 16;
 const int CHUNK_HEIGHT = 256;
-const float FLAT_WORLD_Y_OFFSET = 0.5;
+const float FLAT_WORLD_Y_OFFSET = 50.5;
 
 // block system works that first platform is bottom platform of blocks.
 // We will be indexing it in a way that platform index corresponds to block y coord
