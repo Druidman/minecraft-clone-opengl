@@ -69,9 +69,12 @@ class World{ //world class
         void setChunkToFlat(Chunk* chunk);
 
         bool loadWorldFromFile(std::string fileName);
-        bool saveCustomWorld(std::string fileName);
+
+        
+        
         
     public:
+
         WorldTickData lastFrameWorldTickData;
         bool flatWorld = false;
         bool customWorld = false;
@@ -108,6 +111,7 @@ class World{ //world class
         
         void init(Player *player);
     public:
+        bool saveBlockToCustomWorld(std::string fileName,std::pair<BlockAction, Block> action);
         int genBlockHeight(glm::vec2 positionXZ);
         float genTreeChance(glm::vec2 positionXZ);
 

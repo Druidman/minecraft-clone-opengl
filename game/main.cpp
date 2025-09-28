@@ -241,7 +241,7 @@ int main()
     World world = World(worldWidth, worldMiddle, renderer);
 
     std::cout << "initializing player\n";
-    Player player = Player(worldMiddle + glm::vec3(0.0,200.0,0.0),&world,&camera,window);
+    Player player = Player(worldMiddle + glm::vec3(0.0,100,0.0),&world,&camera,window);
 
     std::cout << "Renderer init\n";
     renderer->init(&world);
@@ -283,7 +283,6 @@ int main()
         exitApp = true;
         std::cout << "\nexiting\n";
         delete renderer;
-        world.~World();
         glfwTerminate();
     #endif
     

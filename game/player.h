@@ -65,6 +65,7 @@ class Player{
 
         std::vector<std::pair<BlockAction, Block>> playerChangedBlocks;
         
+        
     public:
         Player(glm::vec3 playerPos, World *world, Camera *camera, GLFWwindow *window){
             this->position = playerPos;
@@ -72,7 +73,9 @@ class Player{
             this->camera->position = position + CAMERA_OFFSET;
             this->world = world;
             this->window = window;
+            playerChangedBlocks.reserve(sizeof(std::pair<BlockAction, Block>));
         };
+       
         void process_input(double delta);
         void destroy_block();
         void place_block();

@@ -105,6 +105,8 @@ void Player::adjustCamera()
     camera->position = position + CAMERA_OFFSET;
 }
 
+
+
 void Player::process_input(double delta)
 {
     float speed = PLAYER_SPEED * delta;
@@ -178,14 +180,18 @@ void Player::destroy_block()
     Chunk *chunk = intersection.chunk;
     glm::vec3 hitPos = intersection.hitPos;
 
+
+    glm::vec3 regulatedPos;
+    regulatedPos.x = floor(hitPos.x) + 0.5;
+    regulatedPos.y = floor(hitPos.y) + 0.5;
+    regulatedPos.z = floor(hitPos.z) + 0.5;
     
-    chunk->removeBlock(hitPos);
-    this->playerChangedBlocks.push_back(
-        std::pair<BlockAction, Block>(
-            REMOVE,
-            std::move(Block(NONE_BLOCK, hitPos))
-        )
-    );
+    chunk->removeBlock(regulatedPos);
+    this->world->saveBlockToCustomWorld("customWorld.w",std::pair<BlockAction, Block>(
+        REMOVE,
+        Block(NONE_BLOCK, regulatedPos)
+    ));
+   
     chunk->genChunkMesh();
     world->renderer->updateChunk(chunk);
     
@@ -256,12 +262,10 @@ void Player::place_block()
     Chunk *placeChunk = res.value();
     Block blockToAdd = Block(STONE,placePos);
     placeChunk->addBlock(blockToAdd);
-    this->playerChangedBlocks.push_back(
-        std::pair<BlockAction, Block>(
-            ADD,
-            std::move(Block(STONE, placePos))
-        )
-    );
+    this->world->saveBlockToCustomWorld("customWorld.w",std::pair<BlockAction, Block>(
+        ADD,
+        blockToAdd
+    ));
     placeChunk->genChunkMesh();
     world->renderer->updateChunk(placeChunk);
     
