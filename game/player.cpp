@@ -166,6 +166,30 @@ void Player::process_input(double delta)
         fly = !fly;
     }
     this->lastFlyButtonState = flyState;
+
+
+    if (glfwGetKey(window, GLFW_KEY_1)){
+        placeBlock = GRASS_DIRT;
+    }
+    else if (glfwGetKey(window, GLFW_KEY_2)){
+        placeBlock = STONE;
+    }
+    else if (glfwGetKey(window, GLFW_KEY_3)){
+        placeBlock = SAND;
+    }
+    else if (glfwGetKey(window, GLFW_KEY_4)){
+        placeBlock = WATER;
+    }
+    else if (glfwGetKey(window, GLFW_KEY_5)){
+        placeBlock = WOOD;
+    }
+    else if (glfwGetKey(window, GLFW_KEY_6)){
+        placeBlock = EMPTY_LEAF;
+    }
+    else if (glfwGetKey(window, GLFW_KEY_7)){
+        placeBlock = SNOW;
+    }
+    
 }
 
 void Player::destroy_block()
@@ -260,7 +284,7 @@ void Player::place_block()
     }
 
     Chunk *placeChunk = res.value();
-    Block blockToAdd = Block(STONE,placePos);
+    Block blockToAdd = Block(placeBlock,placePos);
     placeChunk->addBlock(blockToAdd);
     this->world->saveBlockToCustomWorld("customWorld.w",std::pair<BlockAction, Block>(
         ADD,

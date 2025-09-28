@@ -34,6 +34,7 @@ enum PlayerAction{
 // postion is a its feet
 class Player{
     private:
+        BlockType placeBlock = STONE;
         
         const glm::vec3 CAMERA_OFFSET = glm::vec3(0.0,1.5,0.0);
         const int leftMouseButton = GLFW_MOUSE_BUTTON_LEFT;
