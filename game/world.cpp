@@ -11,7 +11,7 @@
 #include "player.h"
 #include "renderer.h"
 #include "buffer.h"
-
+#include <fstream>
 
 
 
@@ -52,6 +52,112 @@ void World::setChunkToFlat(Chunk *chunk)
 {
     chunk->terrainGenData.flat = true;
     chunk->terrainGenData.blocksType = GRASS_DIRT;
+}
+bool World::loadWorldFromFile(std::string fileName)
+{
+    if (fileName == "" || fileName == " "){
+        return false;
+    }
+    if (fileName.at(fileName.size()-1) != 'w'){
+        return false;
+    }
+
+    std::ifstream worldFile(fileName, std::ios::binary);
+    if (!worldFile){
+        ExitError("WORLD","WRONG WORLD FILE");
+    }
+    
+    BlockAction action;
+    BlockType blockType = NONE_BLOCK;
+    glm::vec3 blockPosition = glm::vec3(0.0f);
+
+   
+    while (true){
+        if (!worldFile.read(reinterpret_cast<char*>(&action), sizeof(action))){
+            
+            break;
+        }
+        if (!worldFile.read(reinterpret_cast<char*>(&blockType), sizeof(blockType))){
+            ExitError("WORLD","NOt full data in file");
+            break;
+        }
+        if (!worldFile.read(reinterpret_cast<char*>(&blockPosition), sizeof(blockPosition))){
+            ExitError("WORLD","NOt full data in file");
+            break;
+        }
+        std::cout << "blockPos: " << blockPosition.x  << " " << blockPosition.y << " " << blockPosition.z << "\n";
+        std::optional<Chunk*> chunkRes = getChunkByPos(blockPosition);
+        if (!chunkRes.has_value()){
+            ExitError("WORLD","chunk not found");
+            continue;
+        }
+        Chunk* chunk = chunkRes.value();
+
+
+        if (action == REMOVE){
+            chunk->removeBlock(blockPosition);
+        }
+        else if (action == ADD){
+            Block block = Block(blockType, blockPosition);
+            chunk->addBlock(block);
+        }
+        // do something with the data
+        
+        // std::cout << "BLOCK: \n" << \
+        // "blockType: " << blockType << " \n" << \
+        // "blockPos: " << blockPosition.x  << " " << blockPosition.y << " " << blockPosition.z << "\n";
+        // ExitError("SDS","DSDSD");
+        
+        
+
+        
+    }
+    worldFile.close();
+    return true;
+
+
+    
+
+}
+bool World::saveBlockToCustomWorld(std::string fileName, std::pair<BlockAction, Block> action)
+{
+    if (fileName == "" || fileName == " "){
+        return false;
+    }
+    if (fileName.at(fileName.size()-1) != 'w'){
+        return false;
+    }
+    
+    std::ofstream worldFile(fileName, std::ios::binary | std::ios::app);
+    if (!worldFile){
+        ExitError("WORLD","WRONG WORLD FILE");
+    }
+    
+    
+    std::cout << "test? " << action.first << "\n";
+    if (!worldFile.write(reinterpret_cast<char*>(&action.first), sizeof(action.first))){
+        ExitError("WORLD","ERROR WRITING DATA TO SAVE WORLD (blockaction)");
+    };
+    if (!worldFile.write(reinterpret_cast<char*>(&action.second.type), sizeof(action.second.type))){
+        ExitError("WORLD","ERROR WRITING DATA TO SAVE WORLD (blocktype)");
+    };
+    if (!worldFile.write(reinterpret_cast<char*>(&action.second.position), sizeof(action.second.position))){
+        ExitError("WORLD","ERROR WRITING DATA TO SAVE WORLD (blockposition)");
+    };
+
+    std::cout << "BLOCK WRITTEN: \n" << \
+    "blockAction: " << action.first << " \n" <<\
+    "blockType: " << action.second.type << " \n" << \
+    "blockPos: " << action.second.position.x  << " " << action.second.position.y << " " << action.second.position.z << "\n";
+    
+  
+   
+    
+    
+    
+    worldFile.close();
+    
+    return true;
 }
 void World::initChunks()
 {
@@ -167,11 +273,19 @@ int World::genBlockHeight(glm::vec2 positionXZ){
 void World::genWorldBase()
 {
     std::cout << "Generating world...\n";
+    
     for (std::vector<Chunk> &chunkRow : this->chunks){
         for (Chunk &chunk : chunkRow){
             chunk.genChunk();
         }
     }
+
+    if (this->customWorld){
+        loadWorldFromFile(this->customWorldFilePath);
+        
+    }
+    
+    
     for (std::vector<Chunk> &chunkRow : this->chunks){
         for (Chunk &chunk : chunkRow){
             chunk.genChunkMesh();
@@ -642,6 +756,9 @@ World::~World()
             thread.join();
         }
     }
+
+
+    
 }
 
 
@@ -743,14 +860,14 @@ std::optional<Chunk *> World::getChunkByPos(glm::vec3 pointPositionInWorld)
         chunkRow < 0 ||
         chunkCol < 0 
     ){
-        
+        std::cout << "Out of bounds chunk pos: " << pointPositionInWorld.x << " " << pointPositionInWorld.y << " " << pointPositionInWorld.z << "\n";
         return std::nullopt;
     }
 
     
 
     if (pointPositionInWorld.y < this->chunks[chunkRow][chunkCol].position.y){
-    
+        std::cout << "out of bounds y pos: " << pointPositionInWorld.y << "\n";
         return std::nullopt;
     }
 

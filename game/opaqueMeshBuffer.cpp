@@ -37,9 +37,19 @@ std::string OpaqueMeshBuffer::getBufferTypeString()
     return std::string("OPAQUE_MESH_BUFFER");
 }
 
+bool OpaqueMeshBuffer::customUpdateCheck(Chunk *chunk)
+{
+    if (chunk->getOpaqueMesh()->size() != 0){
+        return true;
+    }
+    return false;
+}
 
 bool OpaqueMeshBuffer::updateChunkBuffer(Chunk *chunk)
-{
+{   
+    if (!customUpdateCheck(chunk)){
+        return true;
+    };
     if (!chunk->hasBufferSpace[this->chunkBufferType]){
        
         return true;

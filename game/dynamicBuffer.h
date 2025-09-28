@@ -70,6 +70,8 @@ class DynamicBuffer{
     
         bool moveBufferPart(BufferInt from, BufferInt to); // moves all data from -> to 
 
+
+
     protected:
         DynamicBuffer(Buffer *bufferTarget, ChunkBufferType bufferType, bool deleteData = false){
             this->bufferTarget = bufferTarget;
@@ -77,6 +79,7 @@ class DynamicBuffer{
             this->deleteData = deleteData;
         };
     protected:
+        virtual bool customUpdateCheck(Chunk* chunk);
         virtual bool markData(BufferInt markStart, BufferInt markEnd) = 0;
         virtual bool requiresContiguousMemoryLayout() = 0;
         virtual BufferInt getChunkDataSize(Chunk* chunk) = 0;

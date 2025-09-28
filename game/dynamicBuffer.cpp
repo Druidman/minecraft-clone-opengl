@@ -114,10 +114,14 @@ bool DynamicBuffer::allocateDynamicBuffer(BufferInt size)
 }
 
 void DynamicBuffer::clearBuffer(){
-    if (this->deleteData){
+    
+    if (this->deleteData && this->getBufferSize() != 0){
+        
         if (!markData(0,this->bufferTarget->bufferSize)){
             ExitError("DYNAMIC_BUFFER" + getBufferTypeString(),"Error marking data");
         };
+        
+        
     }
 
     assert(this->bufferTarget != nullptr);
@@ -127,7 +131,9 @@ void DynamicBuffer::clearBuffer(){
 
 bool DynamicBuffer::insertChunkToBuffer(Chunk *chunk)
 {   
-    
+    if (!customUpdateCheck(chunk)){
+        return true;
+    };
     if (!chunk->hasBufferSpace[chunkBufferType]){
         std::cout << "assigning space\n";
         int assignRes = assignChunkBufferZone(chunk);
@@ -346,4 +352,9 @@ bool DynamicBuffer::moveBufferPart(BufferInt from, BufferInt to)
     ExitError("DYNAMIC_BUFFER"  + getBufferTypeString(),"NO SUPPORT OVER MOVING");
     return false;
 
+}
+
+bool DynamicBuffer::customUpdateCheck(Chunk *chunk)
+{
+    return true;
 }

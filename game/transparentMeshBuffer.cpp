@@ -40,9 +40,20 @@ std::string TransparentMeshBuffer::getBufferTypeString()
     return std::string("TRANSPARENT_MESH_BUFFER");
 }
 
+bool TransparentMeshBuffer::customUpdateCheck(Chunk* chunk)
+{
+    std::cout << "TRANS CHECK\n";
+    if (chunk->getTransparentMesh()->size() != 0){
+        return true;
+    }
+    return false;
+}
 
 bool TransparentMeshBuffer::updateChunkBuffer(Chunk *chunk)
 {
+    if (!customUpdateCheck(chunk)){
+        return true;
+    };
     if (!chunk->hasBufferSpace[this->chunkBufferType]){
        
         return true;
