@@ -67,11 +67,16 @@ bool World::loadWorldFromFile(std::string fileName)
         ExitError("WORLD","WRONG WORLD FILE");
     }
     
+    BlockAction action;
     BlockType blockType = NONE_BLOCK;
     glm::vec3 blockPosition = glm::vec3(0.0f);
 
    
     while (true){
+        if (!worldFile.read(reinterpret_cast<char*>(&action), sizeof(action))){
+            
+            break;
+        }
         if (!worldFile.read(reinterpret_cast<char*>(&blockType), sizeof(blockType))){
             
             break;
@@ -80,20 +85,30 @@ bool World::loadWorldFromFile(std::string fileName)
             
             break;
         }
-        // do something with the data
-        Block block = Block(blockType, blockPosition);
-        // std::cout << "BLOCK: \n" << \
-        // "blockType: " << blockType << " \n" << \
-        // "blockPos: " << blockPosition.x  << " " << blockPosition.y << " " << blockPosition.z << "\n";
-        // ExitError("SDS","DSDSD");
-        
-        std::optional<Chunk*> chunkRes = getChunkByPos(block.position);
+        std::optional<Chunk*> chunkRes = getChunkByPos(blockPosition);
         if (!chunkRes.has_value()){
             continue;
         }
         Chunk* chunk = chunkRes.value();
 
-        chunk->addBlock(block);
+
+        if (action == REMOVE){
+            chunk->removeBlock(blockPosition);
+        }
+        else if (action == ADD){
+            Block block = Block(blockType, blockPosition);
+            chunk->addBlock(block);
+        }
+        // do something with the data
+        
+        // std::cout << "BLOCK: \n" << \
+        // "blockType: " << blockType << " \n" << \
+        // "blockPos: " << blockPosition.x  << " " << blockPosition.y << " " << blockPosition.z << "\n";
+        // ExitError("SDS","DSDSD");
+        
+        
+
+        
     }
     worldFile.close();
     return true;
@@ -115,14 +130,14 @@ bool World::saveCustomWorld(std::string fileName)
     if (!worldFile){
         ExitError("WORLD","WRONG WORLD FILE");
     }
+
+    for (std::pair<BlockAction, Block> action : this->player->playerChangedBlocks){
+        worldFile.write(reinterpret_cast<char*>(&action.first), sizeof(action.first));
+        worldFile.write(reinterpret_cast<char*>(&action.second.type), sizeof(action.second.type));
+        worldFile.write(reinterpret_cast<char*>(&action.second.position), sizeof(action.second.position));
+    }
     
-    BlockType blockType = GRASS_DIRT;
-    glm::vec3 blockPosition = glm::vec3(worldMiddle.x + 0.5, 52.5f, worldMiddle.z + 0.5);
-
-    Block block = Block(blockType, blockPosition);
-
-    worldFile.write(reinterpret_cast<char*>(&block.type), sizeof(block.type));
-    worldFile.write(reinterpret_cast<char*>(&block.position), sizeof(block.position));
+    
     worldFile.close();
     
     return true;

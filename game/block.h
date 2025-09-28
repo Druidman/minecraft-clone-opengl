@@ -13,6 +13,9 @@ enum BlockType{
 enum Face {
     TOP_FACE, BOTTOM_FACE, FRONT_FACE, BACK_FACE, LEFT_FACE, RIGHT_FACE
 };
+enum BlockAction{
+    REMOVE, ADD
+};
 const std::vector<bool> transparentBlocks = {0,0,0,1,0,0,0,0,1};
 
 const int SNOW_LEVEL = 100;

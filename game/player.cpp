@@ -178,7 +178,14 @@ void Player::destroy_block()
     Chunk *chunk = intersection.chunk;
     glm::vec3 hitPos = intersection.hitPos;
 
+    
     chunk->removeBlock(hitPos);
+    this->playerChangedBlocks.push_back(
+        std::pair<BlockAction, Block>(
+            REMOVE,
+            std::move(Block(NONE_BLOCK, hitPos))
+        )
+    );
     chunk->genChunkMesh();
     world->renderer->updateChunk(chunk);
     
@@ -249,6 +256,12 @@ void Player::place_block()
     Chunk *placeChunk = res.value();
     Block blockToAdd = Block(STONE,placePos);
     placeChunk->addBlock(blockToAdd);
+    this->playerChangedBlocks.push_back(
+        std::pair<BlockAction, Block>(
+            ADD,
+            std::move(Block(STONE, placePos))
+        )
+    );
     placeChunk->genChunkMesh();
     world->renderer->updateChunk(placeChunk);
     

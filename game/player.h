@@ -62,6 +62,8 @@ class Player{
         glm::vec3 position;
         Camera *camera;
         World *world;
+
+        std::vector<std::pair<BlockAction, Block>> playerChangedBlocks;
         
     public:
         Player(glm::vec3 playerPos, World *world, Camera *camera, GLFWwindow *window){
