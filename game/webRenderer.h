@@ -150,6 +150,7 @@ class WebRenderer : public Renderer
                 UNIFORM_BUFFER_LENGTH * sizeof(StorageBufferType)
             );
 
+            std::cout << "adding chunks\n";
             lastCameraPosOnChunkPosChange = this->world->player->camera->position;
             for (Chunk* chunk : this->world->chunkRenderRefs){
                 std::cout << chunk->getMeshSize() << "\n";

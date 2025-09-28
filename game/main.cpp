@@ -247,7 +247,9 @@ int main()
     renderer->init(&world);
 
     std::cout << "World init\n";
-    world.flatWorld = false;
+    world.flatWorld = true;
+    world.customWorld = true;
+    world.customWorldFilePath = "customWorld.w";
     world.init(&player);
     
     std::cout << "generating world base\n";

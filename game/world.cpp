@@ -11,7 +11,7 @@
 #include "player.h"
 #include "renderer.h"
 #include "buffer.h"
-
+#include <fstream>
 
 
 
@@ -52,6 +52,80 @@ void World::setChunkToFlat(Chunk *chunk)
 {
     chunk->terrainGenData.flat = true;
     chunk->terrainGenData.blocksType = GRASS_DIRT;
+}
+bool World::loadWorldFromFile(std::string fileName)
+{
+    if (fileName == "" || fileName == " "){
+        return false;
+    }
+    if (fileName.at(fileName.size()-1) != 'w'){
+        return false;
+    }
+
+    std::ifstream worldFile(fileName, std::ios::binary);
+    if (!worldFile){
+        ExitError("WORLD","WRONG WORLD FILE");
+    }
+    
+    BlockType blockType = NONE_BLOCK;
+    glm::vec3 blockPosition = glm::vec3(0.0f);
+
+   
+    while (true){
+        if (!worldFile.read(reinterpret_cast<char*>(&blockType), sizeof(blockType))){
+            
+            break;
+        }
+        if (!worldFile.read(reinterpret_cast<char*>(&blockPosition), sizeof(blockPosition))){
+            
+            break;
+        }
+        // do something with the data
+        Block block = Block(blockType, blockPosition);
+        // std::cout << "BLOCK: \n" << \
+        // "blockType: " << blockType << " \n" << \
+        // "blockPos: " << blockPosition.x  << " " << blockPosition.y << " " << blockPosition.z << "\n";
+        // ExitError("SDS","DSDSD");
+        
+        std::optional<Chunk*> chunkRes = getChunkByPos(block.position);
+        if (!chunkRes.has_value()){
+            continue;
+        }
+        Chunk* chunk = chunkRes.value();
+
+        chunk->addBlock(block);
+    }
+    worldFile.close();
+    return true;
+
+
+    
+
+}
+bool World::saveCustomWorld(std::string fileName)
+{
+    if (fileName == "" || fileName == " "){
+        return false;
+    }
+    if (fileName.at(fileName.size()-1) != 'w'){
+        return false;
+    }
+
+    std::ofstream worldFile(fileName);
+    if (!worldFile){
+        ExitError("WORLD","WRONG WORLD FILE");
+    }
+    
+    BlockType blockType = GRASS_DIRT;
+    glm::vec3 blockPosition = glm::vec3(worldMiddle.x + 0.5, 52.5f, worldMiddle.z + 0.5);
+
+    Block block = Block(blockType, blockPosition);
+
+    worldFile.write(reinterpret_cast<char*>(&block.type), sizeof(block.type));
+    worldFile.write(reinterpret_cast<char*>(&block.position), sizeof(block.position));
+    worldFile.close();
+    
+    return true;
 }
 void World::initChunks()
 {
@@ -167,11 +241,19 @@ int World::genBlockHeight(glm::vec2 positionXZ){
 void World::genWorldBase()
 {
     std::cout << "Generating world...\n";
+    
     for (std::vector<Chunk> &chunkRow : this->chunks){
         for (Chunk &chunk : chunkRow){
             chunk.genChunk();
         }
     }
+
+    if (this->customWorld){
+        loadWorldFromFile(this->customWorldFilePath);
+        
+    }
+    
+    
     for (std::vector<Chunk> &chunkRow : this->chunks){
         for (Chunk &chunk : chunkRow){
             chunk.genChunkMesh();
@@ -642,6 +724,8 @@ World::~World()
             thread.join();
         }
     }
+
+    saveCustomWorld("customWorld.w");
 }
 
 

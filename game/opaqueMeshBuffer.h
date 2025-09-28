@@ -13,6 +13,8 @@ class OpaqueMeshBuffer : public DynamicBuffer{
         
 
         virtual std::string getBufferTypeString() override;
+
+        virtual bool customUpdateCheck(Chunk* chunk); 
     
     public:
         OpaqueMeshBuffer(Buffer* buffer, bool deleteData = false) : DynamicBuffer(buffer, OPAQUE_MESH_BUFFER, deleteData){

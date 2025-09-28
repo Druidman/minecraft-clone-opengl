@@ -13,6 +13,7 @@ class TransparentMeshBuffer : public DynamicBuffer{
         
 
         virtual std::string getBufferTypeString() override;
+        virtual bool customUpdateCheck(Chunk* chunk); 
     
     public:
         TransparentMeshBuffer( Buffer* buffer, bool deleteData = false) 

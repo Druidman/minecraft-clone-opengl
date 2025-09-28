@@ -8,6 +8,7 @@ class DynamicIdBuffer : public DynamicBuffer{
     private:
         int UNACTIVE_ELEMENT = -1; // masks face bits to be 6
     protected:
+        
         virtual bool markData(BufferInt markStart, BufferInt markEnd) override;
         virtual bool requiresContiguousMemoryLayout() override;
         
