@@ -79,6 +79,8 @@ class World{ //world class
         bool flatWorld = false;
         bool customWorld = false;
         std::string customWorldFilePath = "";
+        
+        bool lockSun = false;
 
         
         int WIDTH;

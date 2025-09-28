@@ -250,6 +250,7 @@ int main()
     world.flatWorld = true;
     world.customWorld = true;
     world.customWorldFilePath = "customWorld.w";
+    world.lockSun = true;
     world.init(&player);
     
     std::cout << "generating world base\n";

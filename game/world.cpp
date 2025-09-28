@@ -641,6 +641,10 @@ void World::updateThreads(WorldTickData *worldTickData){
 }
 
 void World::updateSun(double delta, WorldTickData *worldTickData){
+    if (lockSun){
+        sunPosition += worldMiddle + glm::vec3(0.0,WIDTH,0.0);
+        return;
+    }
     sunPosition = glm::vec3(0.0,WIDTH,0.0);
     glm::mat4 rotate = glm::rotate(glm::mat4(1.0f),glm::radians(sunAngle),glm::vec3(1.0,0.0,1.0));
     sunPosition = glm::vec4(sunPosition,0.0) * rotate;
