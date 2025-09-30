@@ -642,7 +642,7 @@ void World::updateThreads(WorldTickData *worldTickData){
 
 void World::updateSun(double delta, WorldTickData *worldTickData){
     if (lockSun){
-        sunPosition += worldMiddle + glm::vec3(0.0,WIDTH,0.0);
+        sunPosition = worldMiddle + glm::vec3(0.0,WIDTH,0.0);
         return;
     }
     sunPosition = glm::vec3(0.0,WIDTH,0.0);

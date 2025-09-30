@@ -16,7 +16,7 @@
 
 class World;
 
-const int PLAYER_RANGE = 10;
+const int PLAYER_RANGE = 100;
 const int PLAYER_SPEED = 10;
 const int PLAYER_FLY_SPEED = 100;
 

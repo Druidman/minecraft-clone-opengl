@@ -8,7 +8,7 @@ typedef float FaceData;
 
 
 enum BlockType{
-    GRASS_DIRT, SAND, STONE, WATER, WOOD, LEAF, EMPTY_LEAF, SNOW, NONE_BLOCK
+    GRASS_DIRT, SAND, STONE, WATER, WOOD, LEAF, EMPTY_LEAF, SNOW, LAVA, NONE_BLOCK
 };
 enum Face {
     TOP_FACE, BOTTOM_FACE, FRONT_FACE, BACK_FACE, LEFT_FACE, RIGHT_FACE
@@ -16,7 +16,7 @@ enum Face {
 enum BlockAction{
     REMOVE, ADD
 };
-const std::vector<bool> transparentBlocks = {0,0,0,1,0,0,0,0,1};
+const std::vector<bool> transparentBlocks = {0,0,0,1,0,0,0,0,0,1};
 
 const int SNOW_LEVEL = 100;
 const int STONE_LEVEL = 60;

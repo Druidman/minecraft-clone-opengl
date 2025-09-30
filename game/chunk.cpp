@@ -139,6 +139,10 @@ inline bool Chunk::canAddBlockFace(Face face, Block *currentBlock)
 
     if (!checkBlock->isTransparent())
     {
+        if (checkBlock->type == EMPTY_LEAF){
+            return true;
+        }
+        
         return false;
         
     }

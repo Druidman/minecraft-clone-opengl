@@ -178,7 +178,7 @@ void Player::process_input(double delta)
         placeBlock = SAND;
     }
     else if (glfwGetKey(window, GLFW_KEY_4)){
-        placeBlock = WATER;
+        placeBlock = LAVA;
     }
     else if (glfwGetKey(window, GLFW_KEY_5)){
         placeBlock = WOOD;
